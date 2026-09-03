@@ -1,0 +1,2 @@
+function e(e){return typeof e==`string`?e:e.text}const t=/\{([^{}]+)\}/g;function n(e,n){return n?e.replace(t,(e,t)=>Object.hasOwn(n,t)?String(n[t]):e):e}function r(t,r,i){return typeof t==`string`?t:typeof r==`function`?r(t,i):n(e(t),r??i)}export{n,e as r,r as t};
+//# sourceMappingURL=translate-text-TzSgu_oe.js.map

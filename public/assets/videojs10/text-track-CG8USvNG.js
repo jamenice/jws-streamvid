@@ -1,0 +1,2 @@
+function e(e){return e.kind===`captions`||e.kind===`subtitles`}function t(e,t){if(!(e instanceof HTMLElement))return null;for(let n of e.querySelectorAll(`track`))if(n.track===t)return n;return null}export{e as n,t};
+//# sourceMappingURL=text-track-CG8USvNG.js.map

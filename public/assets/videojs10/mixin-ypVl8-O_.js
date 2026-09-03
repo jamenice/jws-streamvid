@@ -1,0 +1,2 @@
+function e(e){class t extends e{constructor(...e){super(...e),this.host.addEventListener(`sourcechange`,()=>this.#e())}#e(){let e=this.host.src;e?this.getAttribute(`src`)!==e&&this.setAttribute(`src`,e):this.hasAttribute(`src`)&&this.removeAttribute(`src`)}}return t}export{e as t};
+//# sourceMappingURL=mixin-ypVl8-O_.js.map

@@ -1,0 +1,2 @@
+import{t as e}from"../da-CN9l_y-7.js";import{registerI18n as t}from"../i18n.js";t(`da`,e);
+//# sourceMappingURL=da.js.map

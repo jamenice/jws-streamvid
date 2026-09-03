@@ -1,0 +1,934 @@
+/**
+ * Short drama — archive cards and the watch screen.
+ *
+ * Sizes and colours match the reference build: panel 460px on #191c33, stage on
+ * black, episode chips 58x45, accent #7b61ff.
+ */
+
+.sv-short-page {
+    --sv-short-chip: rgba(255, 255, 255, 0.06);
+    --sv-short-chip-hover: rgba(255, 255, 255, 0.14);
+    --sv-short-muted: rgba(255, 255, 255, 0.55);
+}
+
+/* Sits on the episode template, outside .sv-short-page, so no local palette. */
+.sv-short-empty {
+    padding: 60px 0;
+    color: var(--body);
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Watch screen
+ * -------------------------------------------------------------------------- */
+
+.sv-short-page {
+    display: flex;
+    align-items: stretch;
+    /* Fills what is left under the header. --sv-header-h is measured in
+       drama.js from the actual header height; 90px is only the fallback
+       used before JS runs (or if it's disabled). */
+    min-height: calc(100vh - var(--sv-header-h, 90px));
+}
+
+.sv-short-stage {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    background: #000000;
+}
+
+/* The whole point of the format: a 9:16 column, as tall as the stage allows. */
+.sv-short-player {
+    position: relative;
+    width: auto;
+    height: 100%;
+    max-height: calc(100vh - 90px);
+    aspect-ratio: 9 / 16;
+    margin: 0;
+    overflow: hidden;
+    background: var(--background-item);
+}
+
+/* The theme puts 80px under every player; here the stage is the layout. */
+.sv-short-player.videos_player:not(.has-embed) {
+    margin-bottom: 0;
+}
+
+.sv-short-player--locked {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-position: center;
+    background-size: cover;
+}
+
+.sv-short-player--locked::before {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 9, 16, 0.82);
+    content: "";
+}
+
+.sv-short-lock-panel {
+    position: relative;
+    max-width: 300px;
+    padding: 24px;
+    color: #ffffff;
+    text-align: center;
+}
+
+.sv-short-lock-panel i {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 34px;
+}
+
+/* Dim the stage while the next episode is on its way. */
+.sv-short-stage.is-loading .sv-short-player {
+    opacity: 0.35;
+    transition: opacity 0.15s ease;
+}
+
+.sv-short-stage-controls {
+    position: absolute;
+    inset-inline-end: 20px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sv-short-stage-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--background-item);
+    border: 0;
+    border-radius: 999px;
+    font-size: 20px;
+}
+
+.sv-short-stage-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sv-short-stage-btn.is-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Panel
+ * -------------------------------------------------------------------------- */
+
+.sv-short-panel {
+    flex: 0 0 460px;
+    width: 460px;
+    max-height: calc(100vh - 90px);
+    padding: 26px 32px 40px;
+    overflow-y: auto;
+    background: var(--background-item);
+}
+
+.sv-short-panel .sv-short-breadcrumbs {
+    margin: 0 0 18px;
+    padding: 0;
+    color: var(--sv-short-muted);
+    font-size: 13px;
+    list-style: none;
+}
+
+.sv-short-breadcrumbs li {
+    display: inline;
+}
+
+.sv-short-breadcrumbs .jws-breadcrumbs__separator {
+    padding: 0 8px;
+}
+
+.sv-short-title {
+    margin: 0 0 14px;
+    font-size: 26px;
+    line-height: 1.3;
+}
+
+.sv-short-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.sv-short-tag {
+    padding: 6px 14px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.sv-short-plot {
+    margin-bottom: 26px;
+}
+
+.sv-short-plot h6,
+.sv-short-episodes-head h6 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.sv-short-plot p {
+    margin: 0;
+    color: var(--sv-short-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.sv-short-episodes-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.sv-short-episodes-count {
+    color: var(--sv-short-muted);
+    font-size: 13px;
+}
+
+.sv-short-ranges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 14px;
+}
+
+.sv-short-range {
+    padding: 0;
+    color: var(--sv-short-muted);
+    font-size: 13px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.sv-short-range.active {
+    color: var(--main);
+    font-weight: 700;
+}
+
+.sv-short-episode-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+}
+
+.sv-short-episode {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 45px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    background: var(--sv-short-chip);
+    border-radius: 8px;
+    transition: 0.15s ease;
+}
+
+.sv-short-episode:hover {
+    color: #ffffff;
+    background: var(--sv-short-chip-hover);
+}
+
+.sv-short-episode.active {
+    color: #ffffff;
+    background: var(--main);
+}
+
+.sv-short-episode.locked {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.sv-short-lock {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: 5px;
+    font-size: 10px;
+    opacity: 0.75;
+}
+
+/* Three bars bouncing, the usual "this one is playing" cue. */
+.sv-short-playing {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 14px;
+}
+
+.sv-short-playing span {
+    display: block;
+    width: 3px;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 2px;
+    animation: sv-short-bars 0.9s ease-in-out infinite;
+}
+
+.sv-short-playing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.sv-short-playing span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes sv-short-bars {
+
+    0%,
+    100% {
+        transform: scaleY(0.35);
+    }
+
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sv-short-playing span {
+        animation: none;
+        transform: scaleY(0.6);
+    }
+}
+
+/* -------------------------------------------------------------------------- *
+ * Narrow screens: the panel goes under the stage.
+ * -------------------------------------------------------------------------- */
+
+@media (max-width: 1199px) {
+
+    .sv-short-page {
+        display: block;
+        min-height: 0;
+    }
+
+    /*
+     * Size the player from its width here, never from a percentage height.
+     *
+     * The desktop rule is `height: 100%`, which only resolves because the flex
+     * row gives the stage a definite height. Once the page becomes a block the
+     * stage has min-height and nothing more, a percentage height resolves to
+     * auto, and since every child of the player is absolutely positioned there
+     * is no content left to size the box from — the whole 9:16 column collapses
+     * to 0x0 and all you see is the stage's black background.
+     *
+     * A definite width plus aspect-ratio has no such dependency, and filling the
+     * width is what a vertical video wants on a phone anyway. The 85vh cap stops
+     * a tall column from running off the bottom on wider tablets.
+     */
+    .sv-short-stage {
+        height: auto;
+        min-height: 0;
+        padding: 0;
+    }
+
+    .sv-short-player {
+        width: min(100%, calc(85vh * 9 / 16));
+        height: auto;
+        max-height: none;
+    }
+
+    .sv-short-panel {
+        flex: none;
+        width: 100%;
+        max-height: none;
+    }
+
+    .sv-short-stage-controls {
+        inset-inline-end: 12px;
+        bottom: 20px;
+    }
+}
+
+@media (max-width: 575px) {
+
+    .sv-short-panel {
+        padding: 20px 16px 32px;
+    }
+
+    .sv-short-title {
+        font-size: 20px;
+    }
+
+    .sv-short-episode-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+
+}
+
+/* -------------------------------------------------------------------------- *
+ * Coin wallet (account area)
+ * -------------------------------------------------------------------------- */
+
+.sv-coin-balance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 26px;
+    background: var(--background-item);
+    border-radius: 12px;
+}
+
+.sv-coin-balance-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.sv-coin-balance-value {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.sv-coin-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 32px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sv-coin-tab {
+    padding: 10px 4px;
+    margin-bottom: -1px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 14px;
+    font-weight: 600;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.sv-coin-tab+.sv-coin-tab {
+    margin-inline-start: 20px;
+}
+
+.sv-coin-tab:hover {
+    color: #ffffff;
+}
+
+.sv-coin-tab.active {
+    color: #ffffff;
+    border-bottom-color: var(--main, #7b61ff);
+}
+
+.sv-coin-tab-panel {
+    margin-top: 18px;
+}
+
+.sv-coin-packages {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+}
+
+.sv-coin-package {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    padding: 20px 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.sv-coin-package-amount {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.sv-coin-package-unit {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sv-coin-package-price {
+    margin: 6px 0 12px;
+    font-size: 15px;
+}
+
+.sv-coin-package .sv-short-play {
+    min-width: 0;
+    width: 100%;
+    height: 38px;
+}
+
+.sv-coin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sv-coin-table th,
+.sv-coin-table td {
+    padding: 11px 0px;
+    text-align: start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sv-coin-table th {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sv-coin-table .is-in {
+    color: #3fb950;
+}
+
+.sv-coin-table .is-out {
+    color: #e5484d;
+}
+
+.sv-coin-empty {
+    padding: 18px 0;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* The unlock button while its request is in flight. */
+.sv-short-unlock.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Buy panel
+ *
+ * Opens over the watch screen and over the Coins tab, so it carries its own
+ * dark palette rather than inheriting either one.
+ * -------------------------------------------------------------------------- */
+
+.sv-buy-modal {
+    --sv-buy-bg: #1b1b1d;
+    --sv-buy-card: #262628;
+    --sv-buy-line: rgba(255, 255, 255, 0.08);
+    --sv-buy-muted: rgba(255, 255, 255, 0.55);
+    --sv-buy-gold: linear-gradient(140deg, #fbe6bd 0%, #f3cd94 100%);
+    --sv-buy-red: #e5342b;
+
+    position: fixed;
+    z-index: 100000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.sv-buy-modal[hidden] {
+    display: none;
+}
+
+.sv-buy-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.sv-buy-panel {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    color: #ffffff;
+    background: var(--sv-buy-bg);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* The coin. There is no coin glyph in the icon font, so it is drawn here. */
+.sv-coin-ico {
+    display: inline-block;
+    width: 1.05em;
+    height: 1.05em;
+    margin-inline-end: 0.35em;
+    vertical-align: -0.15em;
+    background: radial-gradient(circle at 35% 30%, #ffe9a8 0%, #f0b83f 55%, #c98a1c 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 0.09em rgba(255, 255, 255, 0.45);
+}
+
+/* Head ---------------------------------------------------------------------- */
+
+.sv-buy-head {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--sv-buy-line);
+}
+
+.sv-buy-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 15px;
+}
+
+.sv-buy-meta strong {
+    font-weight: 700;
+}
+
+.sv-buy-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--sv-buy-line);
+}
+
+.sv-buy-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: #ffffff;
+    font-size: 17px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.sv-buy-close:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* Body ---------------------------------------------------------------------- */
+
+.sv-buy-body {
+    max-height: calc(100vh - 130px);
+    padding: 24px 28px 30px;
+    overflow-y: auto;
+}
+
+.sv-buy-title {
+    margin: 26px 0 2px;
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.sv-buy-body>.sv-buy-title:first-child {
+    margin-top: 0;
+}
+
+.sv-buy-sub {
+    margin: 0 0 14px;
+    color: var(--sv-buy-muted);
+    font-size: 13px;
+}
+
+.sv-buy-empty {
+    margin: 0;
+    color: var(--sv-buy-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* Plans --------------------------------------------------------------------- */
+
+.sv-buy-plans {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+/* An <a> to the PMPro checkout, so it has to shed the theme's link styling. */
+.sv-buy-plan {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    color: #3d2c10;
+    text-decoration: none;
+    background: var(--sv-buy-gold);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.sv-buy-plan:hover,
+.sv-buy-plan:focus {
+    color: #3d2c10;
+    text-decoration: none;
+}
+
+.sv-buy-plan:hover {
+    transform: translateY(-2px);
+}
+
+.sv-buy-plan-main {
+    display: block;
+    padding: 20px 22px 16px;
+}
+
+.sv-buy-plan-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.sv-buy-plan-price {
+    display: block;
+    margin: 6px 0 8px;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.sv-buy-plan-price s {
+    margin-inline-start: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    opacity: 0.55;
+}
+
+.sv-buy-plan-note {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.5;
+    opacity: 0.8;
+}
+
+.sv-buy-plan-feats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    padding: 10px 22px;
+    background: rgba(0, 0, 0, 0.07);
+}
+
+.sv-buy-plan-feats span {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+/* The badge sits on both a plan and a package, so it is styled once. */
+.sv-buy-off {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    padding: 3px 9px;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: var(--sv-buy-red);
+    border-start-end-radius: 10px;
+    border-end-start-radius: 10px;
+}
+
+/* Packages ------------------------------------------------------------------ */
+
+.sv-buy-packs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.sv-buy-pack {
+    position: relative;
+    padding: 18px 18px 16px;
+    background: var(--sv-buy-card);
+    border: 2px solid var(--sv-buy-line);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.sv-buy-pack:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sv-buy-pack-total {
+    display: block;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.sv-buy-pack-split {
+    display: block;
+    margin: 8px 0 16px;
+    color: var(--sv-buy-muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.sv-buy-pack-price {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+/* Payment ------------------------------------------------------------------- */
+
+.sv-buy-gateways {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+/*
+ * display:flex on the button beats the [hidden] attribute, and the wallet
+ * buttons are rendered hidden until the browser says it can open them — without
+ * this they would all show and Apple Pay would dead-end on a machine that has
+ * never seen it.
+ */
+.sv-buy-gateway[hidden] {
+    display: none;
+}
+
+.sv-buy-gateway {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    padding: 8px 16px;
+    color: #ffffff;
+    background: var(--sv-buy-card);
+    border: 2px solid var(--sv-buy-line);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.sv-buy-gateway:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.sv-buy-gateway.is-selected {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sv-buy-gateway strong {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.sv-buy-gateway small {
+    color: var(--sv-buy-muted);
+    font-size: 11.5px;
+}
+
+/*
+ * Brand marks: these are plain text labels on purpose. Apple and Google both
+ * require their own button artwork for a live integration — Apple Pay from the
+ * Human Interface Guidelines, Google Pay from its brand guidelines, or both
+ * rendered for you by Stripe's Express Checkout Element. Swap them in here.
+ */
+.sv-buy-gateway--apple_pay strong,
+.sv-buy-gateway--google_pay strong,
+.sv-buy-gateway--paypal strong {
+    letter-spacing: 0.01em;
+}
+
+.sv-buy-gateway--paypal strong {
+    font-style: italic;
+}
+
+/* A card is the buy button, so it shows the request it started. */
+.sv-buy-plan.is-busy,
+.sv-buy-pack.is-busy {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.sv-buy-plan:active,
+.sv-buy-pack:active {
+    transform: scale(0.99);
+}
+
+.sv-buy-error {
+    margin: 14px 0 0;
+    color: #ff6b63;
+    font-size: 13px;
+}
+
+/* Stop the page behind the panel scrolling with it. */
+body.sv-buy-lock {
+    overflow: hidden;
+}
+
+/* The account page prints the balance and the Top up button side by side. */
+.sv-coin-balance .sv-coin-topup {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding: 0 26px;
+}
+
+@media (max-width: 1024px) {
+    .sv-buy-packs {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .sv-buy-modal {
+        padding: 0;
+    }
+
+    .sv-buy-panel {
+        max-width: none;
+        max-height: 100vh;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .sv-buy-body {
+        max-height: calc(100vh - 82px);
+        padding: 20px 18px 28px;
+    }
+
+    .sv-buy-head {
+        padding: 18px;
+    }
+
+    .sv-buy-plans,
+    .sv-buy-packs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sv-buy-plan-price {
+        font-size: 24px;
+    }
+}

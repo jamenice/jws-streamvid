@@ -1,0 +1,235 @@
+/**
+ * StreamVid — in-player episode list button and panel.
+ *
+ * Split out of jws_player.css (it was the tail of that file, unchanged) so both
+ * engines can share it. The panel itself is built by single_global.js and lands
+ * in .videos_player, which is light DOM and identical on Video.js 7 and 10.
+ *
+ * The .vjs-control-bar rules below only bite on the legacy engine. On v10 the
+ * button is injected into the skin's shadow root, where this file cannot reach,
+ * so jws_player_v10.js carries that button's styles itself.
+ */
+
+/* === Episode List Button in Player === */
+.vjs-control-bar .jws-ep-list-btn .vjs-icon-placeholder:before {
+    content: "\f03a";
+    /* list icon */
+    font-family: "Font Awesome 5 Free", FontAwesome, sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.vjs-control-bar .jws-ep-list-btn {
+    cursor: pointer;
+    width: 3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* === Episode Panel === */
+.jws-ep-panel {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 280px;
+    max-height: 100%;
+    background: var(--background-item);
+    border-radius: 8px 8px 0 0;
+    z-index: 2147483640;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    transform: translateY(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.jws-ep-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Panel inside native fullscreen element (appended as child of fullscreen el) */
+:fullscreen .jws-ep-panel,
+:-webkit-full-screen .jws-ep-panel,
+:-moz-full-screen .jws-ep-panel {
+    position: absolute;
+    bottom: 52px;
+    right: 0;
+    z-index: 2147483645;
+}
+
+/* Panel inside videojs pseudo-fullscreen */
+.video-js.vjs-fullscreen .jws-ep-panel {
+    position: absolute;
+    bottom: 52px;
+    right: 0;
+    z-index: 2147483645;
+}
+
+/* Video.js 10 fullscreen.
+   The two rules above cannot reach it: the element actually put into fullscreen
+   is the <media-container> inside the skin's shadow root, so the panel's DOM
+   parent never matches :fullscreen even though the panel renders. Set by
+   placeEpisodePanel() in jws_player_v10.js instead. */
+.jws-ep-panel.jws-ep-panel--fs {
+    position: absolute;
+    right: 0;
+    z-index: 2147483645;
+}
+
+.jws-ep-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.jws-ep-panel-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.jws-ep-panel-close:hover {
+    color: #fff;
+}
+
+.jws-ep-season-select {
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 2px 30px 2px 10px;
+    cursor: pointer;
+    outline: none;
+    min-width: 0;
+    min-height: auto;
+}
+
+.ep-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jws-ep-season-select option {
+    background: #222;
+    color: #fff;
+}
+
+.jws-ep-panel-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 6px 0;
+}
+
+.jws-ep-panel-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.jws-ep-panel-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.jws-ep-panel-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.jws-ep-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.jws-ep-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.jws-ep-item.active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.jws-ep-item.active .jws-ep-title {
+    color: #e5a00d;
+}
+
+.jws-ep-thumb {
+    width: 64px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.jws-ep-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.jws-ep-no {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.jws-ep-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.jws-ep-num {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1;
+}
+
+.jws-ep-title {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.jws-ep-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}

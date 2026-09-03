@@ -1,0 +1,925 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Jws Streamvid\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-07 02:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.14; wp-6.7.1\n"
+"X-Domain: jws_streamvid"
+
+#: includes/function_template.php:277
+#, php-format
+msgid "%s <span>like</span>"
+msgid_plural "%s <span>likes</span>"
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/playlist/playlist-single.php:70
+#: public/playlist/page-content/content.php:108
+#: public/playlist/content/playlist-item-modal.php:44
+#, php-format
+msgid "<span>%s video</span>"
+msgid_plural "<span>%s videos</span>"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-jws-streamvid-dashboard.php:40
+msgid "Account and security"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:69
+msgid "Add"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:570
+#: includes/class-jws-streamvid-post.php:616
+msgid "Add new"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:569
+#: includes/class-jws-streamvid-post.php:615
+msgid "Add new question"
+msgstr ""
+
+#: public/playlist/playlist-single.php:59
+msgid "Add Videos"
+msgstr ""
+
+#: public/playlist/playlist-single.php:128
+msgid "Add videos"
+msgstr ""
+
+#: public/tool/watchlist/watchlist.php:46
+#, php-format
+msgid "Added <strong>%s</strong> to watchlist."
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:611
+#: includes/class-jws-streamvid-post.php:613
+#: includes/class-jws-streamvid-post.php:627
+#: includes/class-jws-streamvid-post.php:628
+msgid "Ads VMAP"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:565
+#: includes/class-jws-streamvid-post.php:567
+#: includes/class-jws-streamvid-post.php:581
+#: includes/class-jws-streamvid-post.php:582
+msgid "Advertising"
+msgstr ""
+
+#: public/playlist/delete-playlist.php:41
+#, php-format
+msgid "After you press %s, this playlist will be deleted permanently."
+msgstr ""
+
+#: public/playlist/delete-playlist.php:34
+msgid "Are you sure you want to delete this playlist?"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:384
+msgid "Audio Format is not allowed."
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:173
+msgid "Billing"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:405
+#: includes/class-jws-streamvid-playlist.php:716
+#: public/playlist/delete-playlist.php:55 public/user/profile/header.php:61
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-jws-streamvid-encode.php:188
+msgid "Cannot create folder."
+msgstr ""
+
+#: includes/class-jws-streamvid-encode.php:242
+msgid "Cannot read/write file playervideo_idc.m3u8"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:76
+#: includes/class-jws-streamvid-videos.php:78
+msgid "Category"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:54
+#: includes/class-jws-streamvid-dashboard.php:61
+#: includes/class-jws-streamvid-dashboard.php:69
+#: includes/class-jws-streamvid-dashboard.php:76
+msgid "Change"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:536
+msgid "Choose Video Submit Method"
+msgstr ""
+
+#: public/playlist/delete-playlist.php:26
+msgid "Confirm Delete"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:467
+msgid "Confirm Password"
+msgstr ""
+
+#: public/playlist/other-playlist.php:37
+msgid "Create New Playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:614
+msgid "Create new Playlist"
+msgstr ""
+
+#: public/user/profile/header.php:56
+msgid "Create Playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:606
+msgid "Create Stream"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:203
+msgid "Dashboard"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:45
+msgid "Date"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:361
+msgid "Date of Birth"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:533
+msgid "Date of Birth:"
+msgstr ""
+
+#: public/playlist/delete-playlist.php:42
+msgid "DELETE"
+msgstr ""
+
+#: public/playlist/playlist-single.php:61
+#: public/playlist/delete-playlist.php:56 public/user/profile/header.php:62
+msgid "Delete"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:713
+msgid "Delete Video"
+msgstr ""
+
+#: includes/function_template.php:534
+msgid ""
+"Demo version will limit media upload, You can turn this limit off in theme "
+"settings."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:549
+#: includes/class-jws-streamvid-playlist.php:668
+msgid "Description"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:345
+#: includes/class-jws-streamvid-dashboard.php:439
+msgid "Display Name"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:52
+msgid "Display name:"
+msgstr ""
+
+#: includes/function_template.php:330
+msgid "Download Videos"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:550
+#: public/playlist/playlist-single.php:60
+#: public/playlist/page-content/content.php:109
+#: public/user/profile/header.php:60
+msgid "Edit"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:571
+#: includes/class-jws-streamvid-post.php:617
+msgid "Edit discussion"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:616
+msgid "Edit Playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:457
+msgid "Edit Video"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:446
+msgid "Email"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:59
+msgid "Email:"
+msgstr ""
+
+#: public/tool/share/share.php:18
+msgid "Embed"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:179
+#: includes/class-jws-streamvid-post.php:180
+#: includes/class-jws-streamvid-post.php:186
+msgid "Episodes"
+msgstr ""
+
+#: includes/class-jws-streamvid-media.php:391
+#: includes/class-jws-streamvid-media.php:438
+msgid "Error please check config api key and account id."
+msgstr ""
+
+#: includes/class-jws-streamvid-encode.php:165
+msgid "Exec function was not found."
+msgstr ""
+
+#: public/user/profile/favorites.php:51
+msgid "Favorite Movies"
+msgstr ""
+
+#: public/user/profile/favorites.php:86
+msgid "Favorite Tv Shows"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:77
+#: includes/class-jws-streamvid-profile.php:263
+msgid "Favorites"
+msgstr ""
+
+#: includes/function_template.php:72
+msgid "Female"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:297
+#: includes/class-jws-streamvid-dashboard.php:262
+#: includes/class-jws-streamvid-videos.php:308
+#: includes/class-jws-streamvid-playlist.php:204
+#: includes/class-jws-streamvid-playlist.php:283
+msgid "File format is not accepted."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:306
+#: includes/class-jws-streamvid-dashboard.php:271
+#: includes/class-jws-streamvid-videos.php:317
+#: includes/class-jws-streamvid-playlist.php:213
+#: includes/class-jws-streamvid-playlist.php:292
+#, php-format
+msgid "File size has to be smaller than %s"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:361
+#: includes/class-jws-streamvid-videos.php:370
+msgid "File Type is not allowed."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:289
+#: includes/class-jws-streamvid-dashboard.php:254
+#: includes/class-jws-streamvid-videos.php:300
+#: includes/class-jws-streamvid-playlist.php:196
+#: includes/class-jws-streamvid-playlist.php:275
+msgid "File was not found or broken"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:345
+msgid "File was not found or empty."
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:369
+msgid "Gender"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:523
+msgid "Gender:"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:116
+msgid "Go live"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:656
+msgid "Go Live with external streaming app"
+msgstr ""
+
+#: public/user/profile/videos.php:69
+msgid "here."
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:86
+#: includes/class-jws-streamvid-profile.php:272
+msgid "History"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://jwsuperthemes.com"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://streamvid.jwsuperthemes.com"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:124
+#: includes/class-jws-streamvid-dashboard.php:203
+msgid "Invalid nonce."
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:182
+msgid "Invoices"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:776
+msgid ""
+"It seems you tried to set up a same thumbnail image, please choose another "
+"one"
+msgstr ""
+
+#. Name of the plugin
+msgid "Jws Streamvid"
+msgstr ""
+
+#. Author of the plugin
+msgid "Jws Theme"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:369
+msgid "Keywords were not found"
+msgstr ""
+
+#: public/tool/like/likes.php:43
+#, php-format
+msgid "Liked <strong>%s</strong>."
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:51
+msgid "Likes"
+msgstr ""
+
+#: public/tool/share/share.php:14
+msgid "Link"
+msgstr ""
+
+#: includes/class-jws-streamvid-media.php:476
+msgid "Live"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:513
+msgid "Live Streaming"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:139
+msgid "Logout"
+msgstr ""
+
+#: includes/function_template.php:71
+msgid "Male"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:156
+msgid "Membership"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:36
+msgid "Movie"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:35
+#: includes/class-jws-streamvid-post.php:43
+#: includes/class-jws-streamvid-playlist.php:580
+msgid "Movies"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:62
+msgid "Movies Playlists"
+msgstr ""
+
+#: public/class-jws-streamvid-public.php:234
+msgid "Moving on to the next episode"
+msgstr ""
+
+#: public/user/profile/history.php:12
+msgid "My History"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:125
+#: includes/class-jws-streamvid-profile.php:211
+msgid "My Profile"
+msgstr ""
+
+#: public/user/profile/watchlist.php:26
+msgid "My Watchlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:661
+msgid "Name"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:117
+msgid "Name is required"
+msgstr ""
+
+#: public/playlist/page-content/content.php:125
+msgid "No playlists."
+msgstr ""
+
+#: public/class-jws-streamvid-public.php:372
+#: public/tool/watchlist/watchlist.php:9 public/tool/watchlist/watchlist.php:58
+msgid "No video selected yet."
+msgstr ""
+
+#: public/user/profile/watchlist.php:60
+msgid "No watchlist."
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:375
+msgid "None"
+msgstr ""
+
+#: public/user/profile/history.php:33
+msgid "Not Found"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:232
+#: includes/class-jws-streamvid-post.php:574
+#: includes/class-jws-streamvid-post.php:620
+#: public/playlist/other-playlist.php:60
+msgid "Not found"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:575
+#: includes/class-jws-streamvid-post.php:621
+msgid "Not found in the bin"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:68
+msgid "not update"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:419
+msgid "Nothing matched your search terms"
+msgstr ""
+
+#: includes/function_template.php:73
+msgid "Other"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:566
+#: includes/class-jws-streamvid-post.php:612
+msgid "Parent discussion"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:460
+msgid "Password"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:147
+msgid "Password does not match."
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:74
+msgid "Password:"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:489
+#: includes/class-jws-streamvid-post.php:490
+#: includes/class-jws-streamvid-post.php:496
+msgid "Person"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:318
+#: includes/class-jws-streamvid-dashboard.php:495
+msgid "Personal information"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:453
+msgid "Phone"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:66
+msgid "Phone:"
+msgstr ""
+
+#: public/playlist/playlist-single.php:46
+#: public/playlist/page-content/content.php:63
+msgid "Play All"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:281
+msgid "Playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:95
+msgid "Playlist deleted successfully"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:139
+msgid "Playlist has been created successfully"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:694
+msgid "Playlist Thumbnail"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:376
+msgid "Playlist was not found"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:139
+#: includes/class-jws-streamvid-dashboard.php:217
+msgid "Please enter full information."
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:623
+msgid "Please fill in all information bellow to create new playlist."
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:475
+msgid "Please fill in all information bellow to submit video."
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:609
+msgctxt "Post Type General Name"
+msgid "Ads VMAP"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:563
+msgctxt "Post Type General Name"
+msgid "Advertising"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:610
+msgctxt "Post Type Singular Name"
+msgid "Ads VMAP"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:564
+msgctxt "Post Type Singular Name"
+msgid "Advertising"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:542
+msgid "Postcode:"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:675
+msgid "Privacy"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:556
+msgid "Private"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:555
+msgid "Public"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:809
+msgid "Remove"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:535
+#, php-format
+msgid "Removed from %s"
+msgstr ""
+
+#: public/class-jws-streamvid-public.php:367
+msgid "Removed from history."
+msgstr ""
+
+#: public/tool/watchlist/watchlist.php:38
+#: public/tool/watchlist/watchlist.php:56
+msgid "Removed from watchlist."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:653
+msgid "RTMP Encoder/ Broadcaster"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:718
+msgid "Save"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:811
+msgid "Save to an other playlist"
+msgstr ""
+
+#: public/playlist/other-playlist.php:14
+msgid "Save to playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:406
+#: includes/class-jws-streamvid-dashboard.php:475
+msgid "Save Update"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:529
+#, php-format
+msgid "Saved to %s"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:573
+#: includes/class-jws-streamvid-post.php:619
+msgid "Search discussion"
+msgstr ""
+
+#: public/playlist/other-playlist.php:23
+msgid "Search playlist..."
+msgstr ""
+
+#: public/playlist/search-item.php:27
+msgid "Search Videos"
+msgstr ""
+
+#: public/playlist/search-item.php:34
+msgid "Search..."
+msgstr ""
+
+#: public/user/profile/watchlist.php:27 public/user/profile/history.php:13
+msgid "Select all"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:579
+#: includes/class-jws-streamvid-videos.php:641
+msgid "Select Categories"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:684
+msgid "Select Playlist"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:666
+msgid "Server:"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:810
+msgid "Set as thumbnail"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:132
+msgid "Setting"
+msgstr ""
+
+#: includes/function_template.php:253 public/tool/share/share.php:7
+msgid "Share"
+msgstr ""
+
+#: public/user/profile/profile.php:48
+msgid "Social Login Accounts"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:134
+#: includes/class-jws-streamvid-videos.php:136
+msgid "Sort by"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:518
+msgid "Start create your own streaming."
+msgstr ""
+
+#: public/user/profile/videos.php:69
+msgid "Start upload your own video "
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:211
+msgid "Stream has not started yet."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:206
+msgid "Stream has started."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:218 public/movies/player.php:264
+msgid "Stream is starting soon."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:676
+msgid "Stream Key:"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:470
+#: includes/class-jws-streamvid-videos.php:711
+msgid "Submit Video"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:96
+msgid "Subscription"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:538
+#: includes/class-jws-streamvid-videos.php:574
+#: includes/class-jws-streamvid-playlist.php:697
+msgid "Support *.png, *.jpeg, *.gif, *.jpg. Maximun upload file size: "
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:558
+#: includes/class-jws-streamvid-videos.php:605
+msgid "Tags"
+msgstr ""
+
+#: public/playlist/playlist-single.php:112
+msgid "The playlist has no videos."
+msgstr ""
+
+#. Description of the plugin
+msgid "The plugin contains important functions for streamvid."
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:352
+msgid "The upload file exceeds the maximum allow file size."
+msgstr ""
+
+#: public/user/profile/videos.php:76
+msgid "There isn't any video."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:535
+msgid "Thumbnail"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:786
+msgid "Thumbnail Image has been set up successfully"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:755
+msgid "Thumbnail Image was not found"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:528
+#: includes/class-jws-streamvid-videos.php:44
+msgid "Title"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:250
+#: includes/class-jws-streamvid-post.php:251
+#: includes/class-jws-streamvid-post.php:257
+#: includes/class-jws-streamvid-playlist.php:581
+msgid "Tv Shows"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:63
+msgid "Tv Shows Playlists"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:634
+msgid "Type Playlist"
+msgstr ""
+
+#: public/tool/like/likes.php:31
+#, php-format
+msgid "Unliked <strong>%s</strong>."
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:572
+#: includes/class-jws-streamvid-post.php:618
+msgid "Update discussion"
+msgstr ""
+
+#: public/user/profile/header.php:42
+msgid "Upgrade Premium"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:107
+msgid "Upload"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:732
+#: public/user/profile/header.php:67
+msgid "Upload Video"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:569
+msgid "Use comma to separate tags"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:165
+msgid "User ID was not found"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:429
+msgid "User Profile"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:517
+msgid "Video Description"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:558
+msgid "Video File"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:377
+msgid "Video Format is not allowed."
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:435
+#: includes/class-jws-streamvid-videos.php:285
+msgid "Video has been created successfully."
+msgstr ""
+
+#: public/user/profile/favorites.php:119
+msgid "Video I Liked"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:571
+msgid "Video Thumbnail"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:510
+msgid "Video Title"
+msgstr ""
+
+#: includes/class-jws-streamvid-livevideo.php:344
+#: includes/class-jws-streamvid-videos.php:190
+msgid "Video title is required."
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:565
+#: includes/class-jws-streamvid-videos.php:735
+msgid "Video URL or Embed"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:297
+#: includes/class-jws-streamvid-post.php:354
+#: includes/class-jws-streamvid-post.php:355
+#: includes/class-jws-streamvid-post.php:361
+#: includes/class-jws-streamvid-playlist.php:579
+msgid "Videos"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:401
+msgid "Videos has been set up successfully"
+msgstr ""
+
+#: includes/class-jws-streamvid-playlist.php:61
+msgid "Videos Playlists"
+msgstr ""
+
+#: includes/class-jws-streamvid-post.php:568
+#: includes/class-jws-streamvid-post.php:614
+msgid "View discussions"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:52
+msgid "Views"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:289
+#: includes/function_template.php:308
+msgid "Watchlist"
+msgstr ""
+
+#: includes/function_template.php:309
+msgid "Watchlisted"
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:112
+#: includes/class-jws-streamvid-videos.php:114
+msgid "Year"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:542
+msgid "You do not have access."
+msgstr ""
+
+#: includes/class-jws-streamvid-videos.php:778
+#: includes/class-jws-streamvid-playlist.php:87
+#: includes/class-jws-streamvid-playlist.php:172
+#: includes/class-jws-streamvid-playlist.php:448
+#: includes/class-jws-streamvid-playlist.php:748
+msgid "You do not have permission to add post to this collection"
+msgstr ""
+
+#: public/user/profile/favorites.php:16
+msgid "You have not liked any posts yet."
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:117
+#: includes/class-jws-streamvid-dashboard.php:196
+msgid "You need to login to use this feature."
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:179
+#: includes/class-jws-streamvid-dashboard.php:293
+msgid "Your information has been updated"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:164
+msgid "Your Subscriptions"
+msgstr ""
+
+#: includes/class-jws-streamvid-dashboard.php:392
+msgid "Zipcode"
+msgstr ""

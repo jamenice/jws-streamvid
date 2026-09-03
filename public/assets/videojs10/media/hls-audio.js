@@ -1,0 +1,2 @@
+import{t as e}from"../custom-media-element-e6Nif43_.js";import{i as t}from"../context-C2rsoDxk.js";import{t as n}from"../media-attach-mixin-DLTjoHUr.js";import{t as r}from"../media-Beg0xqgU.js";var i=class extends n(e(`audio`,r)){},a=class extends i{static{this.tagName=`hls-audio`}};t(a);export{a as HlsAudioElement};
+//# sourceMappingURL=hls-audio.js.map

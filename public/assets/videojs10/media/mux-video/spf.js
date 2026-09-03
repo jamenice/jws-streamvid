@@ -1,0 +1,2 @@
+import{t as e}from"../../custom-media-element-e6Nif43_.js";import{i as t}from"../../context-C2rsoDxk.js";import{t as n}from"../../media-DCEt4ca_.js";import{t as r}from"../../media-attach-mixin-DLTjoHUr.js";import{t as i}from"../../adapter-CkR-bkVZ.js";import{t as a}from"../../mixin-BXfRWfYu.js";const o=i(n),s=a(r(e(`video`,class extends o{})));var c=class extends s{},l=class extends c{static{this.tagName=`mux-video`}};t(l);export{l as MuxVideoElement};
+//# sourceMappingURL=spf.js.map

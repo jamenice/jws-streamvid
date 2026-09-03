@@ -1,0 +1,2 @@
+import{c as e,u as t}from"./predicate-LbFu-fPH.js";function n(r,i){if(Object.is(r,i))return!0;if(Array.isArray(r)||Array.isArray(i))return Array.isArray(r)&&Array.isArray(i)&&r.length===i.length&&r.every((e,t)=>n(e,i[t]));if(!e(r)||!e(i))return!1;let a=Object.keys(r).filter(e=>!t(r[e])),o=Object.keys(i).filter(e=>!t(i[e]));return a.length===o.length&&a.every(e=>n(r[e],i[e]))}export{n as t};
+//# sourceMappingURL=deep-equal-CcwdHo6t.js.map

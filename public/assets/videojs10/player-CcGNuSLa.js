@@ -1,0 +1,2 @@
+import{i as e}from"./context-C2rsoDxk.js";import{o as t,t as n}from"./create-player-B1eHxSTn.js";const{PlayerElement:r,PlayerController:i}=n({features:t});var a=class extends r{static{this.tagName=`live-audio-player`}};e(a);
+//# sourceMappingURL=player-CcGNuSLa.js.map

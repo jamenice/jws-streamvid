@@ -1,0 +1,282 @@
+/**
+ * StreamVid — Video.js 10 engine.
+ *
+ * The v10 packaged skin ships its own stylesheet inside the ES module bundle,
+ * so this file does only the two things the bundle cannot know about: fit the
+ * player into the theme's ratio box, and map the theme's colours onto the
+ * skin's documented custom properties.
+ *
+ * Nothing here is loaded while the legacy Video.js 7 engine is selected.
+ */
+
+/* -------------------------------------------------------------------------- *
+ * Layout
+ *
+ * .videos_player is a padding-ratio box (.ratio_16x9 and friends), and the
+ * theme absolutely positions .jws_player inside it. That rule cannot reach
+ * <video-player>: packaged skins make it `display: contents`, so it has no box
+ * to position. The skin element is the real layout surface, so size that.
+ * -------------------------------------------------------------------------- */
+
+.videos_player video-player.jws_player_v10 {
+    display: contents;
+}
+
+.videos_player video-player.jws_player_v10 > video-skin {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/*
+ * Embed-backed media elements need an explicit box.
+ *
+ * The skin sizes the media it knows about: a native <video>, and the adapters
+ * that are `display: contents` (hlsjs-video among them) whose inner <video>
+ * lands in the skin's layout and gets picked up by the same rule. The
+ * iframe-backed adapters are neither — youtube-video is a plain inline-block, so
+ * it keeps the 300x150 an iframe defaults to and sits in the corner of the
+ * player. Give them the box the skin would have given a <video>.
+ */
+.videos_player video-player.jws_player_v10 youtube-video,
+.videos_player video-player.jws_player_v10 vimeo-video,
+.videos_player video-player.jws_player_v10 twitch-video,
+.videos_player video-player.jws_player_v10 tiktok-video,
+.videos_player video-player.jws_player_v10 cloudflare-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* The theme fades #videos_player out during an AJAX swap. That id is on the
+   boxless <video-player>, so move the fade onto the skin. */
+.videos_player.loading video-player.jws_player_v10 > video-skin {
+    opacity: 0;
+}
+
+/*
+ * Click shield during startup.
+ *
+ * The skin and the media adapter register from two different modules, so the
+ * play button can upgrade while the store still has nothing attached — clicking
+ * in that window throws `StoreError: NO_TARGET`. .vjs-waiting is on the wrapper
+ * from the server and jws_player_v10.js only drops it once the media element has
+ * actually registered, which also covers the case where the adapter never
+ * arrives at all.
+ *
+ * This has to be a shield rather than `pointer-events: none` on the skin: the
+ * skin's own controls set `pointer-events: auto`, and a descendant re-enables
+ * hit testing no matter what an ancestor said. A pseudo-element on the wrapper
+ * sits above the whole skin and cannot be argued with. ::before is already spent
+ * on the theme's aspect-ratio box, so this is ::after.
+ */
+.videos_player.vjs-waiting::after {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: block;
+    content: "";
+}
+
+/* -------------------------------------------------------------------------- *
+ * Advertising (Google IMA)
+ *
+ * Two layers over the player: the ad video underneath, and IMA's own UI (skip
+ * button, countdown, click-through) above it. Both stay out of the way entirely
+ * unless a break is on screen — an ad container left visible after the break
+ * swallows clicks meant for the player.
+ * -------------------------------------------------------------------------- */
+
+.videos_player .jws-v10-ad-video,
+.videos_player .jws-v10-ad-container {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.videos_player .jws-v10-ad-video {
+    z-index: 30;
+    background: #000000;
+    object-fit: contain;
+}
+
+.videos_player .jws-v10-ad-container {
+    z-index: 31;
+}
+
+.videos_player.jws-v10-ad-playing .jws-v10-ad-video,
+.videos_player.jws-v10-ad-playing .jws-v10-ad-container {
+    display: block;
+}
+
+/* The skin's controls would otherwise sit over the ad and let the viewer scrub
+   or pause content that is not on screen. */
+.videos_player.jws-v10-ad-playing video-player.jws_player_v10 > video-skin {
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Player that could not load at all — a blocked CDN, a blocked embed host. */
+.videos_player .jws-v10-error {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    background: #181818;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Theme colours
+ *
+ * Only documented `--media-*` properties — anything else inside a packaged skin
+ * is private and can change between beta releases.
+ * -------------------------------------------------------------------------- */
+
+.videos_player video-player.jws_player_v10 {
+    --media-accent-color: var(--btn-bgcolor3, #8e61ff);
+    --media-accent-text-color: var(--btn-color, #ffffff);
+    --media-focus-ring-color: var(--btn-bgcolor3, #8e61ff);
+    --media-object-fit: contain;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Corner radius
+ *
+ * Single source of truth for both places the radius has to be applied: the
+ * pre-upgrade rule below, and the shadow-root override in jws_player_v10.js,
+ * which reads this property off the player element.
+ *
+ * The skin's own --media-container-border-radius cannot be set from here: it is
+ * re-declared on `.media-default-skin` inside the shadow root, and a local
+ * declaration beats an inherited one. Hence the JS override.
+ * -------------------------------------------------------------------------- */
+
+.videos_player video-player.jws_player_v10 {
+    --jws-player-radius: 10px;
+}
+
+/* Full-bleed banner layout — square corners. */
+.jws-player-global .videos_player video-player.jws_player_v10 {
+    --jws-player-radius: 0px;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Before <video-skin> upgrades
+ *
+ * The skin only exists once its ES module has loaded — a second or more on a
+ * cold cache. Until then <video-skin> is an unknown element and its light-DOM
+ * children render raw: the poster paints at its natural size, square, and
+ * overflowing the ratio box, and then snaps into a rounded player the moment
+ * the module lands. `:defined` is what makes that window addressable, and doing
+ * it in CSS means no JS has to win a race against first paint.
+ * -------------------------------------------------------------------------- */
+
+.videos_player video-player.jws_player_v10 > video-skin:not(:defined) {
+    border-radius: var(--jws-player-radius);
+    background: #000000;
+}
+
+/* The media element has no business rendering before the player owns it. */
+.videos_player video-player.jws_player_v10 > video-skin:not(:defined) > * {
+    display: none;
+}
+
+.videos_player video-player.jws_player_v10 > video-skin:not(:defined) > img[slot="poster"] {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Resume prompt
+ *
+ * The legacy jws skin drew this from inside the player. v10's packaged skin is
+ * a closed shadow root, so it sits over the player instead.
+ * -------------------------------------------------------------------------- */
+
+.videos_player .jws-v10-resume {
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 90px;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    max-width: calc(100% - 40px);
+    margin: 0 20px;
+    padding: 14px 18px;
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 20px;
+    background: rgba(0, 0, 0, 0.78);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.videos_player .jws-v10-resume__label {
+    margin-inline-end: 4px;
+}
+
+.videos_player .jws-v10-resume button {
+    padding: 8px 16px;
+    color: var(--btn-color, #ffffff);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 16px;
+    background: var(--btn-bgcolor3, #8e61ff);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.videos_player .jws-v10-resume button.jws-v10-resume__restart {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.videos_player .jws-v10-resume button:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+
+    .videos_player .jws-v10-resume {
+        bottom: 70px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    /*
+     * Stacked on a narrow screen: the label claims a whole row, which pushes
+     * both buttons onto the next one. The container already wraps, so this is
+     * the whole of it — no separate flex-direction, which would put the two
+     * buttons under each other as well.
+     */
+    .videos_player .jws-v10-resume__label {
+        flex: 0 0 100%;
+        margin-inline-end: 0;
+    }
+
+    .videos_player .jws-v10-resume button {
+        /* Share the row evenly rather than hugging their text. */
+        flex: 1 1 0;
+        padding: 8px 12px;
+    }
+}

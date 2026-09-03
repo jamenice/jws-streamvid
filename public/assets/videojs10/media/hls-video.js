@@ -1,0 +1,2 @@
+import{t as e}from"../custom-media-element-e6Nif43_.js";import{i as t}from"../context-C2rsoDxk.js";import{t as n}from"../media-DCEt4ca_.js";import{t as r}from"../media-attach-mixin-DLTjoHUr.js";var i=class extends r(e(`video`,n)){},a=class extends i{static{this.tagName=`hls-video`}};t(a);export{a as HlsVideoElement};
+//# sourceMappingURL=hls-video.js.map

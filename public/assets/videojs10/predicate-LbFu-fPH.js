@@ -1,0 +1,2 @@
+function e(e){return typeof e==`string`}function t(e){return typeof e==`number`}function n(e){return typeof e==`boolean`}function r(e){return typeof e==`function`}function i(e){return e===null}function a(e){return e===void 0}function o(e){return e==null}function s(e){return typeof e==`object`&&!!e}function c(e,t){return s(e)?t.every(t=>r(e[t])):!1}function l(e){if(!s(e))return!1;let t=Object.getPrototypeOf(e);return t===null||t===Object.prototype}export{i as a,l as c,o as i,e as l,n,t as o,r,s,c as t,a as u};
+//# sourceMappingURL=predicate-LbFu-fPH.js.map

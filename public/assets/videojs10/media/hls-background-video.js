@@ -1,0 +1,2 @@
+import{i as e}from"../context-C2rsoDxk.js";import{t}from"../media-DhUxesbS.js";var n=class extends t{static{this.tagName=`hls-background-video`}};e(n);export{n as HlsBackgroundVideoElement};
+//# sourceMappingURL=hls-background-video.js.map
