@@ -88,11 +88,16 @@ $bypass    = Jws_Drama_Wallet::membership_unlocks_all( get_current_user_id() );
 			?>
 		</h1>
 
-		<?php $genres = Jws_Drama_Templates::genre_names( $drama_id, 5 ); ?>
-		<?php if ( $genres ) : ?>
-			<div class="sv-short-tags">
-				<?php foreach ( $genres as $genre ) : ?>
-					<span class="sv-short-tag"><?php echo esc_html( $genre ); ?></span>
+		<?php $genre_terms = Jws_Drama_Templates::genre_terms( $drama_id, 5 ); ?>
+		<?php if ( $genre_terms ) : ?>
+			<div class="jws-category-extra">
+				<?php foreach ( $genre_terms as $genre_term ) :
+					$genre_link = get_term_link( $genre_term );
+					if ( is_wp_error( $genre_link ) ) {
+						continue;
+					}
+				?>
+					<a href="<?php echo esc_url( $genre_link ); ?>" rel="tag"><?php echo esc_html( $genre_term->name ); ?></a>
 				<?php endforeach; ?>
 			</div>
 		<?php endif; ?>

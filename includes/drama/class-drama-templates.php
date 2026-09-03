@@ -202,10 +202,10 @@ class Jws_Drama_Templates {
 		return $thumb ? $thumb : '';
 	}
 
-	/** Genre-ish labels shown under a card title, e.g. "Royalty | Shifter". */
-	public static function genre_names( $drama_id, $limit = 3 ) {
+	/** Genre-ish terms shown as links, e.g. the tag list on the watch screen. */
+	public static function genre_terms( $drama_id, $limit = 3 ) {
 
-		$names = array();
+		$terms_by_id = array();
 
 		foreach ( array( 'genres', 'topics', Jws_Drama_Post_Types::TAX_TAG ) as $taxonomy ) {
 
@@ -217,16 +217,22 @@ class Jws_Drama_Templates {
 
 			if ( $terms && ! is_wp_error( $terms ) ) {
 				foreach ( $terms as $term ) {
-					$names[ $term->term_id ] = $term->name;
+					$terms_by_id[ $term->term_id ] = $term;
 				}
 			}
 
-			if ( count( $names ) >= $limit ) {
+			if ( count( $terms_by_id ) >= $limit ) {
 				break;
 			}
 		}
 
-		return array_slice( array_values( $names ), 0, $limit );
+		return array_slice( array_values( $terms_by_id ), 0, $limit );
+	}
+
+	/** Genre-ish labels shown under a card title, e.g. "Royalty | Shifter". */
+	public static function genre_names( $drama_id, $limit = 3 ) {
+
+		return wp_list_pluck( self::genre_terms( $drama_id, $limit ), 'name' );
 	}
 
 	/**
