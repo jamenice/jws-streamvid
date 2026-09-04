@@ -33,6 +33,7 @@ class Jws_Drama_Fields {
 		}
 
 		$this->register_drama_group();
+		$this->register_drama_side_group();
 		$this->register_episode_group();
 	}
 
@@ -70,19 +71,6 @@ class Jws_Drama_Fields {
 			'parent' => $g,
 		) );
 
-		/* Short drama is shot vertically; the landscape thumbnail the rest of
-		   the site uses is the wrong crop for a drama card. */
-		acf_add_local_field( array(
-			'key'          => $k . 'poster',
-			'label'        => 'Vertical Poster (9:16)',
-			'name'         => 'drama_poster',
-			'type'         => 'image',
-			'return_format' => 'array',
-			'preview_size' => 'medium',
-			'instructions' => 'Portrait artwork used on drama cards and the player. Falls back to the featured image when empty.',
-			'parent'       => $g,
-		) );
-
 		acf_add_local_field( array(
 			'key'     => $k . 'status',
 			'label'   => 'Status',
@@ -116,6 +104,81 @@ class Jws_Drama_Fields {
 			'parent'       => $g,
 		) );
 
+		/* Replaces the native genres/countries/ages/drama_tag sidebar boxes,
+		   which Jws_Drama_Admin::remove_taxonomy_metaboxes() hides — same
+		   "Taxonomies" tab pattern the theme uses for movies. */
+		acf_add_local_field( array(
+			'key'    => $k . 'tab_taxonomies',
+			'label'  => 'Taxonomies',
+			'name'   => 'drama_tab_taxonomies',
+			'type'   => 'tab',
+			'parent' => $g,
+		) );
+
+		acf_add_local_field( array(
+			'key'           => $k . 'genres',
+			'label'         => 'Genres',
+			'name'          => 'drama_genres',
+			'type'          => 'taxonomy',
+			'taxonomy'      => 'genres',
+			'field_type'    => 'multi_select',
+			'add_term'      => true,
+			'save_terms'    => true,
+			'load_terms'    => true,
+			'return_format' => 'id',
+			'multiple'      => 1,
+			'allow_null'    => 1,
+			'parent'        => $g,
+		) );
+
+		acf_add_local_field( array(
+			'key'           => $k . 'countries',
+			'label'         => 'Countries',
+			'name'          => 'drama_countries',
+			'type'          => 'taxonomy',
+			'taxonomy'      => 'countries',
+			'field_type'    => 'multi_select',
+			'add_term'      => true,
+			'save_terms'    => true,
+			'load_terms'    => true,
+			'return_format' => 'id',
+			'multiple'      => 1,
+			'allow_null'    => 1,
+			'parent'        => $g,
+		) );
+
+		acf_add_local_field( array(
+			'key'           => $k . 'ages',
+			'label'         => 'Ages',
+			'name'          => 'drama_ages',
+			'type'          => 'taxonomy',
+			'taxonomy'      => 'ages',
+			'field_type'    => 'select',
+			'add_term'      => true,
+			'save_terms'    => true,
+			'load_terms'    => true,
+			'return_format' => 'id',
+			'multiple'      => 0,
+			'allow_null'    => 1,
+			'parent'        => $g,
+		) );
+
+		acf_add_local_field( array(
+			'key'           => $k . 'tags',
+			'label'         => 'Drama Tags',
+			'name'          => 'drama_tags',
+			'type'          => 'taxonomy',
+			'taxonomy'      => Jws_Drama_Post_Types::TAX_TAG,
+			'field_type'    => 'multi_select',
+			'add_term'      => true,
+			'save_terms'    => true,
+			'load_terms'    => true,
+			'return_format' => 'id',
+			'multiple'      => 1,
+			'allow_null'    => 1,
+			'parent'        => $g,
+		) );
+
 		acf_add_local_field( array(
 			'key'    => $k . 'tab_coin',
 			'label'  => 'Unlocking',
@@ -142,6 +205,43 @@ class Jws_Drama_Fields {
 			'min'          => 0,
 			'instructions' => 'Cost to unlock one episode past the free ones. Leave empty to use the site default from Jws Settings → Drama Coins.',
 			'parent'       => $g,
+		) );
+	}
+
+	/* Sidebar group, same meta key movies uses (`featured_image_two`), so the
+	   shared hover/backdrop image helpers that read it via get_post_meta()
+	   work for drama without a special case. Placed in the side column,
+	   above the native Featured image box, mirroring the theme's
+	   "Movies Setting Side" group. */
+	private function register_drama_side_group() {
+
+		$k = 'field_drama_side_';
+
+		acf_add_local_field_group( array(
+			'key'    => 'jws_drama_metabox_side',
+			'title'  => 'Drama Setting Side',
+			'fields' => array(
+				array(
+					'key'           => $k . 'featured_image_two',
+					'label'         => 'Image',
+					'name'          => 'featured_image_two',
+					'type'          => 'image',
+					'return_format' => 'id',
+					'preview_size'  => 'full',
+					'library'       => 'all',
+				),
+			),
+			'position'   => 'side',
+			'menu_order' => 0,
+			'location'   => array(
+				array(
+					array(
+						'param'    => 'post_type',
+						'operator' => '==',
+						'value'    => Jws_Drama_Post_Types::DRAMA,
+					),
+				),
+			),
 		) );
 	}
 

@@ -5,7 +5,7 @@ if( ! defined('ABSPATH' ) ){
 
 $user_id = get_current_user_id();
 $video_progress_data = Jws_History::get_all($user_id);
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos', 'drama'];
 
 
 $current_filter = isset($_GET['history_filter']) ? sanitize_text_field($_GET['history_filter']) : 'movies';
@@ -15,7 +15,7 @@ $current_filter = isset($_GET['history_filter']) ? sanitize_text_field($_GET['hi
    <div class="history-tabs jws-scrollbar-x">
     <?php foreach($valid_post_types as $type): ?>
         <a href="#" data-type="<?php echo esc_attr($type); ?>" class="history-tab<?php if($current_filter==$type) echo ' active'; ?>">
-            <?php echo esc_html(ucwords(str_replace('_',' ', $type))); ?>
+            <?php echo esc_html( jws_profile_tab_label( $type ) ); ?>
         </a>
     <?php endforeach; ?>
 </div>

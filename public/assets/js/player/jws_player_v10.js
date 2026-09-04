@@ -119,6 +119,10 @@
                 data.tv_shows = streamvid_script.episodes_tv_shows;
             }
 
+            if (typeof streamvid_script !== 'undefined' && streamvid_script.is_drama_episode) {
+                data.drama = streamvid_script.episodes_drama;
+            }
+
             $.ajax({
                 type: 'POST',
                 dataType: 'json',
@@ -343,7 +347,7 @@
      * the skin's controls are shadow content, and a document stylesheet cannot
      * reach them.
      */
-    function injectSkinStyles(root, cornerRadius) {
+    function injectSkinStyles(root, cornerRadius, hideFullscreen) {
 
         if (root.getElementById('jws-v10-skin-style')) {
             return;
@@ -384,7 +388,19 @@
             'max-width:110px;max-height:30px;margin-inline-start:6px;object-fit:contain;pointer-events:none}' +
             /* The control bar gets tight on phones; the legacy skin dropped the
                logo there rather than crowding the buttons. */
-            '@media (max-width:767px){.media-button-group img.jws-v10-logo{display:none}}';
+            '@media (max-width:767px){.media-button-group img.jws-v10-logo{display:none}}' +
+            /* <media-poster>'s <slot name="poster"> falls back to its own bare
+               <img>, with no src, whenever we skip rendering img[slot="poster"]
+               for a video with no poster. Un-styled, that empty <img> still
+               takes up the poster's 100%x100% box and shows as a border/outline
+               over the video. It's only ever this fallback: a real poster comes
+               from our own <img slot="poster" src="..."> and always has a src. */
+            'media-poster img:not([src]){display:none}' +
+            /* Drama short is a vertical, single-episode-at-a-time feed — a
+               fullscreen toggle is redundant there and the icon just crowds
+               the compact control bar, so the skin's own button is hidden
+               rather than removing it from the packaged markup. */
+            (hideFullscreen ? 'media-fullscreen-button{display:none!important}' : '');
 
         root.appendChild(style);
     }
@@ -412,7 +428,7 @@
                (.jws-player-global gets square corners) in the stylesheet. */
             var radius = getComputedStyle(playerEl).getPropertyValue('--jws-player-radius').trim();
 
-            injectSkinStyles(root, radius || '10px');
+            injectSkinStyles(root, radius || '10px', !!playerEl.closest('.sv-short-player'));
             return;
         }
 
@@ -630,6 +646,14 @@
         var adsManager = null;
         var started = false;
 
+        /*
+         * True from the moment ads are requested until the first break has
+         * either taken the screen or been ruled out. It is the only window in
+         * which this code holds the content back; after it, IMA owns the
+         * pausing and resuming.
+         */
+        var holdingForFirstBreak = false;
+
         var adContainerEl = document.createElement('div');
         adContainerEl.className = 'jws-v10-ad-container';
 
@@ -644,9 +668,131 @@
         function adWidth() { return wrapEl.offsetWidth || 640; }
         function adHeight() { return wrapEl.offsetHeight || 360; }
 
+        /* ------------------------------------------------------------------ */
+        /* Ad controls                                                         */
+        /* ------------------------------------------------------------------ */
+
+        /*
+         * IMA draws only the skip button and whatever click-through the creative
+         * carries; play/pause, sound and fullscreen have always been the
+         * publisher's to provide. The legacy engine got them from videojs-ima,
+         * which is not ported to v10 — and because the skin is hidden for the
+         * duration of a break (it would otherwise scrub content that is not on
+         * screen), the viewer was left with nothing but Skip.
+         */
+        var $adBar = $(
+            '<div class="jws-v10-ad-bar">' +
+                '<button type="button" class="jws-v10-ad-btn jws-v10-ad-toggle"></button>' +
+                '<button type="button" class="jws-v10-ad-btn jws-v10-ad-mute"></button>' +
+                '<span class="jws-v10-ad-count"></span>' +
+                '<button type="button" class="jws-v10-ad-btn jws-v10-ad-fs"></button>' +
+            '</div>'
+        );
+
+        var adPaused = false;
+        var adMuted = media.muted;
+        var countTimer = null;
+
+        function adIcon(name) {
+            return '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentcolor" aria-hidden="true">' + name + '</svg>';
+        }
+
+        var AD_ICONS = {
+            play: '<path d="M8 5v14l11-7z"></path>',
+            pause: '<path d="M6 5h4v14H6zm8 0h4v14h-4z"></path>',
+            sound: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"></path>',
+            muted: '<path d="M3 9v6h4l5 5V4L7 9H3zm18.6-.6-1.4-1.4-2.2 2.2-2.2-2.2-1.4 1.4 2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4-2.2-2.2z"></path>',
+            enter: '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path>',
+            exit: '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"></path>'
+        };
+
+        function fullscreenEl() {
+            return document.fullscreenElement || document.webkitFullscreenElement || null;
+        }
+
+        function syncAdBar() {
+            $adBar.find('.jws-v10-ad-toggle').html(adIcon(adPaused ? AD_ICONS.play : AD_ICONS.pause));
+            $adBar.find('.jws-v10-ad-mute').html(adIcon(adMuted ? AD_ICONS.muted : AD_ICONS.sound));
+            $adBar.find('.jws-v10-ad-fs').html(adIcon(fullscreenEl() ? AD_ICONS.exit : AD_ICONS.enter));
+        }
+
+        function drawCountdown() {
+
+            var left = state.remainingTime();
+            var $out = $adBar.find('.jws-v10-ad-count');
+            var label = (typeof streamvid_script !== 'undefined' && streamvid_script.ad_label) || 'Ad';
+
+            // -1 is the SDK saying it does not know — a live or unmeasured pod.
+            $out.text(left >= 0 ? label + ' · ' + formatTime(left) : label);
+        }
+
+        $adBar.on('click', '.jws-v10-ad-toggle', function () {
+
+            if (!adsManager) {
+                return;
+            }
+
+            try {
+                if (adPaused) {
+                    adsManager.resume();
+                } else {
+                    adsManager.pause();
+                }
+            } catch (e) { /* the break ended under us */ }
+        });
+
+        $adBar.on('click', '.jws-v10-ad-mute', function () {
+
+            adMuted = !adMuted;
+
+            try {
+                if (adsManager) {
+                    adsManager.setVolume(adMuted ? 0 : 1);
+                }
+            } catch (e) { }
+
+            // Keep the content in step, so unmuting the ad does not hand back a
+            // silent film when the break ends.
+            media.muted = adMuted;
+
+            syncAdBar();
+        });
+
+        $adBar.on('click', '.jws-v10-ad-fs', function () {
+
+            var current = fullscreenEl();
+
+            try {
+                if (current) {
+                    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+                } else {
+                    (wrapEl.requestFullscreen || wrapEl.webkitRequestFullscreen).call(wrapEl);
+                }
+            } catch (e) { }
+        });
+
         function showAdUi() {
+
             state.active = true;
             $wrap.addClass('jws-v10-ad-playing');
+
+            /*
+             * Parented to whatever is actually fullscreen, the way the episode
+             * panel is: in fullscreen the element on screen is inside the skin's
+             * shadow root, and a bar left in .videos_player would simply not be
+             * rendered.
+             */
+            var host = fullscreenEl() || wrapEl;
+
+            if ($adBar[0].parentElement !== host) {
+                host.appendChild($adBar[0]);
+            }
+
+            syncAdBar();
+            drawCountdown();
+
+            clearInterval(countTimer);
+            countTimer = setInterval(drawCountdown, 250);
         }
 
         /*
@@ -659,6 +805,11 @@
         function hideAdUi() {
             state.active = false;
             $wrap.removeClass('jws-v10-ad-playing');
+
+            clearInterval(countTimer);
+            countTimer = null;
+
+            $adBar.detach();
         }
 
         function destroyAds() {
@@ -670,6 +821,7 @@
 
             $(adContainerEl).remove();
             $(adVideoEl).remove();
+            $adBar.remove();
         }
 
         state.destroy = destroyAds;
@@ -685,7 +837,18 @@
         }
 
         $(window).on('resize.jwsV10Ads', resizeAds);
-        $(document).on('fullscreenchange.jwsV10Ads webkitfullscreenchange.jwsV10Ads', resizeAds);
+
+        $(document).on('fullscreenchange.jwsV10Ads webkitfullscreenchange.jwsV10Ads', function () {
+
+            resizeAds();
+
+            /* Entering or leaving fullscreen changes which element is on
+               screen, so the bar has to move with it — and its own icon has
+               just gone stale. */
+            if (state.active) {
+                showAdUi();
+            }
+        });
 
         function onAdsManagerLoaded(event) {
 
@@ -716,10 +879,29 @@
 
             adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function (e) {
                 state.adCount++;
+                adPaused = false;
+                syncAdBar();
                 $(document.body).trigger('jws_player_v10_ad_started', [playerEl, e.getAd && e.getAd()]);
             });
 
+            /* The SDK pauses an ad on its own too — a click-through opening a
+               new tab is the usual one — so the button follows the manager
+               rather than assuming its own clicks are the only source. */
+            adsManager.addEventListener(google.ima.AdEvent.Type.PAUSED, function () {
+                adPaused = true;
+                syncAdBar();
+            });
+
+            adsManager.addEventListener(google.ima.AdEvent.Type.RESUMED, function () {
+                adPaused = false;
+                syncAdBar();
+            });
+
+            // The break starts at whatever the content was set to.
+            try { adsManager.setVolume(adMuted ? 0 : 1); } catch (e) { }
+
             adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, function () {
+                holdingForFirstBreak = false;
                 showAdUi();
                 try { media.pause(); } catch (e) { }
             });
@@ -737,6 +919,7 @@
              * container up over the video.
              */
             adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, function () {
+                holdingForFirstBreak = false;
                 destroyAds();
                 if (!media.ended) {
                     media.play();
@@ -748,6 +931,35 @@
                 adsManager.start();
             } catch (e) {
                 onAdError(e);
+                return;
+            }
+
+            /*
+             * A VMAP whose breaks are all midrolls (or a lone postroll) opens
+             * with no ad at all, and the SDK says nothing about it — no
+             * CONTENT_PAUSE_REQUESTED, so nothing arrives to undo the pause
+             * this flow took in order to make the ad request, and the video
+             * simply never starts.
+             *
+             * The cue points say so outright: they are the break offsets, and
+             * a preroll is the offset 0 among them. No zero means the content
+             * is meant to be playing right now.
+             *
+             * The empty case is deliberately left alone: a plain VAST tag has
+             * no cue points and IS the preroll, so it must be waited for.
+             */
+            var cuePoints = [];
+
+            try {
+                cuePoints = adsManager.getCuePoints() || [];
+            } catch (e) { /* not a VMAP; treat as a preroll */ }
+
+            if (cuePoints.length && cuePoints.indexOf(0) === -1) {
+                holdingForFirstBreak = false;
+
+                if (!state.active && !media.ended) {
+                    media.play();
+                }
             }
         }
 
@@ -770,6 +982,7 @@
 
             window.console && console.warn('[StreamVid] IMA ad error, continuing with content:', detail);
 
+            holdingForFirstBreak = false;
             destroyAds();
             media.play();
         }
@@ -796,6 +1009,7 @@
             }
 
             started = true;
+            holdingForFirstBreak = true;
 
             try {
                 displayContainer.initialize();
@@ -820,6 +1034,19 @@
          * The skin's own play button is the gesture. Letting the content start and
          * pausing it back is what videojs-contrib-ads did too — it keeps every
          * entry point (big play button, hotkey, autoplay) on one path.
+         *
+         * Holding the content back is only right while it is still unknown
+         * whether an ad is about to take the screen. Once that first break has
+         * resolved one way or the other, IMA drives the content itself through
+         * CONTENT_PAUSE/RESUME_REQUESTED, and this handler must keep its hands
+         * off — resuming a break ends in media.play(), which lands right back
+         * here, and pausing there paused the very content it had just been
+         * asked to resume. startAds() being a no-op the second time round then
+         * left nothing at all to un-pause it: the video never played.
+         *
+         * That is why midrolls broke outright while a lone preroll sometimes
+         * recovered — ALL_ADS_COMPLETED fires only once no break is left, and
+         * its own media.play() happened to rescue that one case.
          */
         media.addEventListener('play', function () {
 
@@ -827,15 +1054,30 @@
                 return;
             }
 
-            try { media.pause(); } catch (e) { }
-            startAds();
+            if (!started) {
+                try { media.pause(); } catch (e) { }
+                startAds();
+                return;
+            }
+
+            // Request already away; hold only until the first break resolves.
+            if (holdingForFirstBreak) {
+                try { media.pause(); } catch (e) { }
+            }
         });
 
-        // Autoplay means no gesture is coming; the muted attribute is what makes
-        // an unprompted ad legal.
-        if (config.autoplay) {
-            startAds();
-        }
+        /*
+         * Autoplay no longer requests ads up front.
+         *
+         * An unmuted autoplay is refused by every current browser, and the
+         * refusal is the point — the viewer presses play instead. Requesting
+         * ads on the strength of an autoplay that may never happen put a break
+         * on screen in front of a video that was still sitting on its poster.
+         *
+         * The `play` handler above is the one path that matters, and it is
+         * reached the same way whether playback started by itself or by a
+         * click, so an autoplay that IS allowed still gets its pre-roll.
+         */
 
         return state;
     }

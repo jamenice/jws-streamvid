@@ -69,6 +69,25 @@ if ( 'file' === $videos_type ) {
 	}
 }
 
+/* Falls back to the site-wide "Drama Short Default Url" (Jws Settings →
+   Video Options → Video Default) when this episode never got its own video,
+   so a half-imported or demo series still plays something instead of
+   showing the locked panel below. */
+if ( empty( $video_url ) && function_exists( 'jws_theme_get_option' ) ) {
+
+	$video_url = jws_theme_get_option( 'video_player_default_drama_url' );
+
+	if ( function_exists( 'jws_is_youtube_url' ) && jws_is_youtube_url( $video_url ) ) {
+		$type = 'video/youtube';
+	} elseif ( function_exists( 'jws_is_vimeo_url' ) && jws_is_vimeo_url( $video_url ) ) {
+		$type = 'video/vimeo';
+	} elseif ( function_exists( 'jws_check_m3u8_video' ) && jws_check_m3u8_video( $video_url ) ) {
+		$type = 'application/x-mpegURL';
+	} else {
+		$type = 'video/mp4';
+	}
+}
+
 if ( function_exists( 'jws_get_security_video_url' ) ) {
 	$video_url = jws_get_security_video_url( $video_url );
 }

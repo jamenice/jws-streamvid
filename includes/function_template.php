@@ -541,7 +541,39 @@ if(!function_exists('jws_favorite_button')) {
     }
 }
 
-if(!function_exists('jws_watchlist_check')) { 
+if(!function_exists('jws_profile_tab_label')) {
+    /**
+     * Label for one post type on the profile's History / Watchlist / Favorites
+     * tab strip.
+     *
+     * Those strips used to title themselves with ucwords(str_replace('_',' ')),
+     * which reads fine for "Tv Shows" but turns the short-drama post type into
+     * plain "Drama" — not what the module is called anywhere else on the
+     * site. Anything not named here keeps the old derivation, so adding a
+     * post type needs no change at all.
+     *
+     * @param string $post_type
+     * @return string
+     */
+    function jws_profile_tab_label($post_type) {
+
+        $labels = array(
+            /* Watching an episode also credits the parent `drama` post (see
+               Jws_Streamvid_Public::history()), the same way a tv_shows
+               episode credits its show — so the History tab here, like the
+               Tv Shows tab, lists series rows, not individual episodes. */
+            'drama' => esc_html__('Drama Short', 'jws_streamvid'),
+        );
+
+        if (isset($labels[$post_type])) {
+            return $labels[$post_type];
+        }
+
+        return ucwords(str_replace('_', ' ', $post_type));
+    }
+}
+
+if(!function_exists('jws_watchlist_check')) {
     
      function jws_watchlist_check($post_id) {
         $user_id = absint(get_current_user_id());
@@ -1191,12 +1223,12 @@ function jws_sign_bcdn_url($url, $securityKey, $expiration_time = 3600, $user_ip
 
 function is_bunnycdn_url($url) {
     $host = parse_url($url, PHP_URL_HOST);
-    return str_ends_with($host, '.b-cdn.net');
+    return $host !== null && str_ends_with($host, '.b-cdn.net');
 }
 
 function is_cloudflare_stream_url($url) {
     $host = parse_url($url, PHP_URL_HOST);
-    return str_contains($host, '.cloudflarestream.com');
+    return $host !== null && str_contains($host, '.cloudflarestream.com');
 }
 
 

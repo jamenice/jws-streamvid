@@ -48,10 +48,10 @@ $more_url = ( class_exists( 'Jws_Streamvid_Profile' ) && ! is_author() )
 	<div class="sv-buy-head">
 		<div class="sv-buy-meta">
 			<?php if ( $price ) : ?>
-				<span><?php echo esc_html__( 'Price:', 'jws_streamvid' ); ?> <span class="sv-coin-ico" aria-hidden="true"></span><strong><?php echo esc_html( number_format_i18n( $price ) ); ?></strong></span>
+				<span><?php echo esc_html__( 'Price:', 'jws_streamvid' ); ?> <?php echo Jws_Drama_Settings::coin_icon_html(); ?><strong><?php echo esc_html( number_format_i18n( $price ) ); ?></strong></span>
 				<span class="sv-buy-sep"></span>
 			<?php endif; ?>
-			<span><?php echo esc_html__( 'Balance:', 'jws_streamvid' ); ?> <span class="sv-coin-ico" aria-hidden="true"></span><strong class="sv-buy-balance"><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></span>
+			<span><?php echo esc_html__( 'Balance:', 'jws_streamvid' ); ?> <?php echo Jws_Drama_Settings::coin_icon_html(); ?><strong class="sv-buy-balance"><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></span>
 		</div>
 		<button type="button" class="sv-buy-close" aria-label="<?php echo esc_attr__( 'Close', 'jws_streamvid' ); ?>"><i class="jws-icon-x"></i></button>
 	</div>
@@ -130,7 +130,7 @@ $more_url = ( class_exists( 'Jws_Streamvid_Profile' ) && ! is_author() )
 							<span class="sv-buy-off"><?php printf( esc_html__( '+%d%%', 'jws_streamvid' ), (int) $package['bonus_percent'] ); ?></span>
 						<?php endif; ?>
 
-						<span class="sv-buy-pack-total"><span class="sv-coin-ico" aria-hidden="true"></span><?php echo esc_html( number_format_i18n( $package['total'] ) ); ?></span>
+						<span class="sv-buy-pack-total"><?php echo Jws_Drama_Settings::coin_icon_html(); ?><?php echo esc_html( number_format_i18n( $package['total'] ) ); ?></span>
 
 						<span class="sv-buy-pack-split">
 							<?php

@@ -21,6 +21,20 @@ class Jws_Drama_Admin {
 
 	const PAGE_EPISODES = 'jws-drama-episodes';
 
+	/**
+	 * The Taxonomies tab in class-drama-fields.php replaces these, the same
+	 * way the theme hides them for movies/tv_shows in template-tags.php.
+	 */
+	public function remove_taxonomy_metaboxes() {
+
+		$drama = Jws_Drama_Post_Types::DRAMA;
+
+		remove_meta_box( 'genresdiv', $drama, 'side' );
+		remove_meta_box( 'countriesdiv', $drama, 'side' );
+		remove_meta_box( 'agesdiv', $drama, 'side' );
+		remove_meta_box( 'tagsdiv-' . Jws_Drama_Post_Types::TAX_TAG, $drama, 'side' );
+	}
+
 	/* ---------------------------------------------------------------------- */
 	/* List tables                                                             */
 	/* ---------------------------------------------------------------------- */
@@ -36,6 +50,7 @@ class Jws_Drama_Admin {
 				$new['drama_episodes'] = esc_html__( 'Episodes', 'jws_streamvid' );
 				$new['drama_unlock']   = esc_html__( 'Free / Coins', 'jws_streamvid' );
 				$new['drama_status']   = esc_html__( 'Status', 'jws_streamvid' );
+				$new['drama_tags']     = esc_html__( 'Tag', 'jws_streamvid' );
 			}
 		}
 
@@ -74,6 +89,29 @@ class Jws_Drama_Admin {
 			case 'drama_status':
 				$status = get_post_meta( $post_id, 'drama_status', true );
 				echo esc_html( 'completed' === $status ? esc_html__( 'Completed', 'jws_streamvid' ) : esc_html__( 'Ongoing', 'jws_streamvid' ) );
+				break;
+
+			case 'drama_tags':
+				$terms = get_the_terms( $post_id, 'drama_tag' );
+
+				if ( empty( $terms ) || is_wp_error( $terms ) ) {
+					echo '—';
+					break;
+				}
+
+				$links = array();
+
+				foreach ( $terms as $term ) {
+
+					$url = add_query_arg(
+						array( 'post_type' => Jws_Drama_Post_Types::DRAMA, 'drama_tag' => $term->slug ),
+						admin_url( 'edit.php' )
+					);
+
+					$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html( $term->name ) . '</a>';
+				}
+
+				echo wp_kses_post( implode( ', ', $links ) );
 				break;
 		}
 	}

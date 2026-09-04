@@ -193,16 +193,10 @@
                 return;
             }
 
-            // A locked chip: switch to that episode's lock panel (title,
-            // breadcrumb and URL all follow) and open the buy panel over it
-            // in the same click, instead of making the viewer land on the
-            // lock screen and then hunt for its Unlock button.
-            if ($(this).hasClass('locked')) {
-                loadEpisode(episodeId, true);
-                buyPanel.open(episodeId);
-                return;
-            }
-
+            // A locked chip: just switch to that episode's lock panel (title,
+            // breadcrumb and URL all follow) — spending coins is only ever
+            // done from an explicit Unlock button (.sv-short-unlock), never
+            // as a side effect of picking an episode from the list.
             loadEpisode(episodeId, true);
         });
 
@@ -239,6 +233,79 @@
             }
 
             (target.requestFullscreen || target.webkitRequestFullscreen).call(target);
+        });
+
+        /* ------------------------------------------------------------------ */
+        /* Stage controls: hidden until tapped, auto-hide after inactivity     */
+        /* ------------------------------------------------------------------ */
+
+        var stageControlsTimer = null;
+
+        function showStageControls() {
+
+            $page.find('.sv-short-stage-controls').addClass('is-visible');
+
+            clearTimeout(stageControlsTimer);
+            stageControlsTimer = setTimeout(function () {
+                $page.find('.sv-short-stage-controls').removeClass('is-visible');
+            }, 4000);
+        }
+
+        /* Delegated on .sv-short-stage rather than its buttons individually:
+           a click on the fullscreen/nav/panel-toggle buttons bubbles up here
+           too (none of their handlers call stopPropagation), so pressing one
+           of them counts as "interacting" and restarts the same 4s timer
+           instead of needing a second listener. */
+        $page.on('click', '.sv-short-stage', function () {
+            showStageControls();
+        });
+
+        /* ------------------------------------------------------------------ */
+        /* Episode panel toggle (mobile: the panel is a fixed sheet over the   */
+        /* stage, closed until asked for)                                     */
+        /* ------------------------------------------------------------------ */
+
+        function setPanelOpen(open) {
+
+            $page.toggleClass('sv-panel-open', open);
+
+            $page.find('.sv-short-panel-toggle')
+                .toggleClass('is-active', open)
+                .attr('aria-expanded', open ? 'true' : 'false');
+        }
+
+        $page.on('click', '.sv-short-panel-toggle', function () {
+            setPanelOpen(!$page.hasClass('sv-panel-open'));
+        });
+
+        // A fixed sheet over the stage needs the usual ways out: tap
+        // anywhere outside it, or press Escape.
+        $(document).on('click', function (event) {
+
+            if (!$page.hasClass('sv-panel-open')) {
+                return;
+            }
+
+            if ($(event.target).closest('.sv-short-panel, .sv-short-panel-toggle').length) {
+                return;
+            }
+
+            setPanelOpen(false);
+        });
+
+        $(document).on('keydown', function (event) {
+            if (event.key === 'Escape' && $page.hasClass('sv-panel-open')) {
+                setPanelOpen(false);
+            }
+        });
+
+        /* The stage — controls included — is replaced wholesale on every
+           episode switch, so the incoming markup always starts as the
+           server rendered it: controls hidden, toggle button unsynced from
+           .sv-panel-open. Bring both back in line with page state. */
+        $(document.body).on('jws_drama_episode_changed', function () {
+            showStageControls();
+            setPanelOpen($page.hasClass('sv-panel-open'));
         });
 
         /* ------------------------------------------------------------------ */

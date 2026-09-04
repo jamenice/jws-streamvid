@@ -53,6 +53,8 @@ class Jws_Streamvid_Post {
 				$archive_page_url = get_permalink( $archive_page_id );
 			} elseif ( is_singular('tv_shows') || is_post_type_archive('tv_shows') || is_tax('tv_shows_cat') || is_tax('tv_shows_tag') ) {
 				$archive_page_url = get_post_type_archive_link('tv_shows');
+			} elseif ( is_singular('drama') || is_singular('drama_ep') || is_post_type_archive('drama') ) {
+				$archive_page_url = get_post_type_archive_link('drama');
 			} else {
 				$archive_page_url = get_post_type_archive_link('movies');
 			}

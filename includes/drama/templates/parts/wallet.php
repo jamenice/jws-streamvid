@@ -28,7 +28,7 @@ $unlocks = Jws_Drama_Wallet::unlock_history( $user_id, 30 );
 	<div class="sv-coin-balance">
 		<span class="sv-coin-balance-label"><?php echo esc_html__( 'Your balance', 'jws_streamvid' ); ?></span>
 		<span class="sv-coin-balance-value">
-			<span class="sv-coin-ico" aria-hidden="true"></span><span class="sv-coin-balance-number"><?php echo esc_html( number_format_i18n( $balance ) ); ?></span>
+			<?php echo Jws_Drama_Settings::coin_icon_html(); ?><span class="sv-coin-balance-number"><?php echo esc_html( number_format_i18n( $balance ) ); ?></span>
 		</span>
 		<?php
 		/*

@@ -611,4 +611,99 @@ class Jws_Drama_Wallet {
 
 		return array( 'success' => true, 'reason' => 'unlocked', 'balance' => $balance );
 	}
+
+	/* ---------------------------------------------------------------------- */
+	/* Checkout access                                                         */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * PMPro's checkout has no login gate of its own — guest checkout (create
+	 * an account inline) is its built-in default, and every VIP plan on this
+	 * site is priced and sold from that one page. A logged-out visitor is
+	 * bounced back to wherever they came from instead, with this site's own
+	 * login popup queued to open there — see print_login_redirect_script().
+	 *
+	 * "Wherever they came from" prefers the referring page (almost always
+	 * the plans page the checkout link was clicked from) over the theme's
+	 * own "Upgrade Premium" page (Theme Options → select-update-level, the
+	 * same page header.php links "Upgrade Premium" to) — home is the last
+	 * resort, for a direct/bookmarked hit with neither.
+	 */
+	public static function block_logged_out_checkout() {
+
+		if ( is_admin() || is_user_logged_in() ) {
+			return;
+		}
+
+		if ( ! function_exists( 'pmpro_is_checkout' ) || ! pmpro_is_checkout() ) {
+			return;
+		}
+
+		$back = wp_get_referer();
+
+		if ( ! $back ) {
+			$update_page = function_exists( 'jws_theme_get_option' ) ? jws_theme_get_option( 'select-update-level' ) : 0;
+			$back        = $update_page ? get_permalink( $update_page ) : '';
+		}
+
+		$back     = $back ? $back : home_url( '/' );
+		$checkout = esc_url_raw( home_url( add_query_arg( array(), wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) );
+
+		wp_safe_redirect( add_query_arg( 'jws_login_redirect', rawurlencode( $checkout ), $back ) );
+		exit;
+	}
+
+	/**
+	 * The other half of block_logged_out_checkout(): once the visitor lands
+	 * back where they came from, this opens the popup itself and points its
+	 * `redirect` field at the checkout URL they were turned away from, so
+	 * signing in sends them straight back to it rather than to the page this
+	 * printed on.
+	 */
+	public static function print_login_redirect_script() {
+
+		if ( empty( $_GET['jws_login_redirect'] ) ) {
+			return;
+		}
+
+		$redirect = esc_url_raw( wp_unslash( $_GET['jws_login_redirect'] ) );
+		?>
+		<script>
+		document.addEventListener( 'DOMContentLoaded', function () {
+
+			var form = document.querySelector( '.jws-form-login-popup form' );
+
+			if ( ! form ) {
+				return;
+			}
+
+			var field = form.querySelector( 'input[name="redirect"]' );
+
+			if ( ! field ) {
+				field = document.createElement( 'input' );
+				field.type = 'hidden';
+				field.name = 'redirect';
+				form.appendChild( field );
+			}
+
+			field.value = <?php echo wp_json_encode( $redirect ); ?>;
+
+			if ( window.jwsThemeModule && jwsThemeModule.login_popup ) {
+				jwsThemeModule.login_popup();
+			} else {
+				document.querySelectorAll( '.jws-form-login-popup' ).forEach( function ( el ) {
+					el.classList.add( 'open' );
+				} );
+			}
+
+			// One-shot: strip the flag so a refresh does not reopen the popup.
+			if ( window.history && window.history.replaceState ) {
+				var url = new URL( window.location.href );
+				url.searchParams.delete( 'jws_login_redirect' );
+				window.history.replaceState( {}, document.title, url.toString() );
+			}
+		} );
+		</script>
+		<?php
+	}
 }

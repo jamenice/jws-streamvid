@@ -207,7 +207,7 @@ class Jws_Drama_Templates {
 
 		$terms_by_id = array();
 
-		foreach ( array( 'genres', 'topics', Jws_Drama_Post_Types::TAX_TAG ) as $taxonomy ) {
+		foreach ( array( 'genres', 'topics' ) as $taxonomy ) {
 
 			if ( ! taxonomy_exists( $taxonomy ) ) {
 				continue;

@@ -6,7 +6,7 @@ if( ! defined('ABSPATH' ) ){
 $user_id = absint(get_queried_object_id());
 wp_enqueue_script('jws-youtube-api');
 
-$valid_post_types = ['movies', 'tv_shows', 'videos'];
+$valid_post_types = ['movies', 'tv_shows', 'videos', 'drama'];
 $current_filter = isset($_GET['favorites_filter']) ? sanitize_text_field($_GET['favorites_filter']) : 'movies';
 ?>
 <div class="jws-movies_advanced-element profile-favorites favorites-page">
@@ -14,7 +14,7 @@ $current_filter = isset($_GET['favorites_filter']) ? sanitize_text_field($_GET['
     <div class="history-tabs jws-scrollbar-x">
         <?php foreach($valid_post_types as $type): ?>
             <a href="#" data-type="<?php echo esc_attr($type); ?>" class="favorites-tab<?php if($current_filter==$type) echo ' active'; ?>">
-                <?php echo esc_html(ucwords(str_replace('_',' ', $type))); ?>
+                <?php echo esc_html( jws_profile_tab_label( $type ) ); ?>
             </a>
         <?php endforeach; ?>
     </div>

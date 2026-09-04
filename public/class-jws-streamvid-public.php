@@ -149,18 +149,20 @@ class Jws_Streamvid_Public {
     
              wp_enqueue_script( 'jws-archive-global', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/archive_global.js', array( 'jquery' ), $this->version, true );
 
+             $queried_post_type = get_query_var( 'post_type' );
+
              if ( is_post_type_archive('tv_shows') || is_tax('tv_shows_cat') || is_tax('tv_shows_tag') ) {
                  $archive_post_type = 'tv_shows';
              } elseif ( is_post_type_archive('videos') || is_tax('videos_cat') || is_tax('videos_tag') ) {
                  $archive_post_type = 'videos';
              } elseif ( is_post_type_archive('person') || is_tax('person_cat') ) {
                  $archive_post_type = 'person';
+             } elseif ( is_post_type_archive('drama') || is_tax('drama_tag') || ( is_tax( array( 'genres', 'countries', 'ages' ) ) && 'drama' === $queried_post_type ) ) {
+                 $archive_post_type = 'drama';
              } elseif ( is_post_type_archive('movies') || is_tax('movies_cat') || is_tax('movies_tag') || is_tax('genres') ) {
                  $archive_post_type = 'movies';
              } else {
-                 global $wp_query;
-                 $pt = ! empty( $wp_query->query_vars['post_type'] ) ? $wp_query->query_vars['post_type'] : '';
-                 $archive_post_type = ( $pt && is_string( $pt ) ) ? $pt : 'movies';
+                 $archive_post_type = ( $queried_post_type && is_string( $queried_post_type ) ) ? $queried_post_type : 'movies';
              }
              wp_localize_script( 'jws-archive-global', 'jwsArchiveFilter', [
                  'ajaxurl'   => admin_url('admin-ajax.php'),
@@ -298,7 +300,9 @@ class Jws_Streamvid_Public {
             'block_devtool' => jws_theme_get_option('block_devtool') ? 'yes' : 'no',
             'history_text' => esc_html__( 'You have watched up to' , 'jws_streamvid' ),
             'watch_again' => esc_html__( 'Watch again' , 'jws_streamvid' ),
-            'continue_watching' => esc_html__( 'Continue watching' , 'jws_streamvid' )
+            'continue_watching' => esc_html__( 'Continue watching' , 'jws_streamvid' ),
+            /* Shown beside the countdown on the v10 ad control bar. */
+            'ad_label' => esc_html__( 'Ad' , 'jws_streamvid' )
 
         );      
     
@@ -401,10 +405,20 @@ class Jws_Streamvid_Public {
                     
                     
                     endif;
-                
+
             }
-         
-            
+
+
+        } elseif ( is_singular( 'drama_ep' ) && class_exists( 'Jws_Drama_Wallet' ) ) {
+
+            /*
+             * Same idea as the tv_shows branch above, cut down to what
+             * saveVideoProgress() in jws_player_v10.js actually needs: the
+             * parent id, so watching an episode also credits the series for
+             * "Continue Watching" the way a tv_shows episode already does.
+             */
+            $fr_varjs['is_drama_episode'] = true;
+            $fr_varjs['episodes_drama']   = Jws_Drama_Wallet::drama_id_of( get_the_ID() );
         }
 
         $fr_varjs['video_continue_watching'] = jws_theme_get_option('video_continue_watching') ? 'yes' : 'no';
@@ -514,8 +528,9 @@ class Jws_Streamvid_Public {
    
         $args = wp_parse_args( $_POST, array(
             'progress' => array(),
-            'tv_shows' => ''
-        ) ); 
+            'tv_shows' => '',
+            'drama'    => ''
+        ) );
 
         extract( $args );
         
@@ -543,6 +558,11 @@ class Jws_Streamvid_Public {
                 if(!empty($tv_shows)) {
                     $id_tv_show = absint($tv_shows);
                     Jws_History::set_item($user_id, $id_tv_show, $progress['time'], $progress['endtime'], $id);
+                }
+
+                if(!empty($drama)) {
+                    $id_drama = absint($drama);
+                    Jws_History::set_item($user_id, $id_drama, $progress['time'], $progress['endtime'], $id);
                 }
 
             }

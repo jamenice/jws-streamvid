@@ -74,6 +74,13 @@ class Jws_Drama {
 
 		add_action( 'acf/init', array( $fields, 'register' ) );
 
+		/* VIP checkout is Paid Memberships Pro's own page; PMPro lets a
+		   logged-out visitor straight onto it (guest checkout is its
+		   default). This site sells no plan that way, so anyone who isn't
+		   signed in is turned back at the door instead. */
+		add_action( 'template_redirect', array( 'Jws_Drama_Wallet', 'block_logged_out_checkout' ) );
+		add_action( 'wp_footer', array( 'Jws_Drama_Wallet', 'print_login_redirect_script' ) );
+
 		/* The plugin is already active on live sites, so the activation hook
 		   would never fire for them. Checking a stored version on admin_init
 		   costs one option read once it matches. */
@@ -85,6 +92,7 @@ class Jws_Drama {
 		}
 
 		add_action( 'admin_menu', array( $admin, 'register_pages' ) );
+		add_action( 'admin_menu', array( $admin, 'remove_taxonomy_metaboxes' ) );
 
 		/* Late: "Jws Settings" is registered by the theme, whose admin_menu
 		   callback runs after every plugin's at the default priority. */

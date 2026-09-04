@@ -102,6 +102,12 @@ $bypass    = Jws_Drama_Wallet::membership_unlocks_all( get_current_user_id() );
 			</div>
 		<?php endif; ?>
 
+		<div class="jws-tool fs-small">
+			<?php if ( function_exists( 'jws_like_button' ) ) jws_like_button( 'drama', $drama_id ); ?>
+			<?php if ( function_exists( 'jws_watchlist_button' ) ) jws_watchlist_button( $drama_id ); ?>
+			<?php if ( function_exists( 'jws_share_button' ) ) jws_share_button( $drama_id ); ?>
+		</div>
+
 		<?php $overview = get_the_excerpt( $drama_id ); ?>
 		<?php if ( $overview ) : ?>
 			<div class="sv-short-plot">

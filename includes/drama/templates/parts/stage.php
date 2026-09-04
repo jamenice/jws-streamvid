@@ -64,14 +64,10 @@ if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 				?>
 				<a class="jws-open-login button-default" href="<?php echo esc_url( get_permalink( $episode_id ) ); ?>"><span><?php echo esc_html__( 'Sign In', 'jws_streamvid' ); ?></span></a>
 			<?php else : ?>
-				<p>
-					<?php
-					/* translators: 1: coin price, 2: current balance */
-					printf( esc_html__( 'Unlock this episode for %1$d coins. You have %2$d.', 'jws_streamvid' ), (int) $price, (int) $access['balance'] );
-					?>
-				</p>
+				<p><?php echo esc_html__( 'This is a paid episode. Please unlock to watch.', 'jws_streamvid' ); ?></p>
 				<button type="button" class="sv-short-unlock button-default" data-episode="<?php echo (int) $episode_id; ?>">
-					<span><?php echo esc_html__( 'Unlock', 'jws_streamvid' ); ?></span>
+					<?php echo Jws_Drama_Settings::coin_icon_html(); ?><span class="sv-short-unlock-price"><?php echo esc_html( number_format_i18n( $price ) ); ?></span>
+					<span><?php echo esc_html__( 'Unlock Now', 'jws_streamvid' ); ?></span>
 				</button>
 			<?php endif; ?>
 		</div>
@@ -80,6 +76,9 @@ if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 }
 ?>
 <div class="sv-short-stage-controls">
+	<button type="button" class="sv-short-stage-btn sv-short-panel-toggle" aria-label="<?php echo esc_attr__( 'Episodes', 'jws_streamvid' ); ?>" aria-expanded="false">
+		<i class="jws-icon-list" aria-hidden="true"></i>
+	</button>
 	<button type="button" class="sv-short-stage-btn sv-short-fullscreen" aria-label="<?php echo esc_attr__( 'Fullscreen', 'jws_streamvid' ); ?>">
 		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentcolor" viewBox="0 0 256 256"><path d="M216,48V96a8,8,0,0,1-16,0V67.31l-50.34,50.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM106.34,138.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l50.35-50.34a8,8,0,0,0-11.32-11.32Z"></path></svg>
 	</button>

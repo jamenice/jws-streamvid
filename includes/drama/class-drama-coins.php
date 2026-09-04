@@ -67,6 +67,17 @@ class Jws_Drama_Coins {
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'store_item_coins' ), 10, 3 );
 		add_filter( 'woocommerce_get_item_data', array( $this, 'show_item_coins' ), 10, 2 );
 
+		/*
+		 * A coin top-up has no shipping and nothing to invoice an address to
+		 * — the billing form is just friction between "picked a package" and
+		 * "paid". checkout_style() hides it; simplify_checkout_fields() is
+		 * what actually makes that legal, by dropping the "required" flag so
+		 * Woo's own server-side validation does not refuse the order over a
+		 * field the buyer was never shown.
+		 */
+		add_filter( 'woocommerce_checkout_fields', array( $this, 'simplify_checkout_fields' ) );
+		add_action( 'wp_head', array( $this, 'checkout_style' ) );
+
 		// Wallet tab in the account area, sortable from Theme Options > Profile.
 		add_filter( 'streamvid_profile_default_menu_items', array( $this, 'profile_menu' ) );
 	}
@@ -122,14 +133,12 @@ class Jws_Drama_Coins {
 		}
 
 		/*
-		 * One top-up at a time: a second click is a change of mind about how
-		 * many coins to buy, not a second package to pay for.
+		 * One top-up at a time, and nothing else riding along to checkout
+		 * with it: a coin purchase started from the drama watch screen
+		 * shouldn't also charge whatever was already sitting in the cart
+		 * from browsing the shop earlier.
 		 */
-		foreach ( WC()->cart->get_cart() as $key => $item ) {
-			if ( isset( $item[ self::ITEM_COINS ] ) ) {
-				WC()->cart->remove_cart_item( $key );
-			}
-		}
+		WC()->cart->empty_cart();
 
 		$added = WC()->cart->add_to_cart(
 			$product_id,
@@ -153,6 +162,70 @@ class Jws_Drama_Coins {
 				'coins'    => (int) $package['total'],
 			)
 		);
+	}
+
+	/**
+	 * True only when every line in the cart is a coin package — never for a
+	 * cart that mixes a top-up with a real shop purchase, which still needs
+	 * an actual billing address to ship or invoice.
+	 */
+	public static function cart_is_coin_only() {
+
+		if ( ! function_exists( 'WC' ) || ! WC()->cart || WC()->cart->is_empty() ) {
+			return false;
+		}
+
+		foreach ( WC()->cart->get_cart() as $item ) {
+			if ( ! isset( $item[ self::ITEM_COINS ] ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Every billing field but email becomes optional on a coin-only cart —
+	 * email is kept, since it's the one thing an order still needs and a
+	 * logged-in buyer's account already supplies it, so the field is never
+	 * actually blank even hidden.
+	 */
+	public function simplify_checkout_fields( $fields ) {
+
+		if ( empty( $fields['billing'] ) || ! self::cart_is_coin_only() ) {
+			return $fields;
+		}
+
+		foreach ( $fields['billing'] as $key => $field ) {
+			if ( 'billing_email' !== $key ) {
+				$fields['billing'][ $key ]['required'] = false;
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Hides the billing form on a coin-only checkout — simplify_checkout_fields()
+	 * above is what makes that safe, by dropping "required" from every field
+	 * this leaves unreachable.
+	 */
+	public function checkout_style() {
+
+		if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || ! self::cart_is_coin_only() ) {
+			return;
+		}
+		?>
+		<style>
+			#customer_details { display: none; }
+			.woocommerce-checkout .col-lg-60.col-xs-12:has(#customer_details) + .col-lg-40.col-xs-12 {
+				-webkit-box-flex: 0;
+				-ms-flex: 0 0 100%;
+				flex: 0 0 100%;
+				max-width: 100%;
+			}
+		</style>
+		<?php
 	}
 
 	/**

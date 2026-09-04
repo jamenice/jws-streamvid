@@ -72,6 +72,10 @@
     content: "";
 }
 
+.sv-short-unlock-price {
+    margin-inline-end: 0.35em;
+}
+
 .sv-short-lock-panel {
     position: relative;
     max-width: 300px;
@@ -92,6 +96,10 @@
     transition: opacity 0.15s ease;
 }
 
+/* Hidden until the viewer taps the stage, gone again after 4s of no
+   interaction — drama.js toggles .is-visible and restarts that timer on
+   every click inside .sv-short-stage (the buttons here included, since a
+   click on them bubbles up to the same handler). */
 .sv-short-stage-controls {
     position: absolute;
     inset-inline-end: 20px;
@@ -99,6 +107,24 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.sv-short-stage-controls.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* A mouse has no "tap the stage" gesture, so on desktop the controls follow
+   the pointer instead — drama.js's click/4s-timer behaviour above is what
+   still drives touch devices, which this query excludes. */
+@media (hover: hover) and (pointer: fine) {
+    .sv-short-stage:hover .sv-short-stage-controls {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 .sv-short-stage-btn {
@@ -123,6 +149,17 @@
     pointer-events: none;
 }
 
+/* Only meaningful once the panel can be hidden, i.e. under the 1199px
+   breakpoint below — desktop keeps the panel on screen at all times. */
+.sv-short-panel-toggle {
+    display: none;
+}
+
+.sv-short-panel-toggle.is-active {
+    color: #ffffff;
+    background: var(--main);
+}
+
 /* -------------------------------------------------------------------------- *
  * Panel
  * -------------------------------------------------------------------------- */
@@ -133,7 +170,9 @@
     max-height: calc(100vh - 90px);
     padding: 26px 32px 40px;
     overflow-y: auto;
-    background: var(--background-item);
+    background-color: rgba(25, 27, 36, 0.7);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
 }
 
 .sv-short-panel .sv-short-breadcrumbs {
@@ -162,7 +201,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 22px;
+    margin-bottom: 25px;
 }
 
 .sv-short-panel .jws-category-extra a {
@@ -177,6 +216,49 @@
     color: #fff;
     background: rgba(255, 255, 255, 0.14);
 }
+
+.sv-short-panel .jws-tool {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 22px;
+    justify-content: center;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0 7px;
+}
+
+.sv-short-panel .jws-tool>div {
+    position: relative;
+    width: 33.33%;
+    display: flex;
+    justify-content: center;
+}
+
+
+.sv-short-panel .jws-tool>div i {
+    font-size: 22px;
+}
+
+.sv-short-panel .jws-tool>div>a {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    border-radius: 8px;
+    justify-content: center;
+    width: fit-content;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.sv-short-panel .jws-tool>div>a:hover {
+    color: var(--heading);
+}
+
+.sv-short-panel .jws-tool .jws-likes .liked i {
+    color: var(--main);
+}
+
 
 .sv-short-plot {
     margin-bottom: 26px;
@@ -351,15 +433,72 @@
         max-height: none;
     }
 
+    /*
+     * On a phone the panel is a fixed sheet over the stage instead of a long
+     * block under the player — closed until the viewer asks for it via
+     * .sv-short-panel-toggle (drama.js toggles .sv-panel-open on
+     * .sv-short-page), which is also why the ordering below — putting the
+     * episode grid right after the title — still matters: it's the first
+     * thing shown once the sheet opens.
+     */
     .sv-short-panel {
-        flex: none;
+        display: none;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        flex-direction: column;
         width: 100%;
-        max-height: none;
+        max-height: 80vh;
+        z-index: 40;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .sv-short-page.sv-panel-open .sv-short-panel {
+        display: flex;
+    }
+
+    .sv-short-panel-toggle {
+        display: flex;
+    }
+
+    /* Above the sheet, and kept visible while it's open — otherwise the
+       one button that closes it can auto-hide (or sit under it) with no
+       way back. */
+    .sv-short-page.sv-panel-open .sv-short-stage-controls {
+        z-index: 41;
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .sv-short-stage-controls {
         inset-inline-end: 12px;
         bottom: 20px;
+    }
+
+    .sv-short-panel>.sv-short-breadcrumbs {
+        order: 1;
+    }
+
+    .sv-short-panel>.sv-short-title {
+        order: 2;
+    }
+
+    .sv-short-panel>.sv-short-episodes {
+        order: 3;
+        margin-bottom: 26px;
+    }
+
+    .sv-short-panel>.jws-category-extra {
+        order: 4;
+    }
+
+    .sv-short-panel>.jws-tool {
+        order: 5;
+    }
+
+    .sv-short-panel>.sv-short-plot {
+        order: 6;
     }
 }
 
@@ -373,11 +512,17 @@
         font-size: 20px;
     }
 
+    /* auto-fill instead of a fixed column count: chips stay >= 48px (a safe
+       touch target) whether the phone is 320px or 480px wide, instead of
+       stretching or squeezing 5 fixed columns. */
     .sv-short-episode-grid {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
     }
 
-
+    .sv-short-range {
+        padding: 6px 2px;
+        font-size: 14px;
+    }
 }
 
 /* -------------------------------------------------------------------------- *
@@ -395,11 +540,6 @@
     border-radius: 12px;
 }
 
-.sv-coin-balance-label {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-}
-
 .sv-coin-balance-value {
     display: inline-flex;
     gap: 8px;
@@ -407,6 +547,7 @@
     font-size: 30px;
     font-weight: 700;
     line-height: 1;
+    color: var(--heading);
 }
 
 .sv-coin-tabs {
@@ -495,16 +636,13 @@
 
 .sv-coin-table th,
 .sv-coin-table td {
-    padding: 11px 0px;
+    padding: 10px 10px 10px 0;
     text-align: start;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: var(--font-size-sm);
 }
 
 .sv-coin-table th {
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--heading);
 }
 
 .sv-coin-table .is-in {
@@ -563,25 +701,36 @@
 .sv-buy-panel {
     position: relative;
     width: 100%;
-    max-width: 700px;
+    max-width: 780px;
     max-height: calc(100vh - 48px);
     overflow: hidden;
-    color: #ffffff;
-    background: var(--sv-buy-bg);
-    border-radius: 16px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    background: rgba(0, 3, 28, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
 }
 
-/* The coin. There is no coin glyph in the icon font, so it is drawn here. */
+/*
+ * The coin. Sized in em so it scales with whatever text sits beside it,
+ * whether that's the CSS-drawn default (no coin glyph in the icon font) or
+ * the admin's own image from Drama Coins → General → Coin icon.
+ */
 .sv-coin-ico {
     display: inline-block;
     width: 1.05em;
     height: 1.05em;
     margin-inline-end: 0.35em;
     vertical-align: -0.15em;
-    background: radial-gradient(circle at 35% 30%, #ffe9a8 0%, #f0b83f 55%, #c98a1c 100%);
     border-radius: 50%;
+}
+
+.sv-coin-ico:not(.sv-coin-ico--custom) {
+    background: radial-gradient(circle at 35% 30%, #ffe9a8 0%, #f0b83f 55%, #c98a1c 100%);
     box-shadow: inset 0 0 0 0.09em rgba(255, 255, 255, 0.45);
+}
+
+.sv-coin-ico--custom {
+    object-fit: cover;
+    border-radius: 0;
 }
 
 /* Head ---------------------------------------------------------------------- */
@@ -770,27 +919,27 @@
 .sv-buy-pack {
     position: relative;
     padding: 18px 18px 16px;
-    background: var(--sv-buy-card);
-    border: 2px solid var(--sv-buy-line);
+    background: var(--background-item);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     transition: 0.2s ease;
+    color: var(--heading);
 }
 
 .sv-buy-pack:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: var(--main);
 }
 
 .sv-buy-pack-total {
     display: block;
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 800;
 }
 
 .sv-buy-pack-split {
     display: block;
     margin: 8px 0 16px;
-    color: var(--sv-buy-muted);
     font-size: 12.5px;
     line-height: 1.6;
 }

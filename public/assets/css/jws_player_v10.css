@@ -22,7 +22,7 @@
     display: contents;
 }
 
-.videos_player video-player.jws_player_v10 > video-skin {
+.videos_player video-player.jws_player_v10>video-skin {
     position: absolute;
     top: 0;
     inset-inline-start: 0;
@@ -54,7 +54,7 @@
 
 /* The theme fades #videos_player out during an AJAX swap. That id is on the
    boxless <video-player>, so move the fade onto the skin. */
-.videos_player.loading video-player.jws_player_v10 > video-skin {
+.videos_player.loading video-player.jws_player_v10>video-skin {
     opacity: 0;
 }
 
@@ -118,9 +118,94 @@
 
 /* The skin's controls would otherwise sit over the ad and let the viewer scrub
    or pause content that is not on screen. */
-.videos_player.jws-v10-ad-playing video-player.jws_player_v10 > video-skin {
+.videos_player.jws-v10-ad-playing video-player.jws_player_v10>video-skin {
     pointer-events: none;
     visibility: hidden;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Ad controls
+ *
+ * Hiding the skin above leaves IMA's skip button as the only thing on screen,
+ * and the SDK draws nothing else — play/pause, sound and fullscreen have always
+ * been the publisher's to supply. This is that bar.
+ *
+ * It sits above the ad container (z-index 31) so its own clicks never reach the
+ * creative underneath, where they would count as a click-through.
+ * -------------------------------------------------------------------------- */
+
+.jws-v10-ad-bar {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 32;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 0px 14px;
+    color: #ffffff;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    /*
+     * The bar itself is inert so that whatever the SDK has put in this corner —
+     * the skip button lands bottom-end, and its exact box is version-specific —
+     * stays clickable through the gaps. Only the controls below take clicks.
+     */
+    pointer-events: none;
+}
+
+.jws-v10-ad-bar>* {
+    pointer-events: auto;
+}
+
+.jws-v10-ad-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    color: #ffffff;
+    background: none;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.jws-v10-ad-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.jws-v10-ad-btn svg {
+    display: block;
+}
+
+/* Pushes the fullscreen button to the far end, the way a control bar reads.
+   Inert despite the rule above: it is a label, and it spans most of the bar —
+   taking clicks there would swallow the creative's own click-through. */
+.jws-v10-ad-count {
+    flex: 1 1 auto;
+    font-size: 13px;
+    line-height: 16px;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+@media (max-width: 767px) {
+
+    .jws-v10-ad-bar {
+        padding: 6px 8px;
+    }
+
+    .jws-v10-ad-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .jws-v10-ad-count {
+        font-size: 12px;
+    }
 }
 
 /* Player that could not load at all — a blocked CDN, a blocked embed host. */
@@ -185,17 +270,17 @@
  * it in CSS means no JS has to win a race against first paint.
  * -------------------------------------------------------------------------- */
 
-.videos_player video-player.jws_player_v10 > video-skin:not(:defined) {
+.videos_player video-player.jws_player_v10>video-skin:not(:defined) {
     border-radius: var(--jws-player-radius);
     background: #000000;
 }
 
 /* The media element has no business rendering before the player owns it. */
-.videos_player video-player.jws_player_v10 > video-skin:not(:defined) > * {
+.videos_player video-player.jws_player_v10>video-skin:not(:defined)>* {
     display: none;
 }
 
-.videos_player video-player.jws_player_v10 > video-skin:not(:defined) > img[slot="poster"] {
+.videos_player video-player.jws_player_v10>video-skin:not(:defined)>img[slot="poster"] {
     display: block;
     width: 100%;
     height: 100%;

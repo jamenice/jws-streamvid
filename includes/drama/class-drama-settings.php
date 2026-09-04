@@ -30,6 +30,12 @@ class Jws_Drama_Settings {
 	const PAGE  = 'jws-drama-coins';
 	const NONCE = 'jws_drama_settings_save';
 
+	/** Nonce action for the Demo Import tab's own form. */
+	const DEMO_NONCE = 'jws_drama_demo_action';
+
+	/** Marks a drama/episode created by the Demo Import tool, so it can be found and trashed again. */
+	const DEMO_META = '_jws_drama_demo_seed';
+
 	/** Filled by all() so a request reads the option once. */
 	private static $cache = null;
 
@@ -55,6 +61,11 @@ class Jws_Drama_Settings {
 			 * means creating another product.
 			 */
 			'coin_product'  => 0,
+
+			/* Attachment ID for the coin glyph next to every coin amount
+			   (wallet, prices, package cards). 0 keeps the CSS-drawn gold
+			   circle that ships as the default. */
+			'coin_icon'     => 0,
 
 			'packages'      => array(),
 			'plans'         => array(),
@@ -139,6 +150,40 @@ class Jws_Drama_Settings {
 		self::$cache = null;
 
 		update_option( self::OPTION, $settings );
+	}
+
+	/* ---------------------------------------------------------------------- */
+	/* Coin icon                                                               */
+	/* ---------------------------------------------------------------------- */
+
+	/** Empty until an admin picks one under General → Coin icon. */
+	public static function coin_icon_url() {
+
+		$id = (int) self::get( 'coin_icon', 0 );
+
+		if ( ! $id ) {
+			return '';
+		}
+
+		$src = wp_get_attachment_image_src( $id, array( 40, 40 ) );
+
+		return $src ? $src[0] : '';
+	}
+
+	/**
+	 * The markup every `.sv-coin-ico` spot in the coin-wallet templates
+	 * prints, so the fallback (CSS-drawn gold circle) and the admin's own
+	 * image live in one place instead of four.
+	 */
+	public static function coin_icon_html() {
+
+		$url = self::coin_icon_url();
+
+		if ( ! $url ) {
+			return '<span class="sv-coin-ico" aria-hidden="true"></span>';
+		}
+
+		return '<img class="sv-coin-ico sv-coin-ico--custom" src="' . esc_url( $url ) . '" alt="" aria-hidden="true" />';
 	}
 
 	/* ---------------------------------------------------------------------- */
@@ -667,9 +712,12 @@ class Jws_Drama_Settings {
 	 * priority — the submenu would be attached to a parent that does not exist
 	 * yet and silently vanish.
 	 */
+	/** Set by register_submenu() to the exact hook add_submenu_page() returned. */
+	private $hook_suffix = '';
+
 	public function register_submenu() {
 
-		add_submenu_page(
+		$this->hook_suffix = add_submenu_page(
 			'jws_settings',
 			esc_html__( 'Drama Coins', 'jws_streamvid' ),
 			esc_html__( 'Drama Coins', 'jws_streamvid' ),
@@ -677,6 +725,24 @@ class Jws_Drama_Settings {
 			self::PAGE,
 			array( $this, 'render_page' )
 		);
+
+		/*
+		 * Media scripts have to be queued from admin_enqueue_scripts, not from
+		 * inside render_page(): that callback runs after admin-header.php has
+		 * already printed the <head> scripts, so wp.media would still be
+		 * undefined when the Coin icon button's click handler is set up.
+		 */
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_screen_assets' ) );
+	}
+
+	/** @param string $hook_suffix */
+	public function enqueue_screen_assets( $hook_suffix ) {
+
+		if ( $hook_suffix !== $this->hook_suffix ) {
+			return;
+		}
+
+		wp_enqueue_media();
 	}
 
 	/* ---------------------------------------------------------------------- */
@@ -742,6 +808,11 @@ class Jws_Drama_Settings {
 		$out['coin_product'] = isset( $raw['coin_product'] )
 			? absint( $raw['coin_product'] )
 			: ( isset( $stored['coin_product'] ) ? absint( $stored['coin_product'] ) : 0 );
+
+		/* Posted only by the General tab. */
+		$out['coin_icon'] = isset( $raw['coin_icon'] )
+			? absint( $raw['coin_icon'] )
+			: ( isset( $stored['coin_icon'] ) ? absint( $stored['coin_icon'] ) : 0 );
 
 		/*
 		 * Nothing posts the method list any more — the checkboxes went with
@@ -901,6 +972,7 @@ class Jws_Drama_Settings {
 
 		// May redirect (Post/Redirect/Get) and exit before any markup is echoed.
 		$this->handle_member_post();
+		$this->handle_demo_import_post();
 
 		$notice = $this->handle_post();
 		$s      = self::all();
@@ -911,9 +983,10 @@ class Jws_Drama_Settings {
 		 * the only decision this module still makes about VIP.
 		 */
 		$tabs = array(
-			'general'  => esc_html__( 'General', 'jws_streamvid' ),
-			'packages' => esc_html__( 'Coin Packages', 'jws_streamvid' ),
-			'members'  => esc_html__( 'Members & Transactions', 'jws_streamvid' ),
+			'general'     => esc_html__( 'General', 'jws_streamvid' ),
+			'packages'    => esc_html__( 'Coin Packages', 'jws_streamvid' ),
+			'members'     => esc_html__( 'Members & Transactions', 'jws_streamvid' ),
+			'demo_import' => esc_html__( 'Demo Import', 'jws_streamvid' ),
 		);
 		?>
 		<div class="wrap jws-drama-settings">
@@ -946,6 +1019,7 @@ class Jws_Drama_Settings {
 			</form>
 
 			<?php $this->render_members( $s ); ?>
+			<?php $this->render_demo_import(); ?>
 		</div>
 		<?php
 		$this->render_assets();
@@ -967,6 +1041,18 @@ class Jws_Drama_Settings {
 					<td>
 						<input type="number" min="0" id="coin_price" name="coin_price" value="<?php echo (int) $s['coin_price']; ?>" class="small-text" />
 						<p class="description"><?php echo esc_html__( 'Cost to unlock one episode past the free ones, for a drama that does not set its own price.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="coin_icon_select"><?php echo esc_html__( 'Coin icon', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<div class="jws-drama-coin-icon">
+							<input type="hidden" name="coin_icon" id="coin_icon" value="<?php echo (int) $s['coin_icon']; ?>" />
+							<img id="coin_icon_preview" src="<?php echo esc_url( self::coin_icon_url() ); ?>" <?php echo self::coin_icon_url() ? '' : 'hidden'; ?> />
+							<button type="button" class="button" id="coin_icon_select"><?php echo esc_html__( 'Select Image', 'jws_streamvid' ); ?></button>
+							<button type="button" class="button-link jws-drama-coin-icon-remove" id="coin_icon_remove" <?php echo self::coin_icon_url() ? '' : 'hidden'; ?>><?php echo esc_html__( 'Remove', 'jws_streamvid' ); ?></button>
+						</div>
+						<p class="description"><?php echo esc_html__( 'Shown next to every coin amount — wallet balance, episode prices, package cards. Leave empty for the default gold circle.', 'jws_streamvid' ); ?></p>
 					</td>
 				</tr>
 				<?php
@@ -1663,6 +1749,369 @@ class Jws_Drama_Settings {
 	 * this screen, and a separate file would need its own registration, version
 	 * and cache-busting for no gain.
 	 */
+	/* ---------------------------------------------------------------------- */
+	/* Demo Import                                                             */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * Generic short-drama style titles used only to fill the catalogue with
+	 * something readable while trying the coin flow out. Every other field —
+	 * synopsis, poster — is placeholder content generated by the tool itself,
+	 * never pulled from a third party at run time. Episodes get no video of
+	 * their own; they play through the site-wide drama default url instead.
+	 */
+	/**
+	 * A handful of generic trope labels common across the short-drama genre
+	 * as a whole (not tied to any one show or catalogue), used to seed
+	 * `drama_tag` when the site has none yet, so a freshly installed demo
+	 * still has something to randomly tag dramas with.
+	 */
+	private static function demo_drama_tag_names() {
+
+		return array(
+			'Alpha & Luna', 'Werewolf', 'Vampire', 'Billionaire', 'Revenge',
+			'Second Chance', 'Marriage of Convenience', 'Enemies to Lovers',
+			'Fated Mates', 'Secret Baby', 'Amnesia', 'Mafia', 'Royalty',
+			'Rejected Mate', 'Contract Marriage', 'Rags to Riches', 'Betrayal',
+		);
+	}
+
+	/**
+	 * Term ids for demo_drama_tag_names(), creating whichever of them do not
+	 * exist yet. Existing `drama_tag` terms are used as-is — nothing is
+	 * created if the taxonomy is already populated with its own vocabulary.
+	 */
+	private function ensure_demo_drama_tags() {
+
+		if ( ! taxonomy_exists( 'drama_tag' ) ) {
+			return array();
+		}
+
+		$existing = get_terms( array( 'taxonomy' => 'drama_tag', 'hide_empty' => false ) );
+		$existing = ( ! is_wp_error( $existing ) && $existing ) ? wp_list_pluck( $existing, 'term_id' ) : array();
+
+		if ( $existing ) {
+			return $existing;
+		}
+
+		$ids = array();
+
+		foreach ( self::demo_drama_tag_names() as $name ) {
+
+			$term = term_exists( $name, 'drama_tag' );
+
+			if ( ! $term ) {
+				$term = wp_insert_term( $name, 'drama_tag' );
+			}
+
+			if ( ! is_wp_error( $term ) && isset( $term['term_id'] ) ) {
+				$ids[] = (int) $term['term_id'];
+			}
+		}
+
+		return $ids;
+	}
+
+	private static function demo_titles() {
+
+		return array(
+			'The Great and Powerful Genie', 'Abandoned Pawn, Unrivaled Dragon King', 'In Bed with My Brother-in-Law',
+			'The Alpha Princess Is Gone for Good', 'Wasteland Sovereign', 'Mated to the Alpha and His Beta',
+			"You've Been Replaced, First Love", 'Sold to the Warlord, Born for the Sky', 'Tempted by My Bad Boy Stepbrother',
+			'After Her Seventh Heartbreak, I Took Mom Back to Heaven', "You Can't Stop My Super X-Ray Vision", 'I, The Contracted Djinn',
+			"The Alpha's Forbidden Mate", "My Blood-Sucking Familiar Is My Husband's Lover", 'The Death Payout System: Escaping My Toxic Pack',
+			"A Mother's Vengeance", 'From Puppet Bride to Alpha Queen', 'Bound By the Amnesiac Heir',
+			"A Zombie Girl's Journey Home", 'Altarboy', "Mistaken as His Mate: The Luna's Regret",
+			'Art of Falling in Love', 'Take Me Back to the Night We Met', "Keeping the Cowboy's Baby",
+			'Dirty Work', 'Flunk: Season 1', 'Their Brother Lost in Space',
+			'The Vampire Next Door', 'Cooking My Way Back to Love', 'The Reckoning Takes Flight',
+			'Found A Homeless Billionaire Husband for Christmas', 'My X-Ray Vision Sees Right Through You', 'Miss You After Goodbye',
+			'The Lost Quarterback Returns', 'I Accidentally Sexted My Enemy', "Step Aside, I'm the King of Capital",
+			'You Are My Destiny', "Falling for My Ex's Mafia Dad", 'The Amber Trap',
+			'The Atlantic Bride', "A Farm Girl's Reckoning", 'Zero to Alpha: Return of the Wolf King',
+			'The Son Rises Alone', 'The Real Heiress Reclaims Her Place', "The Professor's Forbidden Dragon Prey",
+			"The Silver Serpent's Bride", 'The Valkyrie Divorces the God of War', 'Full Court Legend',
+			'Chained by Hades, the Underworld King', 'Married In A Heartbeat', 'Rejected Luna Is the Alpha Queen',
+			'After the Sacred Whale Betrayed Me, I Contracted Poseidon', 'My Stolen Billionaire Life', 'Good with Her Hands',
+			'Monster in His Eyes', 'Married a Gardener, Got a Prince', 'Fated To My Billionaire Call Boy',
+			'Flash Vows', 'The Auctioned Mate', "Secretly Pregnant with the Billionaire's Daughter",
+			'Crowned in His Claws', 'How to Kiss a Vampire', "Second Chance: The Tech Billionaire's Secret Family",
+			'Forced to Marry My Ruined Ex: The Duke\'s Revenge', 'Pucked in the Friend Zone', "Daddy Help! Mommy's in Prison!",
+			"When Love's Sorrow Plays Again", "Mommy's Little Savior", 'I Ditched My Ex and Had Five Babies with His Alpha Dad',
+			'The Alpha King Sold Me to the War God', 'The Alpha and His Nanny Luna', "Fate of the Dragon's Bride",
+			'After Cancer I Turn into A Badass', 'A Cinderella for Wolf King', 'Mommy, I Got You A Date',
+			"The Godfather's Guardian Angel", "The Alpha and Beta's Shared Mate", 'Rent-A-Mom for the Billionaire Twins',
+			'Waterboy: Second Down', 'Pucked and Pregnant', 'Waterboy',
+			"The Senator's Son", 'Swept Away by My Janitor Husband', 'The Ultimate Fight for Love',
+			'The Genius and the Bad Boy', 'Baby Daddy Goals', "Oops! I'm in Love with My Stepbrother",
+			'Summer Situationship', "The Rockstar's Secret", 'The Fake Dating Spell',
+			'A Spicy Text to My Nemesis', 'Once Love Is Lost, It Never Returns', "Fated to His Brother's Alpha",
+			'Offside with the Hockey Star', 'True Heiress vs. Fake Queen Bee', 'Taming My Bullies 1-3',
+			"Don't Miss Me When I'm Gone", 'Dear Brother, You Loved Me Too Late',
+		);
+	}
+
+	private function handle_demo_import_post() {
+
+		if ( empty( $_POST['jws_drama_demo_action'] ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$nonce = isset( $_POST['jws_drama_demo_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['jws_drama_demo_nonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, self::DEMO_NONCE ) ) {
+			return;
+		}
+
+		$action = sanitize_key( wp_unslash( $_POST['jws_drama_demo_action'] ) );
+		$args   = array( 'page' => self::PAGE );
+
+		if ( 'import' === $action ) {
+
+			$count    = isset( $_POST['demo_count'] ) ? max( 1, min( count( self::demo_titles() ), (int) $_POST['demo_count'] ) ) : 10;
+			$episodes = isset( $_POST['demo_episodes'] ) ? max( 1, min( 80, (int) $_POST['demo_episodes'] ) ) : 8;
+			$publish  = ! empty( $_POST['demo_publish'] );
+
+			$result = $this->import_demo_dramas( $count, $episodes, $publish );
+
+			$args['demo_msg']     = 'imported';
+			$args['demo_created'] = $result['dramas'];
+			$args['demo_eps']     = $result['episodes'];
+			$args['demo_skipped'] = $result['skipped'];
+
+		} elseif ( 'delete' === $action ) {
+
+			$deleted = $this->delete_demo_dramas();
+
+			$args['demo_msg']     = 'deleted';
+			$args['demo_deleted'] = $deleted;
+		}
+
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) . '#demo_import' );
+		exit;
+	}
+
+	/**
+	 * Creates up to $count dramas (skipping any title already used by an
+	 * existing drama post) with $episodes_per_drama placeholder episodes each.
+	 */
+	private function import_demo_dramas( $count, $episodes_per_drama, $publish ) {
+
+		$status       = $publish ? 'publish' : 'draft';
+		$created      = 0;
+		$episodes_out = 0;
+		$skipped      = 0;
+
+		$genre_terms = get_terms( array( 'taxonomy' => 'genres', 'hide_empty' => false ) );
+		$genre_terms = ( ! is_wp_error( $genre_terms ) && $genre_terms ) ? wp_list_pluck( $genre_terms, 'term_id' ) : array();
+
+		$drama_tag_terms = $this->ensure_demo_drama_tags();
+
+		foreach ( self::demo_titles() as $title ) {
+
+			if ( $created >= $count ) {
+				break;
+			}
+
+			if ( post_exists( $title, '', '', Jws_Drama_Post_Types::DRAMA ) ) {
+				$skipped++;
+				continue;
+			}
+
+			$drama_id = wp_insert_post(
+				array(
+					'post_type'    => Jws_Drama_Post_Types::DRAMA,
+					'post_title'   => $title,
+					'post_status'  => $status,
+					'post_content' => sprintf(
+						/* translators: %s: drama title */
+						esc_html__( '%s is placeholder demo content added by the Demo Import tool. Replace this description, the poster and every episode with your own before going live.', 'jws_streamvid' ),
+						$title
+					),
+					'post_excerpt' => esc_html__( 'Demo content — replace before going live.', 'jws_streamvid' ),
+				),
+				true
+			);
+
+			if ( is_wp_error( $drama_id ) ) {
+				continue;
+			}
+
+			update_post_meta( $drama_id, self::DEMO_META, 1 );
+			update_post_meta( $drama_id, 'drama_status', 'ongoing' );
+			update_post_meta( $drama_id, 'drama_total_ep', $episodes_per_drama );
+			update_post_meta( $drama_id, 'drama_poster', 'https://placehold.co/540x960/1a1a2e/eee.png?text=' . rawurlencode( $title ) );
+
+			update_post_meta( $drama_id, '_drama_status', 'field_drama_status' );
+			update_post_meta( $drama_id, '_drama_total_ep', 'field_drama_total_ep' );
+			update_post_meta( $drama_id, '_drama_poster', 'field_drama_poster' );
+
+			if ( $genre_terms ) {
+				$pick = array_rand( $genre_terms, min( 2, count( $genre_terms ) ) );
+				wp_set_object_terms( $drama_id, array_map( 'intval', (array) array_intersect_key( $genre_terms, array_flip( (array) $pick ) ) ), 'genres' );
+			}
+
+			if ( $drama_tag_terms ) {
+				$tag_count = min( wp_rand( 1, 2 ), count( $drama_tag_terms ) );
+				$tag_pick  = array_rand( $drama_tag_terms, $tag_count );
+				wp_set_object_terms( $drama_id, array_map( 'intval', (array) array_intersect_key( $drama_tag_terms, array_flip( (array) $tag_pick ) ) ), 'drama_tag' );
+			}
+
+			$free_episodes = (int) self::all()['free_episodes'];
+
+			for ( $number = 1; $number <= $episodes_per_drama; $number++ ) {
+
+				$episode_id = wp_insert_post(
+					array(
+						'post_type'   => Jws_Drama_Post_Types::EPISODE,
+						/* translators: %d: episode number */
+						'post_title'  => sprintf( esc_html__( 'Episode %d', 'jws_streamvid' ), $number ),
+						'post_status' => $status,
+						'menu_order'  => $number,
+					),
+					true
+				);
+
+				if ( is_wp_error( $episode_id ) ) {
+					continue;
+				}
+
+				update_post_meta( $episode_id, self::DEMO_META, 1 );
+				update_post_meta( $episode_id, 'drama_id', $drama_id );
+				update_post_meta( $episode_id, 'drama_ep_number', $number );
+				update_post_meta( $episode_id, 'drama_ep_free', $number <= $free_episodes ? 1 : 0 );
+				update_post_meta( $episode_id, 'videos_time', sprintf( '00:0%d:%02d', wp_rand( 1, 3 ), wp_rand( 10, 59 ) ) );
+
+				/*
+				 * No videos_type / videos_url written on purpose: an episode
+				 * left without its own video falls back to the site-wide
+				 * "Drama Short Default Url" (Jws Settings → Video Options),
+				 * so demo episodes play without this tool needing to point
+				 * at a video of its own.
+				 */
+				update_post_meta( $episode_id, '_drama_id', 'field_drama_ep_drama_id' );
+				update_post_meta( $episode_id, '_drama_ep_number', 'field_drama_ep_number' );
+				update_post_meta( $episode_id, '_drama_ep_free', 'field_drama_ep_free' );
+				update_post_meta( $episode_id, '_videos_time', 'field_drama_ep_duration' );
+
+				$episodes_out++;
+			}
+
+			$created++;
+		}
+
+		return array( 'dramas' => $created, 'episodes' => $episodes_out, 'skipped' => $skipped );
+	}
+
+	/** Trashes (not force-deletes) every drama and episode the importer created, so it can be undone from the Trash. */
+	private function delete_demo_dramas() {
+
+		$ids = get_posts(
+			array(
+				'post_type'      => array( Jws_Drama_Post_Types::DRAMA, Jws_Drama_Post_Types::EPISODE ),
+				'post_status'    => array( 'publish', 'draft', 'pending', 'trash' ),
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_key'       => self::DEMO_META,
+			)
+		);
+
+		foreach ( $ids as $id ) {
+			wp_trash_post( $id );
+		}
+
+		return count( $ids );
+	}
+
+	private function render_demo_import() {
+
+		$demo_count = count(
+			get_posts(
+				array(
+					'post_type'      => Jws_Drama_Post_Types::DRAMA,
+					'post_status'    => array( 'publish', 'draft', 'pending' ),
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'meta_key'       => self::DEMO_META,
+				)
+			)
+		);
+		?>
+		<div class="jws-drama-tab" data-tab="demo_import">
+
+			<?php if ( ! empty( $_GET['demo_msg'] ) ) : ?>
+				<?php if ( 'imported' === $_GET['demo_msg'] ) : ?>
+					<div class="notice notice-success is-dismissible"><p>
+						<?php
+						printf(
+							/* translators: 1: dramas created, 2: episodes created, 3: titles skipped */
+							esc_html__( 'Imported %1$d demo drama(s) with %2$d episode(s). %3$d title(s) already existed and were skipped.', 'jws_streamvid' ),
+							isset( $_GET['demo_created'] ) ? absint( $_GET['demo_created'] ) : 0,
+							isset( $_GET['demo_eps'] ) ? absint( $_GET['demo_eps'] ) : 0,
+							isset( $_GET['demo_skipped'] ) ? absint( $_GET['demo_skipped'] ) : 0
+						);
+						?>
+					</p></div>
+				<?php elseif ( 'deleted' === $_GET['demo_msg'] ) : ?>
+					<div class="notice notice-success is-dismissible"><p>
+						<?php
+						printf(
+							/* translators: %d: posts trashed */
+							esc_html__( 'Moved %d demo post(s) to Trash.', 'jws_streamvid' ),
+							isset( $_GET['demo_deleted'] ) ? absint( $_GET['demo_deleted'] ) : 0
+						);
+						?>
+					</p></div>
+				<?php endif; ?>
+			<?php endif; ?>
+
+			<p class="description" style="max-width:760px">
+				<?php echo esc_html__( 'Fills the catalogue with placeholder dramas so the coin wall, free-episode limit and buy panel can be tried out end to end. Title, poster and description are generated placeholder content — swap them for the real thing before the site goes live. Episodes get no video of their own; set "Drama Short Default Url" under Jws Settings → Video Options so they still play.', 'jws_streamvid' ); ?>
+			</p>
+
+			<form method="post" style="max-width:520px">
+				<?php wp_nonce_field( self::DEMO_NONCE, 'jws_drama_demo_nonce' ); ?>
+				<input type="hidden" name="jws_drama_demo_action" value="import" />
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="demo_count"><?php echo esc_html__( 'Number of dramas', 'jws_streamvid' ); ?></label></th>
+						<td><input type="number" min="1" max="<?php echo (int) count( self::demo_titles() ); ?>" id="demo_count" name="demo_count" value="10" class="small-text" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="demo_episodes"><?php echo esc_html__( 'Episodes per drama', 'jws_streamvid' ); ?></label></th>
+						<td><input type="number" min="1" max="80" id="demo_episodes" name="demo_episodes" value="8" class="small-text" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Publish immediately', 'jws_streamvid' ); ?></th>
+						<td><label><input type="checkbox" name="demo_publish" value="1" checked="checked" /> <?php echo esc_html__( 'Publish instead of saving as draft', 'jws_streamvid' ); ?></label></td>
+					</tr>
+				</table>
+				<?php submit_button( esc_html__( 'Import Demo Dramas', 'jws_streamvid' ), 'primary', '', false ); ?>
+			</form>
+
+			<p style="margin-top:24px">
+				<?php
+				printf(
+					/* translators: %d: number of demo posts already on the site */
+					esc_html__( '%d demo drama(s) currently on the site.', 'jws_streamvid' ),
+					(int) $demo_count
+				);
+				?>
+			</p>
+
+			<form method="post" onsubmit="return confirm('<?php echo esc_js( __( 'Move every demo drama and episode to Trash?', 'jws_streamvid' ) ); ?>');">
+				<?php wp_nonce_field( self::DEMO_NONCE, 'jws_drama_demo_nonce' ); ?>
+				<input type="hidden" name="jws_drama_demo_action" value="delete" />
+				<?php submit_button( esc_html__( 'Move Demo Dramas to Trash', 'jws_streamvid' ), 'secondary', '', false ); ?>
+			</form>
+		</div>
+		<?php
+	}
+
 	private function render_assets() {
 		?>
 		<style>
@@ -1754,6 +2203,19 @@ class Jws_Drama_Settings {
 
 			@media (max-width: 782px) {
 				.jws-drama-settings .jws-drama-member-grid { grid-template-columns: 1fr; }
+			}
+
+			.jws-drama-settings .jws-drama-coin-icon {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.jws-drama-settings .jws-drama-coin-icon img {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				object-fit: cover;
+				border: 1px solid #dcdcde;
 			}
 		</style>
 		<script>
@@ -1864,6 +2326,64 @@ class Jws_Drama_Settings {
 					? ( base + bonus ).toLocaleString() + ( bonus ? ' <span style="color:#b32d2e">+' + Math.round( bonus / base * 100 ) + '%</span>' : '' )
 					: '—';
 			} );
+
+			/*
+			 * Coin icon: the standard core single-image picker.
+			 *
+			 * wp.media is defined by media-editor.js, which WordPress prints
+			 * in the admin footer — after this inline script, which runs the
+			 * moment the parser reaches it. Checking `wp.media` up here would
+			 * always see it as undefined and silently skip binding the click
+			 * handler; checking inside the handler instead means the only
+			 * thing that has to have loaded by then is whatever the viewer
+			 * did before clicking, which by definition already has.
+			 */
+			var coinIconInput   = wrap.querySelector( '#coin_icon' );
+			var coinIconPreview = wrap.querySelector( '#coin_icon_preview' );
+			var coinIconSelect  = wrap.querySelector( '#coin_icon_select' );
+			var coinIconRemove  = wrap.querySelector( '#coin_icon_remove' );
+			var coinIconFrame   = null;
+
+			if ( coinIconSelect ) {
+
+				coinIconSelect.addEventListener( 'click', function ( event ) {
+
+					event.preventDefault();
+
+					if ( ! window.wp || ! wp.media ) {
+						return;
+					}
+
+					if ( ! coinIconFrame ) {
+						coinIconFrame = wp.media( {
+							title: coinIconSelect.textContent,
+							multiple: false,
+							library: { type: 'image' }
+						} );
+
+						coinIconFrame.on( 'select', function () {
+							var attachment = coinIconFrame.state().get( 'selection' ).first().toJSON();
+							var thumb      = ( attachment.sizes && ( attachment.sizes.thumbnail || attachment.sizes.full ) ) || attachment;
+
+							coinIconInput.value = attachment.id;
+							coinIconPreview.src = thumb.url;
+							coinIconPreview.hidden = false;
+							coinIconRemove.hidden = false;
+						} );
+					}
+
+					coinIconFrame.open();
+				} );
+
+				if ( coinIconRemove ) {
+					coinIconRemove.addEventListener( 'click', function ( event ) {
+						event.preventDefault();
+						coinIconInput.value = '0';
+						coinIconPreview.hidden = true;
+						coinIconRemove.hidden = true;
+					} );
+				}
+			}
 
 		}() );
 		</script>

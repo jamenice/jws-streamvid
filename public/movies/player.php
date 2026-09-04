@@ -598,10 +598,21 @@ if($type == 'blocked'){
                 playsinline
                 preload="auto"
                 <?php echo $v10_config['autoplay'] ? 'autoplay' : ''; ?>
-                <?php /* Autoplay implies muted: an unmuted autoplay is simply
-                         refused by every current browser, and the legacy player
-                         muted for the same reason. */ ?>
-                <?php echo ( $v10_config['muted'] || $v10_config['autoplay'] ) ? 'muted' : ''; ?>
+                <?php
+                /*
+                 * Muted only when the setting says so — autoplay does not drag
+                 * it along.
+                 *
+                 * Muting to force an unmuted autoplay through is the one thing
+                 * the browser's refusal is there to prevent, and it trades a
+                 * click the viewer would have made for a silent film they did
+                 * not ask for. Refused autoplay simply leaves the video paused
+                 * on its poster, which is exactly what the legacy engine does:
+                 * it force-mutes for YouTube sources alone, and lets every
+                 * other blocked autoplay fall back to the play button.
+                 */
+                ?>
+                <?php echo $v10_config['muted'] ? 'muted' : ''; ?>
             >
                 <?php
                 if ( ! empty( $subtitles ) ) {

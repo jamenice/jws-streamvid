@@ -1,6 +1,6 @@
 <?php
 if (!isset($video_progress_data) || !isset($current_filter)) return;
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos', 'drama'];
 $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
 $per_page = 12;
 $found = false;
