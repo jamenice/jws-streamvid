@@ -6,7 +6,10 @@ if( ! defined('ABSPATH' ) ){
 $user_id = absint(get_queried_object_id());
 wp_enqueue_script('jws-youtube-api');
 
-$valid_post_types = ['movies', 'tv_shows', 'videos', 'drama'];
+$valid_post_types = ['movies', 'tv_shows', 'videos'];
+if ( post_type_exists( 'drama' ) ) {
+    $valid_post_types[] = 'drama';
+}
 $current_filter = isset($_GET['favorites_filter']) ? sanitize_text_field($_GET['favorites_filter']) : 'movies';
 ?>
 <div class="jws-movies_advanced-element profile-favorites favorites-page">

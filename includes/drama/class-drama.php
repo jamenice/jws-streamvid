@@ -58,28 +58,38 @@ class Jws_Drama {
 		$stripe->register();
 		$paypal->register();
 
-		/* Late so the theme's own template_include filters run first. */
-		add_filter( 'template_include', array( $templates, 'locate' ), 99 );
-		add_action( 'wp_enqueue_scripts', array( $templates, 'enqueue' ), 20 );
+		/* Master switch: the settings screen registered further down stays
+		   reachable either way, but everything that makes the module show up
+		   — post types, front-end templates, archive/widget hooks — is
+		   skipped while it is switched off, so turning it off hides drama
+		   everywhere on the site without touching stored content. */
+		$enabled = Jws_Drama_Settings::is_enabled();
 
-		/* The theme's archive filter runs over admin-ajax, so these have to be
-		   registered on every request, not just front-end ones. */
-		add_filter( 'jws_archive_filter_post_types', array( $templates, 'allow_in_filter' ) );
-		add_filter( 'jws_archive_filter_item_html', array( $templates, 'filter_item_html' ), 10, 4 );
-		add_filter( 'streamvid/filter/taxonomy', array( $templates, 'filter_taxonomy' ), 10, 2 );
+		if ( $enabled ) {
 
-		add_action( 'init', array( $post_types, 'register' ) );
-		add_action( 'init', array( $post_types, 'attach_shared_taxonomies' ), 20 );
-		add_action( 'save_post', array( $post_types, 'sync_episode_order' ), 20, 3 );
+			/* Late so the theme's own template_include filters run first. */
+			add_filter( 'template_include', array( $templates, 'locate' ), 99 );
+			add_action( 'wp_enqueue_scripts', array( $templates, 'enqueue' ), 20 );
 
-		add_action( 'acf/init', array( $fields, 'register' ) );
+			/* The theme's archive filter runs over admin-ajax, so these have to be
+			   registered on every request, not just front-end ones. */
+			add_filter( 'jws_archive_filter_post_types', array( $templates, 'allow_in_filter' ) );
+			add_filter( 'jws_archive_filter_item_html', array( $templates, 'filter_item_html' ), 10, 4 );
+			add_filter( 'streamvid/filter/taxonomy', array( $templates, 'filter_taxonomy' ), 10, 2 );
 
-		/* VIP checkout is Paid Memberships Pro's own page; PMPro lets a
-		   logged-out visitor straight onto it (guest checkout is its
-		   default). This site sells no plan that way, so anyone who isn't
-		   signed in is turned back at the door instead. */
-		add_action( 'template_redirect', array( 'Jws_Drama_Wallet', 'block_logged_out_checkout' ) );
-		add_action( 'wp_footer', array( 'Jws_Drama_Wallet', 'print_login_redirect_script' ) );
+			add_action( 'init', array( $post_types, 'register' ) );
+			add_action( 'init', array( $post_types, 'attach_shared_taxonomies' ), 20 );
+			add_action( 'save_post', array( $post_types, 'sync_episode_order' ), 20, 3 );
+
+			add_action( 'acf/init', array( $fields, 'register' ) );
+
+			/* VIP checkout is Paid Memberships Pro's own page; PMPro lets a
+			   logged-out visitor straight onto it (guest checkout is its
+			   default). This site sells no plan that way, so anyone who isn't
+			   signed in is turned back at the door instead. */
+			add_action( 'template_redirect', array( 'Jws_Drama_Wallet', 'block_logged_out_checkout' ) );
+			add_action( 'wp_footer', array( 'Jws_Drama_Wallet', 'print_login_redirect_script' ) );
+		}
 
 		/* The plugin is already active on live sites, so the activation hook
 		   would never fire for them. Checking a stored version on admin_init
@@ -91,12 +101,17 @@ class Jws_Drama {
 			return;
 		}
 
+		/* Late: "Jws Settings" is registered by the theme, whose admin_menu
+		   callback runs after every plugin's at the default priority. Always
+		   on, disabled or not, so the toggle above stays reachable. */
+		add_action( 'admin_menu', array( $settings, 'register_submenu' ), 20 );
+
+		if ( ! $enabled ) {
+			return;
+		}
+
 		add_action( 'admin_menu', array( $admin, 'register_pages' ) );
 		add_action( 'admin_menu', array( $admin, 'remove_taxonomy_metaboxes' ) );
-
-		/* Late: "Jws Settings" is registered by the theme, whose admin_menu
-		   callback runs after every plugin's at the default priority. */
-		add_action( 'admin_menu', array( $settings, 'register_submenu' ), 20 );
 
 		/* No sub_save/sub_delete endpoints: VIP is Paid Memberships Pro's, so
 		   a membership is granted and revoked on its own screens rather than

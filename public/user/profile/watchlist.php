@@ -5,7 +5,10 @@ if( ! defined('ABSPATH' ) ){
 $user_id = absint(get_queried_object_id()); 
 wp_enqueue_script('jws-youtube-api');
 $post_watchlisted = Jws_Watchlist::get_ids($user_id);
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos', 'drama'];
+$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+if ( post_type_exists( 'drama' ) ) {
+    $valid_post_types[] = 'drama';
+}
 $current_filter = isset($_GET['watchlist_filter']) ? sanitize_text_field($_GET['watchlist_filter']) : 'movies';
 ?>
 <div class="jws-movies_advanced-element profile-watchlist">

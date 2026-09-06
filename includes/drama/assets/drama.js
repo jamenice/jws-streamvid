@@ -156,6 +156,11 @@
                 markActive(data.episodeId);
                 openRangeOf(data.episodeId);
 
+                // On mobile the panel is a sheet over the stage; picking an
+                // episode from it should hand the screen back to the video
+                // instead of leaving the sheet open over the new episode.
+                setPanelOpen(false);
+
                 if (push && window.history && window.history.pushState) {
                     window.history.pushState({ jwsDramaEpisode: data.episodeId }, data.title, data.permalink);
                 }
@@ -217,11 +222,15 @@
         $page.on('click', '.sv-short-fullscreen', function () {
 
             /*
-             * Fullscreen the stage, not the player: the vertical video is only
-             * a slice of the screen, and taking the whole stage keeps it centred
-             * on black instead of stretching.
+             * Fullscreen .sv-short-page, not just the stage: the Fullscreen API
+             * only paints the requested element's own subtree, and .sv-short-panel
+             * is a sibling of .sv-short-stage, not a descendant. Fullscreening the
+             * stage alone would strand the panel outside the fullscreen element,
+             * so the panel-toggle button could never show it while fullscreen is
+             * active. .sv-short-page still keeps the player centred on black via
+             * the same flex layout it already uses out of fullscreen.
              */
-            var target = $page.find('.sv-short-stage')[0];
+            var target = $page[0];
 
             if (!target) {
                 return;

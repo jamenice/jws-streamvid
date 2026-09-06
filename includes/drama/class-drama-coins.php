@@ -76,7 +76,7 @@ class Jws_Drama_Coins {
 		 * field the buyer was never shown.
 		 */
 		add_filter( 'woocommerce_checkout_fields', array( $this, 'simplify_checkout_fields' ) );
-		add_action( 'wp_head', array( $this, 'checkout_style' ) );
+		//add_action( 'wp_head', array( $this, 'checkout_style' ) );
 
 		// Wallet tab in the account area, sortable from Theme Options > Profile.
 		add_filter( 'streamvid_profile_default_menu_items', array( $this, 'profile_menu' ) );

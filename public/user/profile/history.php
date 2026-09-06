@@ -5,7 +5,10 @@ if( ! defined('ABSPATH' ) ){
 
 $user_id = get_current_user_id();
 $video_progress_data = Jws_History::get_all($user_id);
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos', 'drama'];
+$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+if ( post_type_exists( 'drama' ) ) {
+    $valid_post_types[] = 'drama';
+}
 
 
 $current_filter = isset($_GET['history_filter']) ? sanitize_text_field($_GET['history_filter']) : 'movies';

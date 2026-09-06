@@ -62,6 +62,12 @@ if ( empty( $drama['select-sidebar-post'] ) && function_exists( 'jws_archive_opt
 }
 
 $has_sidebar = ! empty( $drama['check-content-sidebar'] ) && ! empty( $drama['select-sidebar-post'] );
+
+/*
+ * Drama has no image size option of its own; it shares the movie ones —
+ * `movies_imagesize` is the vertical crop the portrait card wants.
+ */
+$image_size = function_exists( 'jws_theme_get_option' ) ? jws_theme_get_option( 'movies_imagesize' ) : 'full';
 ?>
 <div id="primary" class="content-area">
 	<main id="main" class="site-main jws-drama-archive jws-movies-archive jws-movies_advanced-element sidebar-<?php echo esc_attr( $drama['position_sidebar'] ); ?>">
@@ -112,7 +118,10 @@ $has_sidebar = ! empty( $drama['check-content-sidebar'] ) && ! empty( $drama['se
 									get_template_part(
 										'template-parts/content/movies/layout/layout10',
 										'',
-										array( 'post_id' => get_the_ID() )
+										array(
+											'post_id'    => get_the_ID(),
+											'image_size' => $image_size,
+										)
 									);
 									echo '</div>';
 

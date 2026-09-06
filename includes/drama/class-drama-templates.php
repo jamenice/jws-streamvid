@@ -76,6 +76,15 @@ class Jws_Drama_Templates {
 		}
 
 		self::assets();
+
+		/*
+		 * The chat widget floats over the same corner as the stage controls
+		 * and the unlock button on the watch screens — singular only, the
+		 * archive has room for it.
+		 */
+		if ( is_singular( array( Jws_Drama_Post_Types::DRAMA, Jws_Drama_Post_Types::EPISODE ) ) ) {
+			wp_add_inline_style( 'jws-drama', '#svcChatWidget{display:none !important;}' );
+		}
 	}
 
 	/**
@@ -155,12 +164,14 @@ class Jws_Drama_Templates {
 			return $html;
 		}
 
+		$item = array( 'post_id' => (int) $post_id );
+
+		if ( ! empty( $args_item['image_size'] ) ) {
+			$item['image_size'] = $args_item['image_size'];
+		}
+
 		ob_start();
-		get_template_part(
-			'template-parts/content/movies/layout/layout10',
-			'',
-			array( 'post_id' => (int) $post_id )
-		);
+		get_template_part( 'template-parts/content/movies/layout/layout10', '', $item );
 
 		return ob_get_clean();
 	}
@@ -168,39 +179,6 @@ class Jws_Drama_Templates {
 	/* ---------------------------------------------------------------------- */
 	/* Helpers the templates use                                               */
 	/* ---------------------------------------------------------------------- */
-
-	/**
-	 * Portrait artwork for a drama, falling back to the featured image.
-	 *
-	 * Short drama is shot 9:16, so the landscape thumbnail the rest of the site
-	 * uses is the wrong crop for a card.
-	 */
-	public static function poster_url( $drama_id, $size = 'large' ) {
-
-		$poster = get_post_meta( $drama_id, 'drama_poster', true );
-
-		if ( is_array( $poster ) && ! empty( $poster['ID'] ) ) {
-			$src = wp_get_attachment_image_src( $poster['ID'], $size );
-			if ( $src ) {
-				return $src[0];
-			}
-		}
-
-		if ( is_numeric( $poster ) && $poster ) {
-			$src = wp_get_attachment_image_src( $poster, $size );
-			if ( $src ) {
-				return $src[0];
-			}
-		}
-
-		if ( is_string( $poster ) && filter_var( $poster, FILTER_VALIDATE_URL ) ) {
-			return $poster;
-		}
-
-		$thumb = get_the_post_thumbnail_url( $drama_id, $size );
-
-		return $thumb ? $thumb : '';
-	}
 
 	/** Genre-ish terms shown as links, e.g. the tag list on the watch screen. */
 	public static function genre_terms( $drama_id, $limit = 3 ) {

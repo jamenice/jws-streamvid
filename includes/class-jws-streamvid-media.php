@@ -486,22 +486,6 @@ class Jws_Streamvid_Media {
             $image = function_exists('jws_backdrop_banner_image') ? jws_backdrop_banner_image($post_id, $image_size) : '';
         }
 
-        /*
-         * Drama keeps its own vertical poster in the `drama_poster` field
-         * rather than always relying on the featured image, so a drama post
-         * with no featured image set falls through every branch above to
-         * the theme's generic placeholder (WooCommerce's, on this site)
-         * instead of its real artwork. Overridden last, unconditionally,
-         * since none of the TMDB branches above ever apply to drama.
-         */
-        if ( 'drama' === get_post_type( $post_id ) && class_exists( 'Jws_Drama_Templates' ) ) {
-            $drama_poster = Jws_Drama_Templates::poster_url( $post_id, $image_size );
-
-            if ( $drama_poster ) {
-                $image = '<img class="attachment-full" alt="" src="' . esc_url( $drama_poster ) . '">';
-            }
-        }
-
         echo !empty($image) ? $image : '';
         echo $pre;
         

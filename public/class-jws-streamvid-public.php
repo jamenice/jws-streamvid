@@ -409,16 +409,25 @@ class Jws_Streamvid_Public {
             }
 
 
-        } elseif ( is_singular( 'drama_ep' ) && class_exists( 'Jws_Drama_Wallet' ) ) {
+        } elseif ( is_singular( array( 'drama', 'drama_ep' ) ) && class_exists( 'Jws_Drama_Wallet' ) ) {
 
             /*
              * Same idea as the tv_shows branch above, cut down to what
              * saveVideoProgress() in jws_player_v10.js actually needs: the
              * parent id, so watching an episode also credits the series for
              * "Continue Watching" the way a tv_shows episode already does.
+             *
+             * Both post types, because the episode plays on either URL:
+             * single-drama.php opens the drama on whichever episode the viewer
+             * is up to, so /drama/the-ceo/ is where most watching happens. When
+             * only drama_ep was covered, that page wrote a history row for the
+             * episode and none for the series, and the drama never reached
+             * "Continue Watching" at all.
              */
             $fr_varjs['is_drama_episode'] = true;
-            $fr_varjs['episodes_drama']   = Jws_Drama_Wallet::drama_id_of( get_the_ID() );
+            $fr_varjs['episodes_drama']   = is_singular( 'drama' )
+                ? get_the_ID()
+                : Jws_Drama_Wallet::drama_id_of( get_the_ID() );
         }
 
         $fr_varjs['video_continue_watching'] = jws_theme_get_option('video_continue_watching') ? 'yes' : 'no';

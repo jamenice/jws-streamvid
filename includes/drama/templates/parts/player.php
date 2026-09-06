@@ -117,6 +117,9 @@ switch ( $type ) {
 		$module = '';
 }
 
+$autoplay = function_exists( 'jws_theme_get_option' ) && jws_theme_get_option( 'video_autoplay' ) ? true : false;
+$muted    = function_exists( 'jws_theme_get_option' ) && jws_theme_get_option( 'video_muted' ) ? true : false;
+
 $current_time = 0;
 
 if ( is_user_logged_in() ) {
@@ -134,8 +137,8 @@ $config = array(
 	'mediaTag'    => $tag,
 	'mediaModule' => $module,
 	'poster'      => $poster,
-	'autoplay'    => false,
-	'muted'       => false,
+	'autoplay'    => $autoplay,
+	'muted'       => $muted,
 	'currentTime' => $current_time,
 	'qualities'   => array(),
 	'adsTagUrl'   => '',
@@ -151,7 +154,13 @@ $subtitles = function_exists( 'get_field' ) ? get_field( 'sub_titles', $episode_
 		<?php if ( $poster ) : ?>poster="<?php echo esc_url( $poster ); ?>"<?php endif; ?>
 	>
 		<video-skin>
-			<<?php echo esc_html( $tag ); ?> src="<?php echo esc_url( $video_url ); ?>" playsinline preload="auto">
+			<<?php echo esc_html( $tag ); ?>
+				src="<?php echo esc_url( $video_url ); ?>"
+				playsinline
+				preload="auto"
+				<?php echo $config['autoplay'] ? 'autoplay' : ''; ?>
+				<?php echo $config['muted'] ? 'muted' : ''; ?>
+			>
 				<?php
 				if ( ! empty( $subtitles ) && is_array( $subtitles ) ) {
 					foreach ( $subtitles as $key => $subtitle ) {

@@ -335,8 +335,8 @@ class Jws_Drama_Ajax {
 				'number'    => $number,
 				'permalink' => get_permalink( $episode_id ),
 				/* translators: %d: episode number */
-				'crumb'     => sprintf( esc_html__( 'Episode %d', 'jws_streamvid' ), $number ),
-				'title'     => get_the_title( $drama_id ) . ' – ' . sprintf( esc_html__( 'Episode %d', 'jws_streamvid' ), $number ),
+				'crumb'     => sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
+				'title'     => html_entity_decode( get_the_title( $drama_id ), ENT_QUOTES, 'UTF-8' ) . ' – ' . sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
 				'locked'    => empty( $access['can_watch'] ),
 			)
 		);

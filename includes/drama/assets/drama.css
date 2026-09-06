@@ -27,8 +27,16 @@
     align-items: stretch;
     /* Fills what is left under the header. --sv-header-h is measured in
        drama.js from the actual header height; 90px is only the fallback
-       used before JS runs (or if it's disabled). */
+       used before JS runs (or if it's disabled).
+
+       100vh is the *largest* possible viewport on mobile — it ignores the
+       browser's address/search bar, so whenever that bar is showing (top on
+       some Android Chrome builds, bottom on iOS Safari), a plain vh value
+       overflows the real visible area. 100dvh tracks the viewport as the bar
+       shows/hides, so the stage never runs under it or leaves a gap; the vh
+       line stays first as the fallback for browsers without dvh support. */
     min-height: calc(100vh - var(--sv-header-h, 90px));
+    min-height: calc(100dvh - var(--sv-header-h, 90px));
 }
 
 .sv-short-stage {
@@ -46,6 +54,7 @@
     width: auto;
     height: 100%;
     max-height: calc(100vh - 90px);
+    max-height: calc(100dvh - 90px);
     aspect-ratio: 9 / 16;
     margin: 0;
     overflow: hidden;
@@ -137,6 +146,7 @@
     border: 0;
     border-radius: 999px;
     font-size: 20px;
+    color:var(--heading);
 }
 
 .sv-short-stage-btn:hover {
@@ -149,8 +159,9 @@
     pointer-events: none;
 }
 
-/* Only meaningful once the panel can be hidden, i.e. under the 1199px
-   breakpoint below — desktop keeps the panel on screen at all times. */
+/* Only meaningful once the panel can be hidden: under the 1199px breakpoint
+   below, or in fullscreen (see the ":fullscreen" section under Panel) —
+   otherwise desktop keeps the panel on screen at all times. */
 .sv-short-panel-toggle {
     display: none;
 }
@@ -168,11 +179,44 @@
     flex: 0 0 460px;
     width: 460px;
     max-height: calc(100vh - 90px);
+    max-height: calc(100dvh - 90px);
     padding: 26px 32px 40px;
     overflow-y: auto;
     background-color: rgba(25, 27, 36, 0.7);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
+}
+
+/*
+ * Fullscreen (desktop width): the fullscreen target is .sv-short-page itself
+ * (see the fullscreen handler in drama.js), so :fullscreen here matches while
+ * the whole watch screen — stage and panel alike — is the fullscreen element.
+ * Pinning a 460px panel beside a fullscreen stage defeats the point of going
+ * fullscreen, so it becomes the same closed-until-tapped overlay the sub-1199px
+ * layout already uses, just anchored to the side instead of the bottom — the
+ * :fullscreen selectors below out-specificity the plain-class rules they
+ * shadow, so this applies regardless of source order relative to them.
+ */
+.sv-short-page:fullscreen .sv-short-panel-toggle,
+.sv-short-page:-webkit-full-screen .sv-short-panel-toggle {
+    display: flex;
+}
+
+.sv-short-page:fullscreen .sv-short-panel,
+.sv-short-page:-webkit-full-screen .sv-short-panel {
+    display: none;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    flex-direction: column;
+    max-height: 100vh;
+    z-index: 40;
+    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.4);
+}
+
+.sv-short-page.sv-panel-open:fullscreen .sv-short-panel,
+.sv-short-page.sv-panel-open:-webkit-full-screen .sv-short-panel {
+    display: flex;
 }
 
 .sv-short-panel .sv-short-breadcrumbs {
@@ -404,7 +448,8 @@
 
     .sv-short-page {
         display: block;
-        min-height: 0;
+        min-height: calc(100vh - var(--sv-header-h, 90px));
+        min-height: calc(100dvh - var(--sv-header-h, 90px));
     }
 
     /*
@@ -423,12 +468,14 @@
      */
     .sv-short-stage {
         height: auto;
-        min-height: 0;
+        min-height: calc(100vh - var(--sv-header-h, 90px));
+        min-height: calc(100dvh - var(--sv-header-h, 90px));
         padding: 0;
     }
 
     .sv-short-player {
         width: min(100%, calc(85vh * 9 / 16));
+        width: min(100%, calc(85dvh * 9 / 16));
         height: auto;
         max-height: none;
     }
@@ -456,6 +503,7 @@
 
     .sv-short-page.sv-panel-open .sv-short-panel {
         display: flex;
+        animation: fadeInUp 0.5s both;
     }
 
     .sv-short-panel-toggle {
@@ -473,7 +521,7 @@
 
     .sv-short-stage-controls {
         inset-inline-end: 12px;
-        bottom: 20px;
+        bottom: 80px;
     }
 
     .sv-short-panel>.sv-short-breadcrumbs {
@@ -503,7 +551,11 @@
 }
 
 @media (max-width: 575px) {
-
+    .sv-short-stage-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
     .sv-short-panel {
         padding: 20px 16px 32px;
     }

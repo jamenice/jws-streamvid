@@ -42,6 +42,11 @@ class Jws_Drama_Settings {
 	public static function defaults() {
 
 		return array(
+			/* Master switch: off hides the drama post types, front-end pages
+			   and widgets everywhere on the site while this settings screen
+			   stays reachable to turn it back on. */
+			'enabled'       => 1,
+
 			'free_episodes' => 3,
 			'coin_price'    => 10,
 			'currency'      => 'USD',
@@ -143,6 +148,12 @@ class Jws_Drama_Settings {
 		$all = self::all();
 
 		return array_key_exists( $key, $all ) ? $all[ $key ] : $fallback;
+	}
+
+	/** Whether the module should register its post types and front end at all. */
+	public static function is_enabled() {
+
+		return ! empty( self::get( 'enabled', 1 ) );
 	}
 
 	public static function save( array $settings ) {
@@ -791,6 +802,8 @@ class Jws_Drama_Settings {
 		$stored_packages = isset( $stored['packages'] ) && is_array( $stored['packages'] ) ? $stored['packages'] : array();
 		$stored_plans    = isset( $stored['plans'] ) && is_array( $stored['plans'] ) ? $stored['plans'] : array();
 
+		$out['enabled'] = empty( $raw['enabled'] ) ? 0 : 1;
+
 		$out['free_episodes'] = isset( $raw['free_episodes'] ) ? max( 0, (int) $raw['free_episodes'] ) : 0;
 		$out['coin_price']    = isset( $raw['coin_price'] ) ? max( 0, (int) $raw['coin_price'] ) : 0;
 
@@ -1029,6 +1042,16 @@ class Jws_Drama_Settings {
 		?>
 		<div class="jws-drama-tab" data-tab="general">
 			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="enabled"><?php echo esc_html__( 'Drama system', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<label>
+							<input type="checkbox" id="enabled" name="enabled" value="1" <?php checked( ! empty( $s['enabled'] ) ); ?> />
+							<?php echo esc_html__( 'Enable the drama system', 'jws_streamvid' ); ?>
+						</label>
+						<p class="description"><?php echo esc_html__( 'Turn off to hide drama everywhere on the site — post types, pages, widgets and the app API — without losing any content. This settings screen stays reachable so it can be switched back on.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
 				<tr>
 					<th scope="row"><label for="free_episodes"><?php echo esc_html__( 'Default free episodes', 'jws_streamvid' ); ?></label></th>
 					<td>
@@ -1944,11 +1967,9 @@ class Jws_Drama_Settings {
 			update_post_meta( $drama_id, self::DEMO_META, 1 );
 			update_post_meta( $drama_id, 'drama_status', 'ongoing' );
 			update_post_meta( $drama_id, 'drama_total_ep', $episodes_per_drama );
-			update_post_meta( $drama_id, 'drama_poster', 'https://placehold.co/540x960/1a1a2e/eee.png?text=' . rawurlencode( $title ) );
 
 			update_post_meta( $drama_id, '_drama_status', 'field_drama_status' );
 			update_post_meta( $drama_id, '_drama_total_ep', 'field_drama_total_ep' );
-			update_post_meta( $drama_id, '_drama_poster', 'field_drama_poster' );
 
 			if ( $genre_terms ) {
 				$pick = array_rand( $genre_terms, min( 2, count( $genre_terms ) ) );

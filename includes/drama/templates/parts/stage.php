@@ -24,7 +24,7 @@ $access   = $episode_id
 	? Jws_Drama_Wallet::access( $episode_id )
 	: array( 'can_watch' => false, 'reason' => 'invalid', 'price' => 0, 'balance' => 0, 'number' => 0 );
 
-$poster = Jws_Drama_Templates::poster_url( $drama_id, 'full' );
+$poster = get_the_post_thumbnail_url( $drama_id, 'full' ) ?: '';
 $price  = Jws_Drama_Wallet::coin_price( $drama_id );
 
 $index = $episode_id ? array_search( $episode_id, array_map( 'intval', $episodes ), true ) : false;
