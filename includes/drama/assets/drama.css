@@ -45,7 +45,11 @@
     flex: 1;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     background: #000000;
+    /* Lets drama.js read a vertical drag as a swipe between episodes
+       instead of the browser also scrolling the page underneath it. */
+    touch-action: pan-x;
 }
 
 /* The whole point of the format: a 9:16 column, as tall as the stage allows. */

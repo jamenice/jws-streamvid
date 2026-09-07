@@ -128,6 +128,15 @@
 
             var popupClass = popupId.replace('#', 'mfp-');
 
+            /* The Fullscreen API only paints the fullscreen element's own
+               subtree, and magnificPopup otherwise always builds its wrap as
+               a child of document.body — so a popup opened while some other
+               element (e.g. the drama short player) is fullscreen would get
+               its .open classes toggled correctly yet never actually render.
+               Building the wrap inside the fullscreen element keeps it on
+               screen; outside fullscreen this is just document.body, the
+               same default magnificPopup already uses. */
+            var fullscreenEl = document.fullscreenElement || document.webkitFullscreenElement || document.body;
 
             $.magnificPopup.open({
                 items: {
@@ -136,6 +145,7 @@
                 },
                 removalDelay: 360,
                 tClose: 'close',
+                prependTo: fullscreenEl,
                 callbacks: {
                     beforeOpen: function () {
                         this.st.mainClass = 'user-popup animation-popup ' + popupClass;

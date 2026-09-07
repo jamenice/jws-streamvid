@@ -244,6 +244,33 @@
             (target.requestFullscreen || target.webkitRequestFullscreen).call(target);
         });
 
+        /*
+         * .jws-form-login-popup is printed once at wp_footer, as a sibling of
+         * .sv-short-page rather than a descendant — so the moment fullscreen
+         * is active, the same Fullscreen API containment described above
+         * stops it from rendering at all. Its .open class still gets added
+         * correctly (see openLoginPopup() below); it just never paints.
+         * Reparenting it into the fullscreen element while one is active,
+         * and back to <body> once it isn't, is what keeps "Sign In" working
+         * from inside fullscreen without touching every place that opens it.
+         */
+        var $loginPopup = $('.jws-form-login-popup');
+
+        $(document).on('fullscreenchange webkitfullscreenchange', function () {
+
+            if (!$loginPopup.length) {
+                return;
+            }
+
+            var fullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
+
+            if (fullscreenEl === $page[0]) {
+                $loginPopup.appendTo(fullscreenEl);
+            } else if (!$loginPopup.parent().is('body')) {
+                $loginPopup.appendTo(document.body);
+            }
+        });
+
         /* ------------------------------------------------------------------ */
         /* Stage controls: hidden until tapped, auto-hide after inactivity     */
         /* ------------------------------------------------------------------ */
@@ -321,6 +348,28 @@
         /* Keyboard: up / down move between episodes                           */
         /* ------------------------------------------------------------------ */
 
+        /**
+         * The prev/next slot in .sv-short-stage-controls is always rendered
+         * (stage.php), as either an <a class="sv-short-nav"> when that
+         * neighbour exists or a disabled <span> placeholder when it doesn't
+         * — so the two slots always occupy positions 0 (prev) and 1 (next)
+         * in that order. Selecting only "a.sv-short-nav" and indexing into
+         * *that* filtered set instead would shift position whenever the prev
+         * slot is a placeholder (e.g. on the first episode of a range): the
+         * lone "next" link would land at index 0 and get read as "prev".
+         *
+         * @param {number} direction -1 for the previous episode, 1 for next.
+         * @returns {jQuery} The link, or an empty set if that neighbour
+         *   doesn't exist.
+         */
+        function navLink(direction) {
+
+            return $page
+                .find('.sv-short-stage-controls > .sv-short-stage-btn.sv-short-nav, .sv-short-stage-controls > .sv-short-stage-btn.is-disabled')
+                .eq(direction < 0 ? 0 : 1)
+                .filter('a.sv-short-nav');
+        }
+
         $(document).on('keydown', function (event) {
 
             if (event.metaKey || event.ctrlKey || event.altKey) {
@@ -334,18 +383,155 @@
                 return;
             }
 
-            var index = event.key === 'ArrowUp' ? 1 : (event.key === 'ArrowDown' ? 2 : 0);
-
-            if (!index) {
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
                 return;
             }
 
-            var $link = $page.find('.sv-short-stage-controls a.sv-short-nav').eq(index - 1);
+            var $link = navLink(event.key === 'ArrowUp' ? -1 : 1);
 
             if ($link.length) {
                 event.preventDefault();
                 loadEpisode($link.data('episode'), true);
             }
+        });
+
+        /* ------------------------------------------------------------------ */
+        /* Touch: swipe up / down move between episodes (mobile)               */
+        /* ------------------------------------------------------------------ */
+
+        /* Vertical travel needed before a touch counts as a swipe rather than
+           a tap, and how much horizontal drift is still allowed while doing
+           so (a diagonal or mostly-horizontal drag — e.g. across the seek
+           bar — should not be read as "next/previous episode"). */
+        var SWIPE_MIN_Y  = 60;
+        var SWIPE_MAX_X  = 80;
+        var SWIPE_RESIST = 0.5;  // the card trails the finger, doesn't match it 1:1
+        var SWIPE_CAP    = 120;  // px it can be dragged before it stops following
+
+        var touchStartX   = 0;
+        var touchStartY   = 0;
+        var touchTracking = false;
+        var $dragCard     = $();
+
+        function stagePlayer() {
+            return $page.find('.sv-short-stage > .sv-short-player');
+        }
+
+        /* Plain transform write, no `transition` — this has to be
+           instantaneous so the card tracks the finger 1:1 while dragging. */
+        function dragOffset($el, y) {
+            $el.css('transform', y ? 'translateY(' + y + 'px)' : '');
+        }
+
+        /* Finishes the gesture with a short animated move to `y` (0 to snap
+           back, a full stage height to carry on off-screen), then drops the
+           inline styles again so they don't linger and block the stage's own
+           opacity transition (the dim while the next episode loads) on
+           whatever ends up in this slot next. */
+        function releaseDrag($el, y) {
+
+            if (!$el.length) {
+                return;
+            }
+
+            $el.css({ transition: 'transform 0.22s ease', transform: y ? 'translateY(' + y + 'px)' : '' });
+
+            setTimeout(function () {
+                $el.css({ transition: '', transform: '' });
+            }, 220);
+        }
+
+        $page.on('touchstart', '.sv-short-stage', function (event) {
+
+            var touch = event.originalEvent.touches[0];
+
+            if (!touch || loading) {
+                return;
+            }
+
+            touchStartX   = touch.clientX;
+            touchStartY   = touch.clientY;
+            touchTracking = true;
+            $dragCard     = stagePlayer();
+        });
+
+        $page.on('touchmove', '.sv-short-stage', function (event) {
+
+            if (!touchTracking || !$dragCard.length) {
+                return;
+            }
+
+            var touch = event.originalEvent.touches[0];
+
+            if (!touch) {
+                return;
+            }
+
+            var deltaX = touch.clientX - touchStartX;
+            var deltaY = touch.clientY - touchStartY;
+
+            // A mostly-horizontal drag isn't this gesture — leave the card alone.
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                return;
+            }
+
+            // Rubber-band harder toward whichever edge has nowhere to go, the
+            // same cue a native list gives once it's out of items to show.
+            var hasNeighbour = navLink(deltaY < 0 ? 1 : -1).length > 0;
+            var travel       = deltaY * SWIPE_RESIST * (hasNeighbour ? 1 : 0.3);
+
+            dragOffset($dragCard, Math.max(-SWIPE_CAP, Math.min(SWIPE_CAP, travel)));
+        });
+
+        $page.on('touchend', '.sv-short-stage', function (event) {
+
+            if (!touchTracking) {
+                return;
+            }
+
+            touchTracking = false;
+
+            var $card = $dragCard;
+
+            $dragCard = $();
+
+            var touch = event.originalEvent.changedTouches[0];
+
+            if (!touch) {
+                releaseDrag($card, 0);
+                return;
+            }
+
+            var deltaX = touch.clientX - touchStartX;
+            var deltaY = touch.clientY - touchStartY;
+
+            if (Math.abs(deltaY) < SWIPE_MIN_Y || Math.abs(deltaX) > SWIPE_MAX_X) {
+                releaseDrag($card, 0);
+                return;
+            }
+
+            // Swipe up (finger moves toward the top, deltaY < 0) advances to
+            // the next episode, mirroring every other short-video feed.
+            var $link = navLink(deltaY < 0 ? 1 : -1);
+
+            if (!$link.length) {
+                releaseDrag($card, 0);
+                return;
+            }
+
+            var stageHeight = $card.closest('.sv-short-stage').height() || 300;
+
+            // Carry the card the rest of the way off-screen instead of
+            // snapping back, so the swipe reads as "done" the instant the
+            // finger lifts rather than waiting on the network request.
+            releaseDrag($card, deltaY < 0 ? -stageHeight : stageHeight);
+            loadEpisode($link.data('episode'), true);
+        });
+
+        $page.on('touchcancel', '.sv-short-stage', function () {
+            touchTracking = false;
+            releaseDrag($dragCard, 0);
+            $dragCard = $();
         });
 
         /* ------------------------------------------------------------------ */
@@ -566,6 +752,33 @@
             }
 
             /*
+             * .sv-buy-modal is built directly under <body> (see host()
+             * above), so it has the same Fullscreen API containment problem
+             * as the login and share popups: the browser only paints the
+             * fullscreen element's own subtree, so opening this modal while
+             * .sv-short-page is fullscreen adds .is-open correctly but
+             * nothing appears, since the modal sits outside that subtree.
+             * Keep it inside whichever element is fullscreen, moving it back
+             * to <body> once nothing is.
+             */
+            function syncHostParent() {
+
+                if (!$host) {
+                    return;
+                }
+
+                var fullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
+
+                if (fullscreenEl) {
+                    $host.appendTo(fullscreenEl);
+                } else if (!$host.parent().is('body')) {
+                    $host.appendTo(document.body);
+                }
+            }
+
+            $(document).on('fullscreenchange webkitfullscreenchange', syncHostParent);
+
+            /*
              * Everything from here to payByWallet() is the module's own
              * Stripe/PayPal checkout. The panel stopped rendering gateway
              * buttons when coins moved to WooCommerce and VIP to PMPro, so
@@ -712,6 +925,7 @@
                     }
 
                     host().find('.sv-buy-panel').html(response.data.html);
+                    syncHostParent();
                     host().removeAttr('hidden').addClass('is-open');
                     $(document.body).addClass('sv-buy-lock');
 
