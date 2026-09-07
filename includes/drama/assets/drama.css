@@ -150,7 +150,7 @@
     border: 0;
     border-radius: 999px;
     font-size: 20px;
-    color:var(--heading);
+    color: var(--heading);
 }
 
 .sv-short-stage-btn:hover {
@@ -477,11 +477,31 @@
         padding: 0;
     }
 
+    /*
+     * Fullscreen at this width: .sv-short-page is forced to fill the screen
+     * exactly by the browser's own fullscreen styling (author CSS can't
+     * override that part), which is what makes it a definite height here —
+     * unlike the plain block layout above, where the stage has to subtract
+     * --sv-header-h itself because nothing else gives it one. There's no
+     * header sharing space with it in fullscreen, so subtracting its height
+     * would just leave a blank gap the size of the header; filling the
+     * fullscreen box outright is both simpler and correct. Higher
+     * specificity than the plain .sv-short-stage rule above wins regardless
+     * of source order, the same trick the panel's :fullscreen rules use.
+     */
+    .sv-short-page:fullscreen .sv-short-stage,
+    .sv-short-page:-webkit-full-screen .sv-short-stage {
+        height: 100%;
+        min-height: 0;
+    }
+
     .sv-short-player {
         width: min(100%, calc(85vh * 9 / 16));
         width: min(100%, calc(85dvh * 9 / 16));
-        height: auto;
-        max-height: none;
+        height: 100%;
+        max-height: 100%;
+        position: absolute !important;
+        width: 100%;
     }
 
     /*
@@ -508,6 +528,7 @@
     .sv-short-page.sv-panel-open .sv-short-panel {
         display: flex;
         animation: fadeInUp 0.5s both;
+        padding-inline-end: 60px;
     }
 
     .sv-short-panel-toggle {
@@ -525,7 +546,7 @@
 
     .sv-short-stage-controls {
         inset-inline-end: 12px;
-        bottom: 80px;
+        bottom: 160px;
     }
 
     .sv-short-panel>.sv-short-breadcrumbs {
@@ -560,6 +581,7 @@
         height: 36px;
         font-size: 16px;
     }
+
     .sv-short-panel {
         padding: 20px 16px 32px;
     }

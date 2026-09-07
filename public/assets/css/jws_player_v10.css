@@ -235,7 +235,7 @@
     --media-accent-color: var(--btn-bgcolor3, #8e61ff);
     --media-accent-text-color: var(--btn-color, #ffffff);
     --media-focus-ring-color: var(--btn-bgcolor3, #8e61ff);
-    --media-object-fit: contain;
+    --media-object-fit: cover;
 }
 
 /* -------------------------------------------------------------------------- *
