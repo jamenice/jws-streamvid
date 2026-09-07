@@ -193,6 +193,10 @@ class Jws_Streamvid {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-history.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-migration.php';
 
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-settings.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-ledger.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-sync.php';
+
         include_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-install.php';
 		$this->loader = new Jws_Streamvid_Loader();
 
@@ -231,6 +235,9 @@ class Jws_Streamvid {
 
         // YouTube Import feature
         new Jws_Streamvid_Youtube_Import();
+
+        // Unified payment system settings
+        new Jws_Payment_Settings();
 
 	}
 
