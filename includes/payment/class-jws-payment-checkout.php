@@ -238,6 +238,28 @@ class Jws_Payment_Checkout {
 	}
 
 	/**
+	 * Where a member manages what they have just bought.
+	 *
+	 * The theme's own "Your Subscriptions" tab rather than PMPro's account
+	 * page: it is inside the profile the member already knows, and it is the
+	 * screen that actually lists what is being billed. PMPro's page is the
+	 * fallback for a site running this plugin without the theme.
+	 */
+	public static function membership_url() {
+
+		if ( class_exists( 'Jws_Streamvid_Profile' ) ) {
+
+			$url = Jws_Streamvid_Profile::get_url( 'subscriptions', 'membership' );
+
+			if ( $url ) {
+				return $url;
+			}
+		}
+
+		return function_exists( 'pmpro_url' ) ? pmpro_url( 'account' ) : home_url( '/' );
+	}
+
+	/**
 	 * Where someone goes once they have paid.
 	 *
 	 * The page they came from if we know it, and otherwise the place the thing
@@ -246,6 +268,16 @@ class Jws_Payment_Checkout {
 	 */
 	public static function destination( $order ) {
 
+		/*
+		 * Membership ignores `return_to` on purpose. That value is whatever
+		 * page the buyer happened to click from — and the plan cards live in
+		 * the coin popup, so it is usually the coins tab. The button under it
+		 * says "View my membership", and a button must go where it says.
+		 */
+		if ( 'membership' === $order->type ) {
+			return self::membership_url();
+		}
+
 		$meta = Jws_Payment_Orders::meta( $order );
 
 		if ( ! empty( $meta['return_to'] ) ) {
@@ -253,9 +285,6 @@ class Jws_Payment_Checkout {
 		}
 
 		switch ( $order->type ) {
-
-			case 'membership':
-				return function_exists( 'pmpro_url' ) ? pmpro_url( 'account' ) : home_url( '/' );
 
 			case 'coins':
 				return class_exists( 'Jws_Streamvid_Profile' )

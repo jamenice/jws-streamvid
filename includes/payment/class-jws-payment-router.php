@@ -220,7 +220,9 @@ class Jws_Payment_Router {
 			return;
 		}
 
-		$account = function_exists( 'pmpro_url' ) ? pmpro_url( 'account' ) : '';
+		/* Where the receipt's "View my membership" button will send them, and
+		   where they land if they back out of the checkout. */
+		$account = Jws_Payment_Checkout::membership_url();
 
 		Jws_Payment_Checkout::set_cart( get_current_user_id(), 'membership', $level_id, $account );
 
