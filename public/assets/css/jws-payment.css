@@ -1,0 +1,346 @@
+/**
+ * The unified checkout page.
+ *
+ * Deliberately quiet: colours come from the theme's own custom properties
+ * where they exist and fall back to the dark palette the rest of the site
+ * uses, so the page reads as part of the site rather than as a bolted-on form.
+ */
+
+.jws-checkout {
+	--jws-checkout-gap: 32px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: var(--jws-checkout-gap);
+	align-items: start;
+	max-width: 980px;
+	margin: 0 auto;
+	color: var(--jws-color-text, #d5d5d5);
+	padding: 30px 20px 70px;
+}
+
+.jws-checkout h5 {
+	margin: 0 0 18px;
+}
+
+.jws-checkout--notice,
+.jws-checkout--done {
+	grid-template-columns: minmax(0, 1fr);
+	max-width: 560px;
+	text-align: center;
+}
+
+.jws-checkout-summary,
+.jws-checkout-pay {
+	background: var(--background-item);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	padding: 28px;
+	position: sticky;
+	top: 60px;
+}
+
+
+
+/* Order summary ---------------------------------------------------------- */
+
+.jws-checkout-line {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding-bottom: 18px;
+	border-bottom: 1px solid var(--jws-border-color, rgba(255, 255, 255, .08));
+}
+
+.jws-checkout-thumb img {
+	display: block;
+	width: 56px;
+	height: 76px;
+	object-fit: cover;
+	border-radius: 6px;
+}
+
+.jws-checkout-line-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.jws-checkout-item {
+	font-weight: 600;
+	color: var(--jws-color-heading, #fff);
+}
+
+.jws-checkout-note {
+	font-size: 13px;
+	opacity: .7;
+}
+
+.jws-checkout-price {
+	white-space: nowrap;
+	font-weight: 600;
+}
+
+.jws-checkout-total {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	padding-top: 18px;
+	font-size: 17px;
+}
+
+.jws-checkout-total strong {
+	font-size: 22px;
+	color: var(--jws-color-heading, #fff);
+}
+
+.jws-checkout-terms {
+	margin: 16px 0 0;
+	font-size: 13px;
+	line-height: 1.6;
+	opacity: .7;
+}
+
+/* Payment ---------------------------------------------------------------- */
+
+.jws-checkout-wallets,
+.jws-checkout-card {
+	margin-bottom: 8px;
+}
+
+#jws-card-element {
+	margin-bottom: 20px;
+}
+
+.jws-checkout-or {
+	position: relative;
+	text-align: center;
+	margin: 22px 0;
+}
+
+.jws-checkout-or::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: var(--jws-border-color, rgba(255, 255, 255, .1));
+}
+
+.jws-checkout-or span {
+	position: relative;
+	padding: 0 12px;
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	background: var(--background-item);
+}
+
+.jws-checkout-alt {
+	display: grid;
+	gap: 10px;
+}
+
+.jws-checkout-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 48px;
+	padding: 12px 24px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--jws-color-primary, #e50914);
+	color: #fff;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	transition: opacity .2s ease;
+}
+
+.jws-checkout-button:hover,
+.jws-checkout-button:focus {
+	color: #fff;
+	opacity: .88;
+}
+
+.jws-checkout-button[disabled] {
+	cursor: not-allowed;
+	opacity: .55;
+}
+
+.jws-checkout-button--alt {
+	background: var(--jws-bg-tertiary, rgba(255, 255, 255, .08));
+	color: var(--jws-color-text, #eee);
+	border: 1px solid var(--jws-border-color, rgba(255, 255, 255, .12));
+}
+
+.jws-checkout-button--alt:hover,
+.jws-checkout-button--alt:focus {
+	color: var(--jws-color-heading, #fff);
+}
+
+.jws-checkout-button--paypal {
+	background: #ffc439;
+	border-color: #ffc439;
+	color: #12325b;
+}
+
+.jws-checkout-button--paypal:hover,
+.jws-checkout-button--paypal:focus {
+	color: #12325b;
+}
+
+.jws-checkout-error {
+	margin: 18px 0 0;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: rgba(229, 9, 20, .12);
+	border: 1px solid rgba(229, 9, 20, .35);
+	font-size: 14px;
+	color: #ffb3b6;
+}
+
+.jws-checkout.is-busy {
+	pointer-events: none;
+	opacity: .75;
+}
+
+/* Receipt ---------------------------------------------------------------- */
+
+/* The receipt reads top to bottom as one column, so the centring the shared
+   --done rule applies would leave the detail rows floating. */
+.jws-receipt {
+	text-align: left;
+}
+
+.jws-receipt-head {
+	text-align: center;
+	padding-bottom: 22px;
+	border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, .08));
+}
+
+.jws-receipt-check {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	margin-bottom: 14px;
+	border-radius: 50%;
+	background: rgb(30 255 125 / 14%);
+	border: 1px solid rgb(9 90 43 / 45%);
+	color: #1af678;
+}
+
+
+.jws-receipt-sub {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-sm);
+}
+
+.jws-receipt-sub strong {
+	color: var(--heading, #fff);
+}
+
+.jws-receipt-granted {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 22px 0;
+	padding: 14px 16px;
+	border-radius: 10px;
+	background: rgba(46, 204, 113, .08);
+	border: 1px solid rgba(46, 204, 113, .28);
+}
+
+.jws-receipt-granted strong {
+	font-size: 15px;
+	color: var(--jws-color-heading, #fff);
+}
+
+.jws-receipt-granted span {
+	font-size: 13px;
+	line-height: 1.6;
+	opacity: .75;
+}
+
+.jws-receipt-rows {
+	margin: 0;
+	padding: 0;
+}
+
+.jws-receipt-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 9px 0;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.jws-receipt-row dt {
+	flex: 0 0 auto;
+	font-size: var(--font-size-sm);
+}
+
+.jws-receipt-row dd {
+	margin: 0;
+	min-width: 0;
+	font-size: var(--font-size-sm);
+	text-align: right;
+	/* A Stripe reference is long enough to push the page sideways on a phone
+	   if it is allowed to stay on one line. */
+	word-break: break-all;
+	color: var(--heading);
+}
+
+.jws-receipt-row dd code {
+	font-size: 12px;
+	opacity: .85;
+}
+
+.jws-receipt-total {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 18px;
+	font-size: 15px;
+}
+
+.jws-receipt-total strong {
+	font-size: 24px;
+	color: var(--jws-color-heading, #fff);
+}
+
+.jws-receipt-actions {
+	display: grid;
+	gap: 15px;
+	margin-top: 24px;
+}
+
+/* The express-checkout block is revealed by script once Stripe confirms the
+   browser can actually offer a wallet, so it must stay hidden until then. */
+.jws-checkout-wallets[hidden],
+.jws-checkout-error[hidden] {
+	display: none !important;
+}
+
+@media (max-width: 767px) {
+	.jws-checkout {
+		grid-template-columns: minmax(0, 1fr);
+		--jws-checkout-gap: 20px;
+	}
+
+	.jws-checkout-summary,
+	.jws-checkout-pay {
+		padding: 20px;
+	}
+}

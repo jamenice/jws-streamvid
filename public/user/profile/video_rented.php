@@ -65,7 +65,7 @@ if (!empty($videos_with_time)) {
 
                 ?>
 
-                <td>
+                <td data-title="<?php echo esc_html__('Expiration Date', 'jws_streamvid'); ?>">
                         <?php 
                             echo '<p style="margin-bottom:0;">'.esc_html__('You have not watched the video yet', 'jws_streamvid').'</p>';
                             echo '<small>('.esc_html(sprintf(__('The expiration date will be automatically activated after %d days', 'jws_streamvid'), $delay)).')</small>';

@@ -385,7 +385,18 @@ class Jws_Drama_Settings {
 				   line per feature is all the card has room for. */
 				'features'    => array_values( array_filter( array_map( 'trim', explode( "\n", wp_strip_all_tags( (string) $level->description ) ) ) ) ),
 				'recurring'   => $recurring > 0,
-				'url'         => pmpro_url( 'checkout', '?level=' . $id ),
+				/**
+				 * Where a plan card sends the buyer.
+				 *
+				 * PMPro's checkout unless something takes the sale over — the
+				 * unified payment system points this at its own checkout so
+				 * the card links straight there instead of bouncing through a
+				 * page that only redirects.
+				 *
+				 * @param string $url      PMPro's checkout URL for this level.
+				 * @param int    $level_id
+				 */
+				'url'         => apply_filters( 'jws_drama_plan_checkout_url', pmpro_url( 'checkout', '?level=' . $id ), $id ),
 				'active'      => true,
 			);
 		}

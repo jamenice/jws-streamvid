@@ -45,7 +45,10 @@ class Jws_Payment_Sync {
 				'item_id'    => (int) $order->membership_id,
 				'item_label' => ! empty( $level->name ) ? $level->name : '',
 				'amount'     => $order->total,
-				'currency'   => function_exists( 'pmpro_get_currency' ) ? pmpro_get_currency() : '',
+				/* The option holds the code; pmpro_get_currency() returns the
+				   currency's formatting rules, which is not what this column
+				   is for. */
+				'currency'   => (string) get_option( 'pmpro_currency', '' ),
 				'gateway'    => (string) $order->gateway,
 				'status'     => 'completed',
 			)

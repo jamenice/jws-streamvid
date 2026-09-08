@@ -358,7 +358,17 @@ add_action('wp_ajax_get_invoice_html_woo', function() {
         wp_send_json_error('Order not found');
     }
 
-    
+    /*
+     * An invoice carries the buyer's name, address, phone and email. Without
+     * this check any logged-in visitor could walk the order ids and read every
+     * customer's details, because current_user_can('read') is true for every
+     * subscriber on the site.
+     */
+    if ( (int) $order->get_user_id() !== get_current_user_id() && ! current_user_can('manage_woocommerce') ) {
+        wp_send_json_error('Order not found');
+    }
+
+
     $shop_name = get_bloginfo('name');
     $shop_address = get_option('woocommerce_store_address') . ', ' . get_option('woocommerce_store_city') . ', ' . get_option('woocommerce_store_postcode');
     $shop_phone = get_option('woocommerce_store_phone');

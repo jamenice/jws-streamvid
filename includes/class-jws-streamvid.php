@@ -193,9 +193,40 @@ class Jws_Streamvid {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-history.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-migration.php';
 
-        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-settings.php';
-        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-ledger.php';
-        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-payment-sync.php';
+        /**
+         * The unified payment system: one checkout for membership, buy/rent
+         * and coins, taking payment with its own Stripe and PayPal
+         * credentials. Everything front-facing is gated on the master switch
+         * in Jws_Payment_Settings, so with it off the site keeps using the
+         * PMPro checkout and the WooCommerce cart exactly as before.
+         */
+        $payment_dir = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/payment/';
+
+        require_once $payment_dir . 'class-jws-payment-settings.php';
+        require_once $payment_dir . 'class-jws-payment-ledger.php';
+        require_once $payment_dir . 'class-jws-payment-items.php';
+        require_once $payment_dir . 'class-jws-payment-orders.php';
+        require_once $payment_dir . 'class-jws-payment-subscriptions.php';
+        require_once $payment_dir . 'class-jws-payment-fulfillment.php';
+        require_once $payment_dir . 'class-jws-payment-stripe.php';
+        require_once $payment_dir . 'class-jws-payment-paypal.php';
+        require_once $payment_dir . 'class-jws-payment-events.php';
+        require_once $payment_dir . 'class-jws-payment-checkout.php';
+        require_once $payment_dir . 'class-jws-payment-invoice.php';
+        require_once $payment_dir . 'class-jws-payment-router.php';
+        require_once $payment_dir . 'class-jws-payment-sync.php';
+
+        $payment_checkout = new Jws_Payment_Checkout();
+        $payment_checkout->register();
+
+        $payment_events = new Jws_Payment_Events();
+        $payment_events->register();
+
+        $payment_router = new Jws_Payment_Router();
+        $payment_router->register();
+
+        $payment_invoice = new Jws_Payment_Invoice();
+        $payment_invoice->register();
 
         include_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-install.php';
 		$this->loader = new Jws_Streamvid_Loader();
