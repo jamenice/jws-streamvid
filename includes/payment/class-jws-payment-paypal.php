@@ -321,6 +321,11 @@ class Jws_Payment_Paypal {
 			$args['cancelled'] = 1;
 		}
 
+		/* See the note on the Stripe side: app mode has to survive the trip. */
+		if ( Jws_Payment_Checkout::order_is_app( $order ) ) {
+			$args[ Jws_Payment_Checkout::APP_VAR ] = '1';
+		}
+
 		return add_query_arg( $args, Jws_Payment_Checkout::page_url() );
 	}
 

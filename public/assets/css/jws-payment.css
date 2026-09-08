@@ -341,6 +341,12 @@
 
 	.jws-checkout-summary,
 	.jws-checkout-pay {
+		position: static;
+		--jws-checkout-gap: 20px;
+	}
+
+	.jws-checkout-summary,
+	.jws-checkout-pay {
 		padding: 20px;
 	}
 }

@@ -109,9 +109,15 @@ class Jws_Payment_Router {
 	 */
 	public function override_checkout_url() {
 
+		/*
+		 * with_app() because the buy button is clicked from a film page that is
+		 * itself inside the app's WebView; sending the buyer to a checkout
+		 * without the flag would put the site's header and footer back around
+		 * it, mid-purchase.
+		 */
 		$script = sprintf(
 			'if (window.jws_script) { window.jws_script.checkout_url = %s; }',
-			wp_json_encode( Jws_Payment_Checkout::page_url() )
+			wp_json_encode( Jws_Payment_Checkout::with_app( Jws_Payment_Checkout::page_url() ) )
 		);
 
 		if ( wp_script_is( 'jws-main', 'registered' ) ) {
@@ -226,6 +232,9 @@ class Jws_Payment_Router {
 
 		Jws_Payment_Checkout::set_cart( get_current_user_id(), 'membership', $level_id, $account );
 
+		/* url_for() carries `app` from this request, which is what the app's
+		   membership autologin appends to the PMPro checkout URL it sends the
+		   WebView to. Losing it here is what put the site chrome back. */
 		wp_safe_redirect( Jws_Payment_Checkout::url_for( 'membership', $level_id, $account ) );
 		exit;
 	}

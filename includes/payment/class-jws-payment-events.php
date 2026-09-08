@@ -633,9 +633,12 @@ class Jws_Payment_Events {
 		}
 
 		wp_safe_redirect(
-			add_query_arg(
-				array( 'jws_payment' => $cancelled ? 'cancelled' : 'done', 'order' => $token ),
-				Jws_Payment_Checkout::page_url()
+			Jws_Payment_Checkout::with_app(
+				add_query_arg(
+					array( 'jws_payment' => $cancelled ? 'cancelled' : 'done', 'order' => $token ),
+					Jws_Payment_Checkout::page_url()
+				),
+				Jws_Payment_Checkout::order_is_app( $order )
 			)
 		);
 		exit;

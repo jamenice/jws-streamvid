@@ -62,6 +62,53 @@ class Jws_Payment_Checkout {
 		return $page_id && is_page( $page_id );
 	}
 
+	/* ---------------------------------------------------------------------- */
+	/* App WebView                                                             */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * The query var the Flutter WebView is recognised by.
+	 *
+	 * The theme hides the header, footer, chat widget and toolbar whenever it
+	 * is present (see the theme's css_inline.php), so a page that drops it on
+	 * a redirect suddenly grows a website's worth of chrome inside the app.
+	 */
+	const APP_VAR = 'app';
+
+	/** Whether this request is being rendered inside the app's WebView. */
+	public static function is_app_request() {
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- presentation only.
+		return ! empty( $_GET[ self::APP_VAR ] );
+	}
+
+	/**
+	 * Carries app mode onto a URL.
+	 *
+	 * @param string    $url
+	 * @param bool|null $app Force it on or off; null asks the current request.
+	 */
+	public static function with_app( $url, $app = null ) {
+
+		$app = null === $app ? self::is_app_request() : (bool) $app;
+
+		return $app ? add_query_arg( self::APP_VAR, '1', $url ) : $url;
+	}
+
+	/**
+	 * Whether the purchase behind an order began in the app.
+	 *
+	 * Read from the order rather than the request because the gateway calls
+	 * back over admin-ajax and returns through Stripe, neither of which carries
+	 * the original query string.
+	 */
+	public static function order_is_app( $order ) {
+
+		$meta = Jws_Payment_Orders::meta( $order );
+
+		return ! empty( $meta['app'] );
+	}
+
 	/**
 	 * A link that opens the checkout on one specific thing.
 	 *
@@ -77,7 +124,7 @@ class Jws_Payment_Checkout {
 			$args['jws_back'] = rawurlencode( $return_to );
 		}
 
-		return add_query_arg( $args, self::page_url() );
+		return self::with_app( add_query_arg( $args, self::page_url() ) );
 	}
 
 	/**
@@ -155,7 +202,7 @@ class Jws_Payment_Checkout {
 	 * Everything chargeable is resolved again from the settings and post meta
 	 * at the moment the order is created.
 	 */
-	public static function set_cart( $user_id, $type, $item_id, $return_to = '' ) {
+	public static function set_cart( $user_id, $type, $item_id, $return_to = '', $app = null ) {
 
 		update_user_meta(
 			(int) $user_id,
@@ -164,6 +211,10 @@ class Jws_Payment_Checkout {
 				'type'      => sanitize_key( $type ),
 				'item'      => (int) $item_id,
 				'return_to' => esc_url_raw( $return_to ),
+				/* Carried from the click that started this, because the page it
+				   lands on is reached by a redirect that has no query string of
+				   its own. */
+				'app'       => null === $app ? self::is_app_request() : (bool) $app,
 				'added'     => time(),
 			)
 		);
@@ -221,6 +272,30 @@ class Jws_Payment_Checkout {
 		self::set_cart( get_current_user_id(), $parts[0], (int) $parts[1], $back );
 	}
 
+	/**
+	 * Remembers app mode for a cart that was filled before the redirect.
+	 *
+	 * The theme's buy button fills the cart over AJAX and only then navigates
+	 * to the checkout, so the `?app=1` on that navigation is the first time
+	 * this request can know it is inside the WebView.
+	 */
+	private function absorb_app_flag() {
+
+		if ( ! self::is_app_request() || ! is_user_logged_in() ) {
+			return;
+		}
+
+		$cart = self::get_cart();
+
+		if ( ! $cart || ! empty( $cart['app'] ) ) {
+			return;
+		}
+
+		$cart['app'] = true;
+
+		update_user_meta( get_current_user_id(), self::CART_META, $cart );
+	}
+
 	/** The order behind a return token, whoever is asking. */
 	public static function find_by_token( $token ) {
 
@@ -274,25 +349,31 @@ class Jws_Payment_Checkout {
 		 * the coin popup, so it is usually the coins tab. The button under it
 		 * says "View my membership", and a button must go where it says.
 		 */
+		$app = self::order_is_app( $order );
+
 		if ( 'membership' === $order->type ) {
-			return self::membership_url();
+			return self::with_app( self::membership_url(), $app );
 		}
 
 		$meta = Jws_Payment_Orders::meta( $order );
 
 		if ( ! empty( $meta['return_to'] ) ) {
-			return $meta['return_to'];
+			return self::with_app( $meta['return_to'], $app );
 		}
 
 		switch ( $order->type ) {
 
 			case 'coins':
-				return class_exists( 'Jws_Streamvid_Profile' )
-					? Jws_Streamvid_Profile::get_url( 'drama-coins' )
-					: home_url( '/' );
+				return self::with_app(
+					class_exists( 'Jws_Streamvid_Profile' ) ? Jws_Streamvid_Profile::get_url( 'drama-coins' ) : home_url( '/' ),
+					$app
+				);
 
 			default:
-				return get_post( $order->item_id ) ? get_permalink( $order->item_id ) : home_url( '/' );
+				return self::with_app(
+					get_post( $order->item_id ) ? get_permalink( $order->item_id ) : home_url( '/' ),
+					$app
+				);
 		}
 	}
 
@@ -376,6 +457,7 @@ class Jws_Payment_Checkout {
 		}
 
 		$this->absorb_query_args();
+		$this->absorb_app_flag();
 
 		$cart = self::get_cart();
 
@@ -624,7 +706,7 @@ class Jws_Payment_Checkout {
 					<a class="jws-checkout-button button-default" href="<?php echo esc_url( self::destination( $order ) ); ?>">
 						<?php echo esc_html( self::destination_label( $order ) ); ?>
 					</a>
-					<a class="jws-checkout-button button-custom jws-checkout-button--alt" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+					<a class="jws-checkout-button button-custom jws-checkout-button--alt" href="<?php echo esc_url( self::with_app( home_url( '/' ), self::order_is_app( $order ) ) ); ?>">
 						<?php echo esc_html__( 'Back to home', 'jws_streamvid' ); ?>
 					</a>
 				</div>
@@ -834,6 +916,7 @@ class Jws_Payment_Checkout {
 						'cycle'       => $item['cycle'],
 						'fingerprint' => $item['fingerprint'],
 						'return_to'   => isset( $cart['return_to'] ) ? $cart['return_to'] : '',
+						'app'         => ! empty( $cart['app'] ),
 					)
 				),
 			)
@@ -870,9 +953,9 @@ class Jws_Payment_Checkout {
 				'flow'         => 'elements',
 				'token'        => $order->source_ref,
 				'clientSecret' => $intent['client_secret'],
-				'returnUrl'    => add_query_arg(
-					array( Jws_Payment_Stripe::RETURN_VAR => $order->source_ref ),
-					self::page_url()
+				'returnUrl'    => self::with_app(
+					add_query_arg( array( Jws_Payment_Stripe::RETURN_VAR => $order->source_ref ), self::page_url() ),
+					self::order_is_app( $order )
 				),
 			)
 		);
@@ -910,9 +993,9 @@ class Jws_Payment_Checkout {
 
 		wp_send_json_success(
 			array(
-				'redirect' => add_query_arg(
-					array( 'jws_payment' => 'done', 'order' => $token ),
-					self::page_url()
+				'redirect' => self::with_app(
+					add_query_arg( array( 'jws_payment' => 'done', 'order' => $token ), self::page_url() ),
+					self::order_is_app( $order )
 				),
 			)
 		);

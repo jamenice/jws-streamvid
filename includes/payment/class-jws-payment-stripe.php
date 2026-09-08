@@ -302,6 +302,15 @@ class Jws_Payment_Stripe {
 			$args['cancelled'] = 1;
 		}
 
+		/* App mode rides along, or the buyer comes back out of the WebView's
+		   chrome-free view into a full website inside the app. Folded into the
+		   args rather than appended afterwards: a second add_query_arg() over a
+		   finished URL re-encodes what is already in it, and Stripe only
+		   substitutes {CHECKOUT_SESSION_ID} when it is left literal. */
+		if ( Jws_Payment_Checkout::order_is_app( $order ) ) {
+			$args[ Jws_Payment_Checkout::APP_VAR ] = '1';
+		}
+
 		return add_query_arg( $args, Jws_Payment_Checkout::page_url() );
 	}
 
