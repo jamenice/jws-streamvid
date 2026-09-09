@@ -303,6 +303,84 @@ class Jws_Payment_Ledger {
 	}
 
 	/* ---------------------------------------------------------------------- */
+	/* Writing (mirrored orders)                                               */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * Writes or updates one row for a purchase taken by a *native* checkout —
+	 * PMPro's own, the WooCommerce cart, the drama module's direct
+	 * Stripe/PayPal flow. Called only from Jws_Payment_Sync, and only while
+	 * Jws_Payment_Settings::is_enabled() is true.
+	 *
+	 * This is not how an order this plugin's own checkout takes gets written —
+	 * that lifecycle (pending → completed, webhooks racing a return handler)
+	 * belongs to Jws_Payment_Orders::create()/mark_paid(). A native checkout
+	 * has already taken the money and granted access by the time its own hook
+	 * fires, so there is nothing to race and nothing left to grant: this only
+	 * mirrors the fact of the sale into the shared ledger, as a single
+	 * `completed` row, idempotent on (source, source_ref) so a hook that fires
+	 * twice for the same order — a WooCommerce status flapping between
+	 * `processing` and `completed`, a webhook retried — updates that row
+	 * rather than duplicating it.
+	 *
+	 * @param array $args user_id, type, source, source_ref, item_id,
+	 *                    item_label, amount, currency, gateway, status.
+	 * @return int Row id, or 0 if the row has neither a user nor a source
+	 *             reference to key on.
+	 */
+	public static function record( array $args ) {
+
+		global $wpdb;
+
+		$table = self::table();
+
+		$row = array(
+			'user_id'    => (int) $args['user_id'],
+			'type'       => substr( (string) $args['type'], 0, 20 ),
+			'source'     => substr( (string) $args['source'], 0, 20 ),
+			'source_ref' => substr( (string) $args['source_ref'], 0, 64 ),
+			'item_id'    => isset( $args['item_id'] ) ? (int) $args['item_id'] : 0,
+			'item_label' => substr( (string) ( $args['item_label'] ?? '' ), 0, 191 ),
+			'amount'     => number_format( (float) ( $args['amount'] ?? 0 ), 2, '.', '' ),
+			'currency'   => strtoupper( substr( (string) ( $args['currency'] ?? '' ), 0, 3 ) ),
+			'gateway'    => substr( (string) ( $args['gateway'] ?? '' ), 0, 20 ),
+			'status'     => substr( (string) ( $args['status'] ?? 'completed' ), 0, 20 ),
+		);
+
+		if ( ! $row['user_id'] || '' === $row['source'] || '' === $row['source_ref'] ) {
+			return 0;
+		}
+
+		$existing_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table} WHERE source = %s AND source_ref = %s LIMIT 1",
+				$row['source'],
+				$row['source_ref']
+			)
+		);
+
+		if ( $existing_id ) {
+			$wpdb->update( $table, $row, array( 'id' => (int) $existing_id ) );
+			return (int) $existing_id;
+		}
+
+		$row['created_at'] = current_time( 'mysql' );
+		$row['paid_at']    = current_time( 'mysql' );
+
+		/* order_number exists on every row regardless of who wrote it — the
+		   admin Orders list shows and searches by it uniformly, and a
+		   mirrored purchase has no other checkout to have already minted one
+		   for it. */
+		$row['order_number'] = class_exists( 'Jws_Payment_Orders' )
+			? Jws_Payment_Orders::generate_order_number()
+			: '';
+
+		$wpdb->insert( $table, $row );
+
+		return (int) $wpdb->insert_id;
+	}
+
+	/* ---------------------------------------------------------------------- */
 	/* Browsing                                                                */
 	/* ---------------------------------------------------------------------- */
 

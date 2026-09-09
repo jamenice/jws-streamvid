@@ -485,22 +485,57 @@ class Jws_Payment_Checkout {
 
 	private function render_checkout( array $item, array $methods ) {
 
-		$wallets = array_intersect( array( 'apple_pay', 'google_pay' ), array_keys( $methods ) );
-		$has_card = isset( $methods['card'] );
+		$wallet_keys = array( 'apple_pay', 'google_pay' );
+
+		/*
+		 * Whichever isn't a wallet starts checked — Apple Pay and Google Pay
+		 * only know whether the browser can honestly offer them once Stripe
+		 * says so client-side, so a wallet row starts hidden and unchecked
+		 * regardless of catalog order, and JS only reveals it once
+		 * canMakePayment() confirms it, never auto-checking it (see
+		 * mountWallets() in the script). Card, PayPal, the hosted page —
+		 * none of that applies, so the first of those is a default that is
+		 * never wrong the moment the page renders.
+		 */
+		$non_wallet_methods = array_diff_key( $methods, array_flip( $wallet_keys ) );
+		$default_method     = $non_wallet_methods ? array_key_first( $non_wallet_methods ) : '';
 		?>
 		<div class="jws-checkout"
 			data-type="<?php echo esc_attr( $item['type'] ); ?>"
 			data-item="<?php echo (int) $item['item_id']; ?>"
+			data-label="<?php echo esc_attr( $item['label'] ); ?>"
 			data-amount="<?php echo esc_attr( Jws_Payment_Stripe::minor_units( $item['amount'], $item['currency'] ) ); ?>"
 			data-currency="<?php echo esc_attr( strtolower( $item['currency'] ) ); ?>"
-			data-mode="<?php echo esc_attr( ! empty( $item['recurring'] ) ? 'subscription' : 'payment' ); ?>">
+			data-mode="<?php echo esc_attr( ! empty( $item['recurring'] ) ? 'subscription' : 'payment' ); ?>"
+			data-default-method="<?php echo esc_attr( $default_method ); ?>">
+
+			<div class="jws-checkout-pay">
+				<h5><?php echo esc_html__( 'Payment', 'jws_streamvid' ); ?></h5>
+
+				<?php if ( $methods ) : ?>
+					<div class="jws-checkout-methods" role="radiogroup" aria-label="<?php echo esc_attr__( 'Payment method', 'jws_streamvid' ); ?>">
+						<?php foreach ( $methods as $key => $method ) : ?>
+							<?php $is_wallet = in_array( $key, $wallet_keys, true ); ?>
+							<label class="jws-checkout-method" data-method="<?php echo esc_attr( $key ); ?>" <?php echo $is_wallet ? 'hidden' : ''; ?>>
+								<input type="radio" name="jws_pay_method" value="<?php echo esc_attr( $key ); ?>" <?php checked( ! $is_wallet && $key === $default_method ); ?> />
+								<span class="jws-checkout-method-icon jws-checkout-method-icon--<?php echo esc_attr( $key ); ?><?php echo self::method_image_url( $key ) ? ' jws-checkout-method-icon--image' : ''; ?>"><?php self::method_icon( $key ); ?></span>
+								<span class="jws-checkout-method-label"><?php echo esc_html( $method['label'] ); ?></span>
+								<span class="jws-checkout-method-radio" aria-hidden="true"></span>
+							</label>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+
+				<p class="jws-checkout-error" role="alert" hidden></p>
+			</div>
 
 			<div class="jws-checkout-summary">
-				<h5><?php echo esc_html__( 'Your order', 'jws_streamvid' ); ?></h5>
+				<h5><?php echo esc_html__( 'Purchase summary', 'jws_streamvid' ); ?></h5>
 
 				<div class="jws-checkout-line">
 					<?php if ( ! empty( $item['meta']['thumbnail_id'] ) ) : ?>
 						<div class="jws-checkout-thumb"><?php echo wp_get_attachment_image( (int) $item['meta']['thumbnail_id'], 'thumbnail' ); ?></div>
+					<?php else : ?>
 					<?php endif; ?>
 
 					<div class="jws-checkout-line-text">
@@ -522,82 +557,180 @@ class Jws_Payment_Checkout {
 				</div>
 
 				<div class="jws-checkout-total">
-					<span><?php echo esc_html__( 'Total today', 'jws_streamvid' ); ?></span>
+					<span><?php echo esc_html__( 'Total', 'jws_streamvid' ); ?></span>
 					<strong><?php echo esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) ); ?></strong>
 				</div>
 
-				<?php if ( ! empty( $item['recurring'] ) ) : ?>
-					<p class="jws-checkout-terms">
-						<?php
-						$period = Jws_Payment_Items::period_phrase( $item['period'], $item['cycle'] );
+				<ul class="jws-checkout-notices">
+					<?php if ( ! empty( $item['recurring'] ) ) : ?>
+						<li><?php echo esc_html__( 'Auto-renew. Cancel anytime.', 'jws_streamvid' ); ?></li>
+						<li>
+							<?php
+							$period = Jws_Payment_Items::period_phrase( $item['period'], $item['cycle'] );
 
-						if ( (float) $item['amount'] < (float) $item['renew'] ) {
+							if ( (float) $item['amount'] < (float) $item['renew'] ) {
+								printf(
+									/* translators: 1: price charged today, 2: billing period, 3: price charged on every renewal. */
+									esc_html__( '%1$s for the first %2$s, then %3$s every %2$s.', 'jws_streamvid' ),
+									esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) ),
+									esc_html( $period ),
+									esc_html( Jws_Payment_Items::format_price( $item['renew'], $item['currency'] ) )
+								);
+							} else {
+								printf(
+									/* translators: 1: renewal price, 2: billing period. */
+									esc_html__( 'Renews at %1$s every %2$s.', 'jws_streamvid' ),
+									esc_html( Jws_Payment_Items::format_price( $item['renew'], $item['currency'] ) ),
+									esc_html( $period )
+								);
+							}
+							?>
+						</li>
+						<li>
+							<?php
 							printf(
-								/* translators: 1: price charged today, 2: billing period, 3: price charged on every renewal. */
-								esc_html__( '%1$s for the first %2$s, then %3$s every %2$s. Cancel any time from your account.', 'jws_streamvid' ),
-								esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) ),
-								esc_html( $period ),
-								esc_html( Jws_Payment_Items::format_price( $item['renew'], $item['currency'] ) )
+								/* translators: %s: link to the subscriptions page. */
+								wp_kses( __( 'Cancel or manage your subscription any time from <a href="%s">Subscription Management</a>.', 'jws_streamvid' ), array( 'a' => array( 'href' => array() ) ) ),
+								esc_url( self::membership_url() )
 							);
-						} else {
-							printf(
-								/* translators: 1: renewal price, 2: billing period. */
-								esc_html__( 'Renews at %1$s every %2$s. Cancel any time from your account.', 'jws_streamvid' ),
-								esc_html( Jws_Payment_Items::format_price( $item['renew'], $item['currency'] ) ),
-								esc_html( $period )
-							);
-						}
-						?>
-					</p>
-				<?php endif; ?>
-			</div>
+							?>
+						</li>
+					<?php else : ?>
+						<li><?php echo esc_html__( 'One-time payment. No renewal.', 'jws_streamvid' ); ?></li>
+					<?php endif; ?>
+				</ul>
 
-			<div class="jws-checkout-pay">
-				<h5><?php echo esc_html__( 'Payment', 'jws_streamvid' ); ?></h5>
-
-				<?php if ( $wallets ) : ?>
-					<?php /* Hidden until Stripe reports the browser can actually
-					         offer one — an empty wallet slot reads as broken. */ ?>
-					<div class="jws-checkout-wallets" hidden>
-						<div id="jws-express-checkout"></div>
-						<div class="jws-checkout-or"><span><?php echo esc_html__( 'or', 'jws_streamvid' ); ?></span></div>
+				<?php if ( isset( $methods['card'] ) ) : ?>
+					<?php /* The card form — shown only while the Credit or
+					         debit card row up in the Payment panel is the one
+					         selected. Lives here rather than under that row
+					         because this is where Pay Now is: fill it in and
+					         the button to charge it is right there. */ ?>
+					<div class="jws-checkout-card-inline" <?php echo 'card' === $default_method ? '' : 'hidden'; ?>>
+						<div id="jws-card-element"></div>
 					</div>
 				<?php endif; ?>
 
-				<?php if ( $has_card ) : ?>
-					<div class="jws-checkout-card">
-						<div id="jws-card-element"></div>
-						<button type="button" class="jws-checkout-button button-default" data-method="card">
+				<?php
+				/*
+				 * One button either way, once there is at least one method:
+				 * card, PayPal and the hosted page start selected and ready;
+				 * Apple Pay and Google Pay start hidden and only become
+				 * selected once the script confirms one is actually usable,
+				 * at which point this same button is what charges it.
+				 */
+				?>
+				<?php if ( $methods ) : ?>
+					<button type="button" class="jws-checkout-button jws-checkout-pay-button" id="jws-checkout-submit">
+						<?php /* Matches whichever row is checked — empty here
+						         only when that is a wallet, which starts
+						         unselected until the script confirms one is
+						         usable. selectMethod() in the script keeps
+						         this in sync with every change after this. */ ?>
+						<span class="jws-checkout-pay-icon" aria-hidden="true"><?php if ( $default_method ) { self::method_icon( $default_method ); } ?></span>
+						<span class="jws-checkout-pay-label">
 							<?php
 							printf(
 								/* translators: %s: amount to pay. */
-								esc_html__( 'Pay %s', 'jws_streamvid' ),
+								esc_html__( 'Pay Now %s', 'jws_streamvid' ),
 								esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) )
 							);
 							?>
-						</button>
-					</div>
+						</span>
+					</button>
 				<?php endif; ?>
-
-				<?php $redirects = array_filter( $methods, function ( $m ) { return 'redirect' === $m['flow']; } ); ?>
-
-				<?php if ( $redirects ) : ?>
-					<?php if ( $has_card || $wallets ) : ?>
-						<div class="jws-checkout-or"><span><?php echo esc_html__( 'or', 'jws_streamvid' ); ?></span></div>
-					<?php endif; ?>
-
-					<div class="jws-checkout-alt">
-						<?php foreach ( $redirects as $key => $method ) : ?>
-							<button type="button" class="jws-checkout-button button-default jws-checkout-button--alt jws-checkout-button--<?php echo esc_attr( $key ); ?>" data-method="<?php echo esc_attr( $key ); ?>">
-								<?php echo esc_html( $method['label'] ); ?>
-							</button>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
-
-				<p class="jws-checkout-error" role="alert" hidden></p>
 			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Where a method's badge art lives, relative to the plugin.
+	 *
+	 * Real artwork for the methods a browser or a bank actually recognises by
+	 * their own logo — card has none, because there is no single brand to
+	 * badge a generic card with, so it keeps a plain glyph instead.
+	 */
+	private static function method_image( $key ) {
+
+		$images = array(
+			'apple_pay'  => 'apple.png',
+			'google_pay' => 'google.png',
+			'paypal'     => 'paypal.svg',
+			'quick_pay'  => 'stripe.svg',
+		);
+
+		return isset( $images[ $key ] ) ? $images[ $key ] : '';
+	}
+
+	/** The full URL to a method's badge art, or '' if it has none. */
+	private static function method_image_url( $key ) {
+
+		$file = self::method_image( $key );
+
+		if ( ! $file ) {
+			return '';
+		}
+
+		return plugin_dir_url( dirname( dirname( __FILE__ ) ) ) . 'public/assets/images/payment/' . $file;
+	}
+
+	/**
+	 * The icon for a payment method's radio row — and, copied by the script
+	 * whenever that row is the one selected, for the Pay Now button too (see
+	 * selectMethod() in jws-payment.js).
+	 */
+	private static function method_icon( $key ) {
+
+		$url = self::method_image_url( $key );
+
+		if ( $url ) {
+			$catalog = Jws_Payment_Settings::method_catalog();
+			$alt     = isset( $catalog[ $key ]['label'] ) ? $catalog[ $key ]['label'] : $key;
+
+			printf(
+				'<img src="%s" alt="%s" loading="lazy" />',
+				esc_url( $url ),
+				esc_attr( $alt )
+			);
+			return;
+		}
+
+		// card, and anything else the catalog adds later without artwork of
+		// its own: a plain card glyph, since the label text already says
+		// what it is.
+		?>
+		<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<rect x="2" y="5" width="20" height="14" rx="2" />
+			<line x1="2" y1="10" x2="22" y2="10" />
+		</svg>
+		<?php
+	}
+
+	/**
+	 * A decorative icon for the summary line when the item has no thumbnail.
+	 *
+	 * Only membership and coins land here — buy/rent/live carry a real poster
+	 * (see the thumbnail branch above this call), so those never need one.
+	 */
+	private static function item_icon( $type ) {
+
+		if ( 'membership' === $type ) {
+			?>
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+				<path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 13h14v2H5v-2z" />
+			</svg>
+			<?php
+			return;
+		}
+
+		// coins
+		?>
+		<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+			<ellipse cx="12" cy="6" rx="7" ry="3" />
+			<path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6" />
+			<path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5" />
+		</svg>
 		<?php
 	}
 

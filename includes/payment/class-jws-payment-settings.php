@@ -223,7 +223,7 @@ class Jws_Payment_Settings {
 				'flow'    => 'redirect',
 			),
 			'quick_pay'  => array(
-				'label'   => esc_html__( 'Stripe hosted page', 'jws_streamvid' ),
+				'label'   => esc_html__( 'Stripe', 'jws_streamvid' ),
 				'note'    => esc_html__( "Sends the buyer to Stripe's own checkout page instead of taking the card here.", 'jws_streamvid' ),
 				'gateway' => 'stripe',
 				'flow'    => 'redirect',

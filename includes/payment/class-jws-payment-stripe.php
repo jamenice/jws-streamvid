@@ -150,17 +150,37 @@ class Jws_Payment_Stripe {
 			return new WP_Error( 'jws_payment_no_user', esc_html__( 'Unknown user.', 'jws_streamvid' ) );
 		}
 
+		$args = array(
+			'email'                   => $user->user_email,
+			'name'                    => $user->display_name,
+			'metadata[wp_user_id]'    => $user_id,
+			'metadata[wp_user_login]' => $user->user_login,
+		);
+
 		$customer = self::request(
 			'POST',
 			'customers',
-			array(
-				'email'                   => $user->user_email,
-				'name'                    => $user->display_name,
-				'metadata[wp_user_id]'    => $user_id,
-				'metadata[wp_user_login]' => $user->user_login,
-				'_idempotency_key'        => 'jws-payment-customer-' . self::mode() . '-' . $user_id,
-			)
+			$args + array( '_idempotency_key' => 'jws-payment-customer-' . self::mode() . '-' . $user_id )
 		);
+
+		/*
+		 * That key is meant to hold for this user forever, so a genuine
+		 * retry (a timeout on our end after Stripe already created the
+		 * customer) replays this same email and name and Stripe just hands
+		 * back what it already made. This error means it did not: either
+		 * that first create succeeded and update_user_meta() below never
+		 * got to run, or the buyer's email or display name has changed on
+		 * WP's side since — either way the body no longer matches what the
+		 * key was first used for. One retry under a fresh key is the only
+		 * way past that short of hand-editing usermeta.
+		 */
+		if ( is_wp_error( $customer ) && 'jws_payment_stripe_idempotency_error' === $customer->get_error_code() ) {
+			$customer = self::request(
+				'POST',
+				'customers',
+				$args + array( '_idempotency_key' => 'jws-payment-customer-' . self::mode() . '-' . $user_id . '-' . wp_generate_password( 6, false ) )
+			);
+		}
 
 		if ( is_wp_error( $customer ) ) {
 			return $customer;
