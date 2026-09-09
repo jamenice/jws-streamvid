@@ -36,6 +36,9 @@ class Jws_Drama_Settings {
 	/** Marks a drama/episode created by the Demo Import tool, so it can be found and trashed again. */
 	const DEMO_META = '_jws_drama_demo_seed';
 
+	/** The url list the episode-video tool last dealt out, so it survives the redirect. */
+	const DEMO_VIDEO_OPTION = 'jws_drama_demo_video_urls';
+
 	/** Filled by all() so a request reads the option once. */
 	private static $cache = null;
 
@@ -1923,6 +1926,56 @@ class Jws_Drama_Settings {
 
 			$args['demo_msg']     = 'deleted';
 			$args['demo_deleted'] = $deleted;
+
+		} elseif ( 'videos' === $action ) {
+
+			$target = isset( $_POST['demo_video_target'] ) ? sanitize_text_field( wp_unslash( $_POST['demo_video_target'] ) ) : 'demo';
+			$raw    = isset( $_POST['demo_video_urls'] ) ? sanitize_textarea_field( wp_unslash( $_POST['demo_video_urls'] ) ) : '';
+			$urls   = array();
+			$bad    = 0;
+
+			foreach ( preg_split( '/\R/', $raw ) as $line ) {
+
+				$line = trim( $line );
+
+				if ( '' === $line ) {
+					continue;
+				}
+
+				$url = esc_url_raw( $line );
+
+				if ( $url ) {
+					$urls[] = $url;
+				} else {
+					$bad++;
+				}
+			}
+
+			if ( ! $urls ) {
+
+				$args['demo_msg'] = 'videos_empty';
+
+			} else {
+
+				/* Kept so the box comes back filled in: this list gets run
+				   again every time the demo content is rebuilt. */
+				update_option( self::DEMO_VIDEO_OPTION, $urls );
+
+				$result = $this->assign_demo_videos( $target, $urls );
+
+				$args['demo_msg']     = 'videos';
+				$args['demo_created'] = $result['dramas'];
+				$args['demo_eps']     = $result['episodes'];
+				$args['demo_urls']    = count( $urls );
+				$args['demo_skipped'] = $bad;
+			}
+
+		} elseif ( 'clear_videos' === $action ) {
+
+			$target = isset( $_POST['demo_video_target'] ) ? sanitize_text_field( wp_unslash( $_POST['demo_video_target'] ) ) : 'demo';
+
+			$args['demo_msg'] = 'videos_cleared';
+			$args['demo_eps'] = $this->clear_demo_videos( $target );
 		}
 
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) . '#demo_import' );
@@ -2059,6 +2112,110 @@ class Jws_Drama_Settings {
 		return count( $ids );
 	}
 
+	/**
+	 * The dramas one of the episode-video buttons was pointed at.
+	 *
+	 * @param string $target 'demo' for the ones this tool created, 'all' for
+	 *   every drama on the site, or a single drama's post id.
+	 * @return int[] Drama ids.
+	 */
+	private function demo_target_dramas( $target ) {
+
+		if ( 'demo' !== $target && 'all' !== $target ) {
+			$id = (int) $target;
+
+			return ( $id && Jws_Drama_Post_Types::DRAMA === get_post_type( $id ) ) ? array( $id ) : array();
+		}
+
+		$args = array(
+			'post_type'      => Jws_Drama_Post_Types::DRAMA,
+			'post_status'    => array( 'publish', 'draft', 'pending' ),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		);
+
+		if ( 'demo' === $target ) {
+			$args['meta_key'] = self::DEMO_META;
+		}
+
+		return get_posts( $args );
+	}
+
+	/**
+	 * Deals the url list out across each drama's episodes, one per episode and
+	 * back to the top of the list when it runs out.
+	 *
+	 * The count restarts on every drama rather than running on through the
+	 * catalogue, so the pattern a series plays is the same wherever it sits in
+	 * the list — two urls alternate A/B from episode one in every drama.
+	 *
+	 * @param string   $target See demo_target_dramas().
+	 * @param string[] $urls   Already sanitised, at least one.
+	 * @return array{dramas:int,episodes:int}
+	 */
+	private function assign_demo_videos( $target, $urls ) {
+
+		$dramas   = $this->demo_target_dramas( $target );
+		$episodes = 0;
+		$total    = count( $urls );
+
+		foreach ( $dramas as $drama_id ) {
+
+			$index = 0;
+
+			foreach ( Jws_Drama_Post_Types::episodes_of( $drama_id ) as $episode_id ) {
+
+				update_post_meta( $episode_id, 'videos_type', 'url' );
+				update_post_meta( $episode_id, 'videos_url', $urls[ $index % $total ] );
+
+				/* The field-key rows ACF keeps beside each value. Writing the
+				   value alone puts it where the player reads it but leaves the
+				   Videos Url box in the editor empty, which reads as the tool
+				   having done nothing. */
+				update_post_meta( $episode_id, '_videos_type', 'field_drama_ep_videos_type' );
+				update_post_meta( $episode_id, '_videos_url', 'field_drama_ep_videos_url' );
+
+				$index++;
+				$episodes++;
+			}
+		}
+
+		return array( 'dramas' => count( $dramas ), 'episodes' => $episodes );
+	}
+
+	/**
+	 * Takes the video back off the targeted episodes, which drops them back to
+	 * the site-wide "Drama Short Default Url".
+	 *
+	 * @param string $target See demo_target_dramas().
+	 * @return int Episodes that had a url to remove.
+	 */
+	private function clear_demo_videos( $target ) {
+
+		$episodes = 0;
+
+		foreach ( $this->demo_target_dramas( $target ) as $drama_id ) {
+
+			foreach ( Jws_Drama_Post_Types::episodes_of( $drama_id ) as $episode_id ) {
+
+				if ( ! metadata_exists( 'post', $episode_id, 'videos_url' ) ) {
+					continue;
+				}
+
+				delete_post_meta( $episode_id, 'videos_url' );
+				delete_post_meta( $episode_id, 'videos_type' );
+				delete_post_meta( $episode_id, '_videos_url' );
+				delete_post_meta( $episode_id, '_videos_type' );
+
+				$episodes++;
+			}
+		}
+
+		return $episodes;
+	}
+
 	private function render_demo_import() {
 
 		$demo_count = count(
@@ -2072,6 +2229,9 @@ class Jws_Drama_Settings {
 				)
 			)
 		);
+
+		$demo_video_urls = (array) get_option( self::DEMO_VIDEO_OPTION, array() );
+		$all_dramas      = $this->demo_target_dramas( 'all' );
 		?>
 		<div class="jws-drama-tab" data-tab="demo_import">
 
@@ -2095,6 +2255,33 @@ class Jws_Drama_Settings {
 							/* translators: %d: posts trashed */
 							esc_html__( 'Moved %d demo post(s) to Trash.', 'jws_streamvid' ),
 							isset( $_GET['demo_deleted'] ) ? absint( $_GET['demo_deleted'] ) : 0
+						);
+						?>
+					</p></div>
+				<?php elseif ( 'videos' === $_GET['demo_msg'] ) : ?>
+					<div class="notice notice-success is-dismissible"><p>
+						<?php
+						printf(
+							/* translators: 1: episodes updated, 2: dramas covered, 3: urls in the list, 4: lines skipped */
+							esc_html__( 'Dealt %3$d url(s) across %1$d episode(s) in %2$d drama(s). %4$d line(s) were not a usable url and were skipped.', 'jws_streamvid' ),
+							isset( $_GET['demo_eps'] ) ? absint( $_GET['demo_eps'] ) : 0,
+							isset( $_GET['demo_created'] ) ? absint( $_GET['demo_created'] ) : 0,
+							isset( $_GET['demo_urls'] ) ? absint( $_GET['demo_urls'] ) : 0,
+							isset( $_GET['demo_skipped'] ) ? absint( $_GET['demo_skipped'] ) : 0
+						);
+						?>
+					</p></div>
+				<?php elseif ( 'videos_empty' === $_GET['demo_msg'] ) : ?>
+					<div class="notice notice-error is-dismissible"><p>
+						<?php echo esc_html__( 'No usable url in that list, so nothing was changed.', 'jws_streamvid' ); ?>
+					</p></div>
+				<?php elseif ( 'videos_cleared' === $_GET['demo_msg'] ) : ?>
+					<div class="notice notice-success is-dismissible"><p>
+						<?php
+						printf(
+							/* translators: %d: episodes cleared */
+							esc_html__( 'Cleared the video url on %d episode(s), which drops them back to the default url.', 'jws_streamvid' ),
+							isset( $_GET['demo_eps'] ) ? absint( $_GET['demo_eps'] ) : 0
 						);
 						?>
 					</p></div>
@@ -2124,6 +2311,64 @@ class Jws_Drama_Settings {
 				</table>
 				<?php submit_button( esc_html__( 'Import Demo Dramas', 'jws_streamvid' ), 'primary', '', false ); ?>
 			</form>
+
+			<hr style="margin:28px 0;max-width:760px" />
+
+			<h2><?php echo esc_html__( 'Episode Videos', 'jws_streamvid' ); ?></h2>
+
+			<p class="description" style="max-width:760px">
+				<?php echo esc_html__( 'Deals the urls below out across a drama\'s episodes, one each and back to the top of the list when it runs out — so two urls alternate A/B all the way through a series instead of every episode playing the same clip. The count restarts on each drama, so every series gets the same pattern from episode one. Each url is written to that episode\'s Videos Url field with Videos Type set to Url.', 'jws_streamvid' ); ?>
+			</p>
+
+			<form method="post" style="max-width:760px">
+				<?php wp_nonce_field( self::DEMO_NONCE, 'jws_drama_demo_nonce' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="demo_video_urls"><?php echo esc_html__( 'Video urls', 'jws_streamvid' ); ?></label></th>
+						<td>
+							<textarea id="demo_video_urls" name="demo_video_urls" rows="6" class="large-text code" placeholder="https://example.com/one.mp4&#10;https://example.com/two.m3u8"><?php echo esc_textarea( implode( "\n", $demo_video_urls ) ); ?></textarea>
+							<p class="description"><?php echo esc_html__( 'One per line. An mp4 or m3u8 url, or a YouTube or Vimeo url — the player works out which from the url itself.', 'jws_streamvid' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="demo_video_target"><?php echo esc_html__( 'Apply to', 'jws_streamvid' ); ?></label></th>
+						<td>
+							<select id="demo_video_target" name="demo_video_target">
+								<option value="demo"><?php echo esc_html__( 'Demo-imported dramas only', 'jws_streamvid' ); ?></option>
+								<option value="all"><?php echo esc_html__( 'Every drama on the site', 'jws_streamvid' ); ?></option>
+								<?php if ( $all_dramas ) : ?>
+									<optgroup label="<?php echo esc_attr__( 'One drama', 'jws_streamvid' ); ?>">
+										<?php foreach ( $all_dramas as $one_drama_id ) : ?>
+											<option value="<?php echo (int) $one_drama_id; ?>"><?php echo esc_html( get_the_title( $one_drama_id ) ); ?></option>
+										<?php endforeach; ?>
+									</optgroup>
+								<?php endif; ?>
+							</select>
+							<p class="description"><?php echo esc_html__( 'Every episode of the chosen dramas is rewritten, drafts included.', 'jws_streamvid' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<p class="submit" style="padding-top:0">
+					<?php
+					/*
+					 * Two submit buttons sharing one name rather than a hidden
+					 * field: only the button actually pressed is posted, so both
+					 * actions read the same url list and the same target without
+					 * a second copy of either control.
+					 */
+					?>
+					<button type="submit" name="jws_drama_demo_action" value="videos" class="button button-primary"
+						onclick="return this.form.demo_video_target.value !== 'all' || confirm('<?php echo esc_js( __( 'This overwrites the video url on every episode of every drama, demo or not. Continue?', 'jws_streamvid' ) ); ?>');">
+						<?php echo esc_html__( 'Assign Videos to Episodes', 'jws_streamvid' ); ?>
+					</button>
+					<button type="submit" name="jws_drama_demo_action" value="clear_videos" class="button"
+						onclick="return confirm('<?php echo esc_js( __( 'Remove the video url from every episode of the chosen dramas?', 'jws_streamvid' ) ); ?>');">
+						<?php echo esc_html__( 'Clear Videos', 'jws_streamvid' ); ?>
+					</button>
+				</p>
+			</form>
+
+			<hr style="margin:28px 0;max-width:760px" />
 
 			<p style="margin-top:24px">
 				<?php

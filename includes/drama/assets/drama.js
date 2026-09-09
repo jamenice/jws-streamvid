@@ -71,6 +71,30 @@
 
         var loading = false;
 
+        /* The stage for the episode either side of the one playing, fetched
+           while it plays so that prev/next lands on markup that is already
+           here. These are two-minute episodes: the wait to start the next one
+           is most of what the viewer actually feels.
+
+           An entry is kept only while that episode is still a neighbour. The
+           markup bakes in the resume position the server had when it was
+           fetched, so one that outlives its neighbourhood would drop the
+           viewer back at a point they have since moved past. */
+        var prefetched  = {};
+        var prefetching = {};
+        var prefetchWait = null;
+
+        /* Long enough that the episode on screen has the connection to itself
+           while it fills its own buffer. */
+        var PREFETCH_DELAY = 800;
+
+        /* How long a card takes to travel a full stage height. Must match the
+           transition on .sv-is-leaving / .sv-is-entering in drama.css: it is
+           what the outgoing card is removed on. */
+        var SLIDE_MS = 320;
+
+        var slideTimer = null;
+
         function markActive(episodeId) {
 
             $page.find('.sv-short-episode').each(function () {
@@ -117,9 +141,176 @@
             });
         }
 
+        /**
+         * @param {number|string} episodeId
+         * @param {boolean} isPrefetch Whether this is a neighbour being warmed
+         *   rather than an episode the viewer opened — the server needs to know,
+         *   because rendering a stage is what moves the drama's resume point.
+         */
+        function fetchEpisode(episodeId, isPrefetch) {
+
+            return $.ajax({
+                url: jwsDrama.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'jws_drama_episode',
+                    episode_id: episodeId,
+                    prefetch: isPrefetch ? 1 : 0
+                }
+            });
+        }
+
+        /**
+         * Which way the two cards should travel, worked out from the episode
+         * numbers rather than from what was clicked — so jumping to episode 30
+         * from the list slides the same way as pressing next thirty times, and
+         * so back/forward moves the way the viewer originally came.
+         *
+         * @param {Object} data The episode response.
+         * @returns {number} 1 to move towards a later episode, -1 towards an
+         *   earlier one, 0 when there is nothing to compare against.
+         */
+        function slideDirection(data) {
+
+            var from = parseInt($page.find('.sv-short-episode.active').data('epNumber'), 10);
+            var to   = parseInt(data.number, 10);
+
+            if (!from || !to || from === to) {
+                return 0;
+            }
+
+            return to > from ? 1 : -1;
+        }
+
+        /**
+         * Drops whatever a slide still had in the air: the card that was on its
+         * way out, and the transition class on the one that stayed.
+         *
+         * Called before starting another so that a fast run of swipes never
+         * stacks cards up, and so the drag gesture below is never handed a card
+         * that still eases towards the finger instead of tracking it.
+         */
+        function endSlide() {
+
+            clearTimeout(slideTimer);
+
+            var $stage = $page.find('.sv-short-stage');
+
+            $stage.children('.sv-short-player.sv-is-leaving').remove();
+
+            /* .sv-is-entering is what carries the transition; left on, it would
+               have the drag gesture below ease towards the finger instead of
+               tracking it. Any inline transform is deliberately left alone — a
+               card the finger has just let go of is exactly what the slide
+               about to start needs to carry on from. */
+            $stage.children('.sv-short-player').removeClass('sv-is-entering');
+        }
+
+        /**
+         * Puts the next episode's card in place, sliding it past the one it
+         * replaces.
+         *
+         * @param {Object} data The episode response.
+         */
+        function swapStage(data) {
+
+            var $stage = $page.find('.sv-short-stage');
+
+            endSlide();
+
+            var $outgoing = $stage.children('.sv-short-player');
+            var $incoming = $(data.stage);
+            var $card     = $incoming.filter('.sv-short-player');
+            var direction = slideDirection(data);
+
+            /* Everything but the card being replaced goes now — the controls
+               carry the new prev/next, and the card is the only part worth
+               animating. Removing the old <video-player> is what lets the
+               MutationObserver in jws_player_v10.js pick the new one up; the
+               old one's save timer stops itself once it is detached. */
+            $stage.children().not($outgoing).remove();
+            $stage.removeClass('is-loading');
+
+            if (!direction || !$outgoing.length || !$card.length) {
+                $outgoing.remove();
+                $stage.append($incoming);
+                return;
+            }
+
+            /* The outgoing card stays on screen for the length of the slide,
+               and a video still playing behind the new one is heard as well as
+               seen. */
+            $outgoing.find('video, hlsjs-video, youtube-video, vimeo-video').each(function () {
+                try {
+                    this.muted = true;
+                    this.pause();
+                } catch (e) { /* a source that never got as far as playing */ }
+            });
+
+            /* Set while the card is still detached, so it is already off stage
+               the first time it is styled and has nothing to transition from.
+
+               110% of the card, not 100%: the percentage is of the card's own
+               height, which is a shade under the stage's once the desktop
+               max-height caps it, and the last thing wanted is the top of the
+               next episode already peeking in before the slide starts. */
+            $card.css('transform', 'translateY(' + (direction > 0 ? 110 : -110) + '%)');
+
+            $outgoing.addClass('sv-is-leaving');
+            $stage.append($incoming);
+
+            /* Forces both start positions to be computed before they change —
+               including a card the finger dragged part of the way, which then
+               carries on from where it was let go rather than jumping back. */
+            $card[0].offsetHeight; // eslint-disable-line no-unused-expressions
+
+            $card.addClass('sv-is-entering').css('transform', '');
+            $outgoing.css('transform', 'translateY(' + (direction > 0 ? -110 : 110) + '%)');
+
+            slideTimer = setTimeout(endSlide, SLIDE_MS);
+        }
+
+        function applyEpisode(data, push) {
+
+            swapStage(data);
+
+            $page.find('.sv-short-title').text(data.title);
+            $page.find('.sv-short-breadcrumbs .jws-breadcrumbs__item--current .jws-breadcrumbs__text').text(data.crumb);
+
+            markActive(data.episodeId);
+            openRangeOf(data.episodeId);
+
+            // On mobile the panel is a sheet over the stage; picking an
+            // episode from it should hand the screen back to the video
+            // instead of leaving the sheet open over the new episode.
+            setPanelOpen(false);
+
+            if (push && window.history && window.history.pushState) {
+                window.history.pushState({ jwsDramaEpisode: data.episodeId }, data.title, data.permalink);
+            }
+
+            document.title = data.title;
+
+            $(document.body).trigger('jws_drama_episode_changed', [data]);
+
+            // Neighbours have moved along with the episode.
+            prefetchNeighbours();
+        }
+
         function loadEpisode(episodeId, push) {
 
             if (loading || !episodeId) {
+                return;
+            }
+
+            var ready = prefetched[episodeId];
+
+            if (ready) {
+                /* Already here: swap it straight in, with none of the dim —
+                   there is nothing to wait for. */
+                delete prefetched[episodeId];
+                applyEpisode(ready, push);
                 return;
             }
 
@@ -129,12 +320,7 @@
 
             $stage.addClass('is-loading');
 
-            $.ajax({
-                url: jwsDrama.ajax_url,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'jws_drama_episode', episode_id: episodeId }
-            }).done(function (response) {
+            fetchEpisode(episodeId, false).done(function (response) {
 
                 if (!response || !response.success) {
                     // Nothing sensible to show in place — let the browser do it.
@@ -142,32 +328,7 @@
                     return;
                 }
 
-                var data = response.data;
-
-                /* Replacing the stage removes the old <video-player>; the
-                   MutationObserver in jws_player_v10.js picks the new one up,
-                   and the old one's save timer stops on its own once it is
-                   detached. */
-                $stage.html(data.stage);
-
-                $page.find('.sv-short-title').text(data.title);
-                $page.find('.sv-short-breadcrumbs .jws-breadcrumbs__item--current .jws-breadcrumbs__text').text(data.crumb);
-
-                markActive(data.episodeId);
-                openRangeOf(data.episodeId);
-
-                // On mobile the panel is a sheet over the stage; picking an
-                // episode from it should hand the screen back to the video
-                // instead of leaving the sheet open over the new episode.
-                setPanelOpen(false);
-
-                if (push && window.history && window.history.pushState) {
-                    window.history.pushState({ jwsDramaEpisode: data.episodeId }, data.title, data.permalink);
-                }
-
-                document.title = data.title;
-
-                $(document.body).trigger('jws_drama_episode_changed', [data]);
+                applyEpisode(response.data, push);
 
             }).fail(function () {
                 var href = $page.find('.sv-short-episode[data-episode="' + episodeId + '"]').attr('href');
@@ -176,6 +337,156 @@
                 loading = false;
                 $stage.removeClass('is-loading');
             });
+        }
+
+        /**
+         * The prev/next episode ids, read off the stage's own controls — the
+         * same source the arrows, the swipe and the keyboard already go by, so
+         * this follows whatever the server last rendered, the ends of the
+         * series included.
+         *
+         * @returns {string[]} One id, two, or none at all.
+         */
+        function neighbourIds() {
+
+            var ids = [];
+
+            $.each([-1, 1], function (index, direction) {
+
+                var id = navLink(direction).data('episode');
+
+                if (id) {
+                    ids.push(String(id));
+                }
+            });
+
+            return ids;
+        }
+
+        /** Warms the episode either side of the one now playing. */
+        function prefetchNeighbours() {
+
+            clearTimeout(prefetchWait);
+
+            var wanted = neighbourIds();
+
+            $.each(prefetched, function (id) {
+                if ($.inArray(String(id), wanted) === -1) {
+                    delete prefetched[id];
+                }
+            });
+
+            /* Nobody on a metered connection asked to download two episodes
+               they may never open. */
+            var link = navigator.connection;
+
+            if (!wanted.length || (link && (link.saveData || /2g$/.test(link.effectiveType || '')))) {
+                return;
+            }
+
+            prefetchWait = setTimeout(function () {
+
+                $.each(wanted, function (index, id) {
+
+                    if (prefetched[id] || prefetching[id]) {
+                        return;
+                    }
+
+                    prefetching[id] = true;
+
+                    fetchEpisode(id, true).done(function (response) {
+
+                        /* The viewer can have jumped somewhere else entirely
+                           while this was in flight, in which case the prune
+                           above has already been and gone — storing it now
+                           would put back the stale entry it just removed. */
+                        if (response && response.success && $.inArray(id, neighbourIds()) !== -1) {
+                            prefetched[id] = response.data;
+                            warmMedia(response.data.stage);
+                        }
+
+                    }).always(function () {
+                        delete prefetching[id];
+                    });
+                });
+
+            }, PREFETCH_DELAY);
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Media warm-up                                                       */
+        /* ------------------------------------------------------------------ */
+
+        var warmed       = {};
+        var preconnected = {};
+        var $mediaProbes = null;
+
+        /**
+         * Opens the connection the next episode's video will need, and pulls in
+         * the first thing that will be asked for over it.
+         *
+         * Having the stage markup ready only removes the admin-ajax wait. The
+         * video still starts from a cold CDN connection, which on a phone is
+         * the larger half of the gap between pressing next and seeing a frame.
+         *
+         * @param {string} stageHtml The stage exactly as the server rendered it.
+         */
+        function warmMedia(stageHtml) {
+
+            /* Parsed detached: a <video-player> only upgrades once it is in the
+               document, so reading it here starts no second player. */
+            var raw = $('<div>').html(stageHtml).find('[data-jws-v10]').attr('data-jws-v10');
+            var config;
+
+            try {
+                config = raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return;
+            }
+
+            // A locked episode has no player and so nothing to warm.
+            if (!config || !config.src || warmed[config.src]) {
+                return;
+            }
+
+            warmed[config.src] = true;
+
+            var url;
+
+            try {
+                // Resolves the protocol-relative "//host/..." that the Bunny and
+                // Cloudflare branches of the player template emit.
+                url = new URL(config.src, window.location.href);
+            } catch (e) {
+                return;
+            }
+
+            if (url.origin !== window.location.origin && !preconnected[url.origin]) {
+                preconnected[url.origin] = true;
+                $('<link rel="preconnect" crossorigin>').attr('href', url.origin).appendTo('head');
+            }
+
+            if (config.type === 'application/x-mpegURL') {
+                /* The playlist is the first thing hls.js asks for and is a
+                   couple of kilobytes, so it is worth having in the HTTP cache.
+                   Which rendition follows is its decision, not ours — the
+                   segments are left to it. */
+                if (window.fetch) {
+                    window.fetch(url.href, { credentials: 'omit', mode: 'cors' }).catch(function () { });
+                }
+                return;
+            }
+
+            /* A progressive file: metadata only. "auto" would let the browser
+               buffer as far ahead as it likes into an episode that may never be
+               opened. */
+            if (!$mediaProbes) {
+                $mediaProbes = $('<div aria-hidden="true" style="display:none"></div>').appendTo(document.body);
+            }
+
+            $mediaProbes
+                .append($('<video muted playsinline preload="metadata"></video>').attr('src', url.href))
+                .children().slice(0, -2).remove();
         }
 
         // Episode chips and the up/down arrows both carry data-episode.
@@ -214,6 +525,11 @@
                 loadEpisode(state.jwsDramaEpisode, false);
             }
         });
+
+        // The episode the page opened on has neighbours too.
+        if ($page.length) {
+            prefetchNeighbours();
+        }
 
         /* ------------------------------------------------------------------ */
         /* Fullscreen                                                          */
@@ -413,8 +729,9 @@
         var touchTracking = false;
         var $dragCard     = $();
 
+        /* The card that is actually here, never one still sliding out. */
         function stagePlayer() {
-            return $page.find('.sv-short-stage > .sv-short-player');
+            return $page.find('.sv-short-stage > .sv-short-player').not('.sv-is-leaving');
         }
 
         /* Plain transform write, no `transition` — this has to be
@@ -423,21 +740,23 @@
             $el.css('transform', y ? 'translateY(' + y + 'px)' : '');
         }
 
-        /* Finishes the gesture with a short animated move to `y` (0 to snap
-           back, a full stage height to carry on off-screen), then drops the
-           inline styles again so they don't linger and block the stage's own
-           opacity transition (the dim while the next episode loads) on
-           whatever ends up in this slot next. */
-        function releaseDrag($el, y) {
+        /* Eases a gesture that never became a swipe back into place, then drops
+           the inline styles again so they don't linger and block the stage's
+           own opacity transition (the dim while the next episode loads) on
+           whatever ends up in this slot next.
+
+           Only ever a snap back: a swipe that did land is carried off by
+           swapStage(), in the same movement that brings the next card in. */
+        function snapBack($el) {
 
             if (!$el.length) {
                 return;
             }
 
-            $el.css({ transition: 'transform 0.22s ease', transform: y ? 'translateY(' + y + 'px)' : '' });
+            $el.css({ transition: 'transform 0.22s ease', transform: '' });
 
             setTimeout(function () {
-                $el.css({ transition: '', transform: '' });
+                $el.css('transition', '');
             }, 220);
         }
 
@@ -498,7 +817,7 @@
             var touch = event.originalEvent.changedTouches[0];
 
             if (!touch) {
-                releaseDrag($card, 0);
+                snapBack($card);
                 return;
             }
 
@@ -506,7 +825,7 @@
             var deltaY = touch.clientY - touchStartY;
 
             if (Math.abs(deltaY) < SWIPE_MIN_Y || Math.abs(deltaX) > SWIPE_MAX_X) {
-                releaseDrag($card, 0);
+                snapBack($card);
                 return;
             }
 
@@ -515,23 +834,100 @@
             var $link = navLink(deltaY < 0 ? 1 : -1);
 
             if (!$link.length) {
-                releaseDrag($card, 0);
+                snapBack($card);
                 return;
             }
 
-            var stageHeight = $card.closest('.sv-short-stage').height() || 300;
-
-            // Carry the card the rest of the way off-screen instead of
-            // snapping back, so the swipe reads as "done" the instant the
-            // finger lifts rather than waiting on the network request.
-            releaseDrag($card, deltaY < 0 ? -stageHeight : stageHeight);
+            /* The card is left exactly where the finger let go of it: the slide
+               swapStage() is about to start picks it up from there and carries
+               it the rest of the way out, so the gesture and the transition read
+               as one movement rather than two that fight over the same
+               transform. */
             loadEpisode($link.data('episode'), true);
         });
 
         $page.on('touchcancel', '.sv-short-stage', function () {
             touchTracking = false;
-            releaseDrag($dragCard, 0);
+            snapBack($dragCard);
             $dragCard = $();
+        });
+
+        /* ------------------------------------------------------------------ */
+        /* Wheel: scrolling over the stage moves between episodes (desktop)    */
+        /* ------------------------------------------------------------------ */
+
+        /* One flick of a trackpad is one episode, not the dozen its momentum
+           tail would otherwise ask for. Travel accumulates until it is worth a
+           switch, and the wheel then has to fall quiet before another can
+           start — a wait that also covers the slide, so the next episode has
+           settled before a second gesture can move off it. */
+        var WHEEL_TRAVEL = 80;
+        var WHEEL_QUIET  = 350;
+
+        var wheelTravel = 0;
+        var wheelSpent  = false;
+        var wheelIdle   = null;
+
+        /* deltaY is not always pixels: Firefox reports lines, and a page at a
+           time is rarer still. Left unconverted, three lines of travel would
+           never reach a threshold counted in pixels and the wheel would appear
+           dead on those browsers. */
+        function wheelPixels(wheel) {
+
+            if (1 === wheel.deltaMode) {
+                return wheel.deltaY * 16;
+            }
+
+            if (2 === wheel.deltaMode) {
+                return wheel.deltaY * 400;
+            }
+
+            return wheel.deltaY;
+        }
+
+        $page.on('wheel', '.sv-short-stage', function (event) {
+
+            var wheel = event.originalEvent;
+
+            // A sideways or mostly-sideways gesture is not this one.
+            if (!wheel.deltaY || Math.abs(wheel.deltaX) > Math.abs(wheel.deltaY)) {
+                return;
+            }
+
+            /* Nothing that way — at either end of the series, hand the gesture
+               back to the page rather than swallowing it into a stage that
+               cannot answer it. */
+            if (!navLink(wheel.deltaY > 0 ? 1 : -1).length) {
+                return;
+            }
+
+            event.preventDefault();
+
+            clearTimeout(wheelIdle);
+            wheelIdle = setTimeout(function () {
+                wheelTravel = 0;
+                wheelSpent  = false;
+            }, WHEEL_QUIET);
+
+            if (wheelSpent) {
+                return;
+            }
+
+            wheelTravel += wheelPixels(wheel);
+
+            if (Math.abs(wheelTravel) < WHEEL_TRAVEL) {
+                return;
+            }
+
+            // Scrolling down (deltaY > 0) goes on to the next episode.
+            var $link = navLink(wheelTravel > 0 ? 1 : -1);
+
+            wheelSpent  = true;
+            wheelTravel = 0;
+
+            if ($link.length) {
+                loadEpisode($link.data('episode'), true);
+            }
         });
 
         /* ------------------------------------------------------------------ */
@@ -677,6 +1073,10 @@
                     notify((response && response.data && response.data.message) || jwsDrama.i18n.failed, 'error');
                     return;
                 }
+
+                /* Any warmed copy of this episode is the lock panel, which is
+                   no longer what it is. */
+                delete prefetched[episodeId];
 
                 // It is paid for now, so it stops being a locked chip.
                 $page.find('.sv-short-episode[data-episode="' + episodeId + '"]').removeClass('locked')

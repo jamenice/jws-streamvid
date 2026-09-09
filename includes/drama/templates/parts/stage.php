@@ -19,6 +19,11 @@ if ( ! defined( 'WPINC' ) ) {
 $drama_id   = isset( $args['drama_id'] ) ? (int) $args['drama_id'] : 0;
 $episode_id = isset( $args['episode_id'] ) ? (int) $args['episode_id'] : 0;
 
+/* A neighbour rendered ahead of the viewer asking for it is not a visit: it
+   must not go through remember_episode() below, or opening the drama again
+   would resume on an episode nobody ever watched. */
+$prefetch = ! empty( $args['prefetch'] );
+
 $episodes = Jws_Drama_Post_Types::episodes_of( $drama_id );
 $access   = $episode_id
 	? Jws_Drama_Wallet::access( $episode_id )
@@ -33,7 +38,9 @@ $next  = ( false !== $index && isset( $episodes[ $index + 1 ] ) ) ? (int) $episo
 
 if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 
-	Jws_Drama_Templates::remember_episode( $drama_id, $episode_id );
+	if ( ! $prefetch ) {
+		Jws_Drama_Templates::remember_episode( $drama_id, $episode_id );
+	}
 
 	jws_streamvid_load_template(
 		'../includes/drama/templates/parts/player.php',

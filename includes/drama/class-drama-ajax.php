@@ -305,6 +305,11 @@ class Jws_Drama_Ajax {
 
 		$number = Jws_Drama_Wallet::episode_number( $episode_id );
 
+		/* The watch screen warms the episode either side of the one playing, and
+		   says so here. Same markup either way — what it changes is that a stage
+		   nobody has opened does not become the drama's resume point. */
+		$prefetch = ! empty( $_POST['prefetch'] );
+
 		/*
 		 * The template parts read the loop, not just their arguments — the player
 		 * pulls ACF fields and the excerpt off the current post. Set the loop up
@@ -319,7 +324,7 @@ class Jws_Drama_Ajax {
 		jws_streamvid_load_template(
 			'../includes/drama/templates/parts/stage.php',
 			false,
-			array( 'drama_id' => $drama_id, 'episode_id' => $episode_id )
+			array( 'drama_id' => $drama_id, 'episode_id' => $episode_id, 'prefetch' => $prefetch )
 		);
 		$stage = ob_get_clean();
 

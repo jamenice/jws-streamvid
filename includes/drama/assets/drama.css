@@ -109,6 +109,40 @@
     transition: opacity 0.15s ease;
 }
 
+/*
+ * Switching episode slides the two cards past each other — up towards a later
+ * episode, down towards an earlier one. That is the direction the swipe
+ * gesture already moves in, so a swipe, an arrow, a key and a tap on the
+ * episode list all resolve the same way.
+ *
+ * Only the outgoing card leaves the flow, and it does so with no insets and no
+ * margin of its own: an absolutely positioned child of a flex container lands
+ * at its static position, which this stage centres. That is the same placement
+ * the card had a moment ago as the sole flex item, so going out of flow moves
+ * it nowhere — and it leaves the incoming card sitting exactly where a single
+ * card always sits, with nothing about its layout resting on this transition.
+ */
+.sv-short-player.sv-is-leaving {
+    position: absolute;
+    pointer-events: none;
+}
+
+.sv-short-player.sv-is-leaving,
+.sv-short-player.sv-is-entering {
+    transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform;
+}
+
+/* Still swapped, just not travelled: the outgoing card jumps straight off
+   stage, where it is clipped, and drama.js removes it on the same timer. */
+@media (prefers-reduced-motion: reduce) {
+
+    .sv-short-player.sv-is-leaving,
+    .sv-short-player.sv-is-entering {
+        transition-duration: 0s;
+    }
+}
+
 /* Hidden until the viewer taps the stage, gone again after 4s of no
    interaction — drama.js toggles .is-visible and restarts that timer on
    every click inside .sv-short-stage (the buttons here included, since a
