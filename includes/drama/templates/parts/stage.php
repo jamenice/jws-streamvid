@@ -77,6 +77,34 @@ if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 					<span><?php echo esc_html__( 'Unlock Now', 'jws_streamvid' ); ?></span>
 				</button>
 			<?php endif; ?>
+
+			<?php
+			/*
+			 * The way in that costs nothing but attention. Offered on both
+			 * branches above — it needs no account, so it is the only thing a
+			 * signed-out viewer can do here besides sign in.
+			 *
+			 * A real link, with the advertiser's URL in the markup: opened by
+			 * the browser on the viewer's own click, which is what keeps it
+			 * clear of pop-up blockers. drama.js takes it from there.
+			 */
+			?>
+			<?php if ( $episode_id && class_exists( 'Jws_Drama_Ad_Unlock' ) && Jws_Drama_Ad_Unlock::enabled() ) : ?>
+				<?php if ( 'video' === Jws_Drama_Ad_Unlock::mode() ) : ?>
+					<button type="button" class="sv-short-ad-unlock fs-small" data-episode="<?php echo (int) $episode_id; ?>" data-ad-mode="video">
+						<i class="jws-icon-play-circle" aria-hidden="true"></i>
+						<span class="sv-short-ad-label"><?php echo esc_html__( 'Watch an ad to unlock', 'jws_streamvid' ); ?></span>
+					</button>
+				<?php else : ?>
+					<a class="sv-short-ad-unlock fs-small" data-episode="<?php echo (int) $episode_id; ?>" data-ad-mode="link"
+						href="<?php echo esc_url( Jws_Drama_Ad_Unlock::link() ); ?>"
+						target="_blank" rel="nofollow sponsored noopener">
+						<i class="jws-icon-play-circle" aria-hidden="true"></i>
+						<span class="sv-short-ad-label"><?php echo esc_html__( 'Watch an ad to unlock', 'jws_streamvid' ); ?></span>
+					</a>
+				<?php endif; ?>
+				<p class="sv-short-ad-note"><?php echo esc_html__( 'Opens this episode for this visit only.', 'jws_streamvid' ); ?></p>
+			<?php endif; ?>
 		</div>
 	</div>
 	<?php

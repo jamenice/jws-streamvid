@@ -31,6 +31,12 @@ class Jws_Streamvid_Advertising {
     
     public function template_redirect(){
         
+        if ( ! is_singular( array( 'advertising', 'adsvmap' ) ) ) {
+            return;
+        }
+        
+        $this->serve_as_xml();
+        
         if ( is_singular( 'advertising' ) ){ 
             
             $this->load_template();
@@ -43,6 +49,36 @@ class Jws_Streamvid_Advertising {
             exit;
         }
         
+    }
+    
+    /**
+     * Makes these two endpoints answer as the ad documents they are, not as
+     * pages that happen to contain XML.
+     *
+     * Errors off, for this request only: an ad tag is parsed by an SDK, and a
+     * PHP notice printed anywhere near the document — a deprecation from some
+     * other plugin, a warning from a theme — is enough for IMA to reject the
+     * whole thing and report no ad at all. The same failure is already
+     * documented against the VMAP branch below, where a notice printed ahead
+     * of the XML declaration silently lost the ad break. This closes the other
+     * half of it: anything printed after the closing tag is junk after the
+     * document element, and just as fatal.
+     *
+     * CORS on, because a VAST tag is meant to be fetched cross-origin — the
+     * IMA SDK reads it with XHR from whatever page is showing the ad, and
+     * without this header a tag served from another host (a staging site, a
+     * second domain, the app) cannot be read at all. It is a public XML
+     * document with nothing user-specific in it, so there is nothing here for
+     * an origin to be trusted with.
+     */
+    private function serve_as_xml() {
+        
+        @ini_set( 'display_errors', '0' );
+        @ini_set( 'html_errors', '0' );
+        
+        if ( ! headers_sent() ) {
+            header( 'Access-Control-Allow-Origin: *' );
+        }
     }
     
     private function check_tag_url($tag_id) { 

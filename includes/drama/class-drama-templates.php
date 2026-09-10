@@ -102,6 +102,22 @@ class Jws_Drama_Templates {
 		$url     = plugin_dir_url( __FILE__ );
 
 		wp_enqueue_style( 'jws-drama', $url . 'assets/drama.css', array(), $version );
+
+		$ad_mode = class_exists( 'Jws_Drama_Ad_Unlock' ) && Jws_Drama_Ad_Unlock::enabled()
+			? Jws_Drama_Ad_Unlock::mode()
+			: '';
+
+		/*
+		 * The rewarded break talks to google.ima directly, the way
+		 * jws_player_v10.js does — videojs-ima was never ported to v10. Same
+		 * handle the movie player enqueues it under, so this costs nothing on a
+		 * site that already runs ads and is what makes the break work on one
+		 * that does not.
+		 */
+		if ( 'video' === $ad_mode ) {
+			wp_enqueue_script( 'googleapis-imasdk', '//imasdk.googleapis.com/js/sdkloader/ima3.js', array(), $version, true );
+		}
+
 		wp_enqueue_script( 'jws-drama', $url . 'assets/drama.js', array( 'jquery' ), $version, true );
 
 		wp_localize_script(
@@ -110,8 +126,28 @@ class Jws_Drama_Templates {
 			array(
 				'ajax_url'    => admin_url( 'admin-ajax.php' ),
 				'unlockNonce' => wp_create_nonce( 'jws_drama_unlock' ),
+				/* Its own nonce because its two actions have nopriv twins: the
+				   ad unlock is open to viewers who have not signed in. */
+				'adNonce'     => wp_create_nonce( 'jws_drama_ad' ),
+				'adMode'      => $ad_mode,
+				'adTag'       => 'video' === $ad_mode ? Jws_Drama_Ad_Unlock::vast_tag() : '',
+				'adReward'    => 'video' === $ad_mode ? Jws_Drama_Ad_Unlock::reward_at() : '',
 				'loggedIn'    => is_user_logged_in(),
 				'i18n'        => array(
+					/* translators: %d: seconds left before the episode opens */
+					'adWait'        => esc_html__( 'Unlocking in %ds', 'jws_streamvid' ),
+					'adClaiming'    => esc_html__( 'Unlocking…', 'jws_streamvid' ),
+					'adLoading'     => esc_html__( 'Loading the ad…', 'jws_streamvid' ),
+					/* What was missing, in the terms this site actually asks for:
+					   telling someone to watch to the end when half of it would
+					   have done is a wrong answer, not a strict one. */
+					'adNotFinished' => self::ad_reward_message(),
+					'adNoAd'        => esc_html__( 'No ad available right now. Please try again.', 'jws_streamvid' ),
+					/* The stage's own prev/next arrows, which drama.js rebuilds
+					   while a placeholder stands in for an episode still being
+					   fetched — the markup it copies them from is gone by then. */
+					'prevEpisode' => esc_attr__( 'Previous episode', 'jws_streamvid' ),
+					'nextEpisode' => esc_attr__( 'Next episode', 'jws_streamvid' ),
 					'locked'  => esc_html__( 'This episode is locked.', 'jws_streamvid' ),
 					'signIn'  => esc_html__( 'Please sign in first.', 'jws_streamvid' ),
 					'failed'  => esc_html__( 'Could not unlock. Please try again.', 'jws_streamvid' ),
@@ -119,6 +155,28 @@ class Jws_Drama_Templates {
 				),
 			)
 		);
+	}
+
+	/** What the viewer is told when a break did not earn the episode. */
+	private static function ad_reward_message() {
+
+		if ( ! class_exists( 'Jws_Drama_Ad_Unlock' ) ) {
+			return esc_html__( 'Watch the ad to the end to open this episode.', 'jws_streamvid' );
+		}
+
+		switch ( Jws_Drama_Ad_Unlock::reward_at() ) {
+
+			case 'midpoint':
+				return esc_html__( 'Watch at least half of the ad to open this episode.', 'jws_streamvid' );
+
+			case 'start':
+				/* Nothing was skipped here — the ad never got as far as
+				   playing, which is a different problem entirely. */
+				return esc_html__( 'The ad did not play. Please try again.', 'jws_streamvid' );
+
+			default:
+				return esc_html__( 'Watch the ad to the end to open this episode.', 'jws_streamvid' );
+		}
 	}
 
 	/* ---------------------------------------------------------------------- */

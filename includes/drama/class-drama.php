@@ -41,6 +41,7 @@ class Jws_Drama {
 		require_once $dir . 'class-drama-admin.php';
 		require_once $dir . 'class-drama-templates.php';
 		require_once $dir . 'class-drama-ajax.php';
+		require_once $dir . 'class-drama-ad-unlock.php';
 		require_once $dir . 'class-drama-coins.php';
 
 		$settings   = new Jws_Drama_Settings();
@@ -50,11 +51,13 @@ class Jws_Drama {
 		$templates  = new Jws_Drama_Templates();
 		$ajax       = new Jws_Drama_Ajax();
 		$coins      = new Jws_Drama_Coins();
+		$ad_unlock  = new Jws_Drama_Ad_Unlock();
 		$stripe     = new Jws_Drama_Stripe_Events();
 		$paypal     = new Jws_Drama_Paypal_Events();
 
 		$ajax->register();
 		$coins->register();
+		$ad_unlock->register();
 		$stripe->register();
 		$paypal->register();
 

@@ -69,7 +69,12 @@
         /* Episode switching                                                   */
         /* ------------------------------------------------------------------ */
 
-        var loading = false;
+        /* The episode the viewer has moved to whose stage has not arrived
+           yet. The switch itself happens on the gesture, against a placeholder
+           card, so what is held here is only the request still owed to it —
+           and holding it is what lets a second gesture supersede the first
+           instead of being swallowed while the first one loads. */
+        var pending = null;
 
         /* The stage for the episode either side of the one playing, fetched
            while it plays so that prev/next lands on markup that is already
@@ -84,6 +89,14 @@
         var prefetching = {};
         var prefetchWait = null;
 
+        /* Episodes an ad has opened, as the payload that opened them.
+           The grant is never written down: ask the server for one of these
+           again and the answer is the paywall. This map is the whole of "for
+           this visit" — it dies with the page, which is exactly what the lock
+           panel promised, and until then it is what a swipe back finds instead
+           of the wall the viewer already got past. */
+        var adOpened = {};
+
         /* Long enough that the episode on screen has the connection to itself
            while it fills its own buffer. */
         var PREFETCH_DELAY = 800;
@@ -94,6 +107,10 @@
         var SLIDE_MS = 320;
 
         var slideTimer = null;
+
+        /* When the slide in flight lands, so a stage that beats it can wait for
+           it rather than cut across it. */
+        var slideEndsAt = 0;
 
         function markActive(episodeId) {
 
@@ -162,25 +179,38 @@
         }
 
         /**
-         * Which way the two cards should travel, worked out from the episode
-         * numbers rather than from what was clicked — so jumping to episode 30
-         * from the list slides the same way as pressing next thirty times, and
-         * so back/forward moves the way the viewer originally came.
+         * Which way the two cards should travel, worked out from where the two
+         * episodes sit in the series rather than from what was clicked — so
+         * jumping to episode 30 from the list slides the same way as pressing
+         * next thirty times, and so back/forward moves the way the viewer
+         * originally came.
          *
-         * @param {Object} data The episode response.
+         * Read off the panel's chips rather than off the response, because the
+         * card that slides in is often a placeholder with no response behind it
+         * yet.
+         *
+         * @param {number|string} episodeId The episode being moved to.
          * @returns {number} 1 to move towards a later episode, -1 towards an
          *   earlier one, 0 when there is nothing to compare against.
          */
-        function slideDirection(data) {
+        function directionTo(episodeId) {
 
-            var from = parseInt($page.find('.sv-short-episode.active').data('epNumber'), 10);
-            var to   = parseInt(data.number, 10);
+            var ids  = episodeIds();
+            var from = $.inArray(currentEpisodeId(), ids);
+            var to   = $.inArray(String(episodeId), ids);
 
-            if (!from || !to || from === to) {
+            if (-1 === from || -1 === to || from === to) {
                 return 0;
             }
 
             return to > from ? 1 : -1;
+        }
+
+        /* The slide is a CSS transition, which reduced motion switches off; the
+           timers below have to agree with it, or a stage that is already here
+           would be held back for a slide that never ran. */
+        function reducedMotion() {
+            return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         }
 
         /**
@@ -195,6 +225,8 @@
 
             clearTimeout(slideTimer);
 
+            slideEndsAt = 0;
+
             var $stage = $page.find('.sv-short-stage');
 
             $stage.children('.sv-short-player.sv-is-leaving').remove();
@@ -207,34 +239,57 @@
             $stage.children('.sv-short-player').removeClass('sv-is-entering');
         }
 
+        /* The controls are absolutely positioned and carry no z-index of their
+           own, so they stay above the card only while they are the last thing
+           on the stage — which a card appended beside kept controls, rather
+           than alongside its own, would otherwise break. */
+        function raiseControls($stage) {
+
+            var $controls = $stage.children('.sv-short-stage-controls');
+
+            if ($controls.length && !$controls.is(':last-child')) {
+                $controls.appendTo($stage);
+            }
+        }
+
         /**
-         * Puts the next episode's card in place, sliding it past the one it
-         * replaces.
+         * Puts a card on the stage, sliding it past the one it replaces.
          *
-         * @param {Object} data The episode response.
+         * @param {jQuery} $incoming The card, plus anything that belongs on the
+         *   stage beside it — a server-rendered stage brings its own controls,
+         *   a placeholder brings nothing.
+         * @param {number} direction 1 towards a later episode, -1 towards an
+         *   earlier one, 0 to put it there without a slide.
          */
-        function swapStage(data) {
+        function swapStage($incoming, direction) {
 
             var $stage = $page.find('.sv-short-stage');
 
             endSlide();
 
-            var $outgoing = $stage.children('.sv-short-player');
-            var $incoming = $(data.stage);
-            var $card     = $incoming.filter('.sv-short-player');
-            var direction = slideDirection(data);
+            /* An ad plays over the stage, so a stage that changes ends it. */
+            destroyAdBreak();
 
-            /* Everything but the card being replaced goes now — the controls
-               carry the new prev/next, and the card is the only part worth
-               animating. Removing the old <video-player> is what lets the
-               MutationObserver in jws_player_v10.js pick the new one up; the
-               old one's save timer stops itself once it is detached. */
-            $stage.children().not($outgoing).remove();
-            $stage.removeClass('is-loading');
+            var $outgoing = $stage.children('.sv-short-player');
+            var $card     = $incoming.filter('.sv-short-player');
+
+            /* Everything the incoming set replaces goes now — a server-rendered
+               stage brings its own controls, a placeholder leaves the ones
+               already here standing for renderNavSlots() to repoint. The card
+               is the only part worth animating. Removing the old <video-player>
+               is what lets the MutationObserver in jws_player_v10.js pick the
+               new one up; the old one's save timer stops itself once it is
+               detached. */
+            var $keep = $incoming.filter('.sv-short-stage-controls').length
+                ? $outgoing
+                : $outgoing.add($stage.children('.sv-short-stage-controls'));
+
+            $stage.children().not($keep).remove();
 
             if (!direction || !$outgoing.length || !$card.length) {
                 $outgoing.remove();
                 $stage.append($incoming);
+                raiseControls($stage);
                 return;
             }
 
@@ -259,6 +314,7 @@
 
             $outgoing.addClass('sv-is-leaving');
             $stage.append($incoming);
+            raiseControls($stage);
 
             /* Forces both start positions to be computed before they change —
                including a card the finger dragged part of the way, which then
@@ -268,12 +324,64 @@
             $card.addClass('sv-is-entering').css('transform', '');
             $outgoing.css('transform', 'translateY(' + (direction > 0 ? -110 : 110) + '%)');
 
-            slideTimer = setTimeout(endSlide, SLIDE_MS);
+            slideEndsAt = Date.now() + (reducedMotion() ? 0 : SLIDE_MS);
+            slideTimer  = setTimeout(endSlide, SLIDE_MS);
         }
 
-        function applyEpisode(data, push) {
+        /**
+         * Drops the real stage into a placeholder's place, where it stands.
+         *
+         * No slide: the one the viewer asked for ran when they asked for it,
+         * and the card sitting here is the one that made it.
+         *
+         * @param {string} stageHtml The stage exactly as the server rendered it.
+         */
+        function replaceStage(stageHtml) {
 
-            swapStage(data);
+            var $stage = $page.find('.sv-short-stage');
+
+            endSlide();
+
+            /* The placeholder, and the controls that came in with the episode
+               before it: both are replaced by what has just arrived. */
+            $stage.empty().append($(stageHtml));
+        }
+
+        /**
+         * Runs something once the slide in flight has finished, or straight away
+         * when there is none.
+         *
+         * A stage that arrives faster than the slide has to wait for it: put in
+         * mid-flight it would appear wherever the placeholder had got to,
+         * halfway up the stage, and jump from there.
+         */
+        function afterSlide(done) {
+
+            var left = slideEndsAt - Date.now();
+
+            if (left > 0) {
+                setTimeout(done, left);
+                return;
+            }
+
+            done();
+        }
+
+        /**
+         * @param {Object} data The episode response.
+         * @param {boolean} push Whether this switch should add a history entry.
+         * @param {boolean} [inPlace] Whether the stage is already showing this
+         *   episode as a placeholder, which the real one then replaces where it
+         *   stands — everything else about the switch happened when the viewer
+         *   asked for it.
+         */
+        function applyEpisode(data, push, inPlace) {
+
+            if (inPlace) {
+                replaceStage(data.stage);
+            } else {
+                swapStage($(data.stage), directionTo(data.episodeId));
+            }
 
             $page.find('.sv-short-title').text(data.title);
             $page.find('.sv-short-breadcrumbs .jws-breadcrumbs__item--current .jws-breadcrumbs__text').text(data.crumb);
@@ -298,53 +406,176 @@
             prefetchNeighbours();
         }
 
-        function loadEpisode(episodeId, push) {
+        /** The episode's own page — where a switch falls back to when AJAX can't. */
+        function episodeHref(episodeId) {
+            return $page.find('.sv-short-episode[data-episode="' + episodeId + '"]').attr('href') || '';
+        }
 
-            if (loading || !episodeId) {
+        /**
+         * The card that stands in for an episode whose stage is not here yet.
+         *
+         * The gesture is answered by this, immediately, rather than by a stage
+         * that sits on the episode being left until the network says it may
+         * move — which on a slow connection read as the swipe having missed.
+         */
+        function pendingCard() {
+
+            return $(
+                '<div class="sv-short-player sv-short-player--pending">' +
+                    '<span class="sv-short-spinner" aria-hidden="true"></span>' +
+                '</div>'
+            );
+        }
+
+        /** Drops the request for an episode the viewer has already moved past. */
+        function endPending() {
+
+            if (!pending) {
                 return;
             }
 
-            var ready = prefetched[episodeId];
+            var stale = pending;
+
+            /* Cleared before the abort, not after: abort() runs the fail
+               handler synchronously, and that handler decides what to do by
+               whether its episode is still the one being waited on. */
+            pending = null;
+            stale.xhr.abort();
+        }
+
+        /**
+         * Moves to an episode whose stage has to be fetched: the switch is made
+         * now, against a placeholder, and the stage drops into it on arrival.
+         *
+         * @param {number|string} episodeId
+         * @param {boolean} push Whether to add a history entry.
+         */
+        function startPending(episodeId, push) {
+
+            endPending();
+
+            var href      = episodeHref(episodeId);
+            var direction = directionTo(episodeId);
+            var id        = String(episodeId);
+
+            swapStage(pendingCard(), direction);
+
+            /* Everything that says which episode this is moves with the card;
+               only the frames are still owed. The arrows move too, or a second
+               swipe would be read against the episode just left. */
+            markActive(episodeId);
+            openRangeOf(episodeId);
+            renderNavSlots();
+            setPanelOpen(false);
+
+            if (push && href && window.history && window.history.pushState) {
+                window.history.pushState({ jwsDramaEpisode: id }, '', href);
+            }
+
+            var xhr = fetchEpisode(episodeId, false);
+
+            pending = { id: id, xhr: xhr };
+
+            xhr.done(function (response) {
+
+                // Superseded: the viewer has swiped past this one already.
+                if (!pending || pending.id !== id) {
+                    return;
+                }
+
+                if (!response || !response.success) {
+                    // Nothing sensible to show in place — let the browser do it.
+                    if (href) {
+                        window.location.href = href;
+                    }
+                    return;
+                }
+
+                afterSlide(function () {
+
+                    if (!pending || pending.id !== id) {
+                        return;
+                    }
+
+                    pending = null;
+
+                    /* Never pushed again here: the URL moved with the card, at
+                       the moment the viewer asked for it. */
+                    applyEpisode(response.data, false, true);
+                });
+
+            }).fail(function () {
+
+                if (pending && pending.id === id && href) {
+                    window.location.href = href;
+                }
+            });
+        }
+
+        function loadEpisode(episodeId, push) {
+
+            if (!episodeId || String(episodeId) === currentEpisodeId()) {
+                return;
+            }
+
+            /* An ad-opened episode is checked first and never spent: it is the
+               only copy of a stage the server will not render a second time. */
+            var ready = adOpened[episodeId] || prefetched[episodeId];
 
             if (ready) {
-                /* Already here: swap it straight in, with none of the dim —
-                   there is nothing to wait for. */
+                /* Already here: it goes straight in, so there is nothing for a
+                   placeholder to stand in for. */
                 delete prefetched[episodeId];
+                endPending();
                 applyEpisode(ready, push);
                 return;
             }
 
-            loading = true;
-
-            var $stage = $page.find('.sv-short-stage');
-
-            $stage.addClass('is-loading');
-
-            fetchEpisode(episodeId, false).done(function (response) {
-
-                if (!response || !response.success) {
-                    // Nothing sensible to show in place — let the browser do it.
-                    window.location.href = $page.find('.sv-short-episode[data-episode="' + episodeId + '"]').attr('href');
-                    return;
-                }
-
-                applyEpisode(response.data, push);
-
-            }).fail(function () {
-                var href = $page.find('.sv-short-episode[data-episode="' + episodeId + '"]').attr('href');
-                if (href) { window.location.href = href; }
-            }).always(function () {
-                loading = false;
-                $stage.removeClass('is-loading');
-            });
+            startPending(episodeId, push);
         }
 
         /**
-         * The prev/next episode ids, read off the stage's own controls — the
-         * same source the arrows, the swipe and the keyboard already go by, so
-         * this follows whatever the server last rendered, the ends of the
-         * series included.
+         * Every episode of the series, in order, read off the panel's chips.
          *
+         * The panel renders the lot — the ranges only hide them — so this is
+         * the one list of the series the page always has, including while the
+         * stage is showing a placeholder instead of the prev/next the server
+         * rendered.
+         *
+         * @returns {string[]}
+         */
+        function episodeIds() {
+
+            return $page.find('.sv-short-episode').map(function () {
+                return String($(this).data('episode'));
+            }).get();
+        }
+
+        /** The episode being watched, or the one being moved to. */
+        function currentEpisodeId() {
+
+            return pending
+                ? pending.id
+                : String($page.find('.sv-short-episode.active').data('episode') || '');
+        }
+
+        /**
+         * @param {number} direction -1 for the previous episode, 1 for next.
+         * @returns {string} The id, or '' at that end of the series.
+         */
+        function neighbourId(direction) {
+
+            var ids = episodeIds();
+            var at  = $.inArray(currentEpisodeId(), ids);
+
+            if (-1 === at) {
+                return '';
+            }
+
+            return ids[at + (direction < 0 ? -1 : 1)] || '';
+        }
+
+        /**
          * @returns {string[]} One id, two, or none at all.
          */
         function neighbourIds() {
@@ -353,14 +584,73 @@
 
             $.each([-1, 1], function (index, direction) {
 
-                var id = navLink(direction).data('episode');
+                var id = neighbourId(direction);
 
                 if (id) {
-                    ids.push(String(id));
+                    ids.push(id);
                 }
             });
 
             return ids;
+        }
+
+        /*
+         * Both prev/next slots of .sv-short-stage-controls, in that order.
+         *
+         * stage.php always renders the pair, as an <a class="sv-short-nav">
+         * where that neighbour exists and a disabled <span> placeholder where
+         * it doesn't — so prev is always slot 0 and next always slot 1.
+         * Selecting only "a.sv-short-nav" would shift position whenever the
+         * prev slot is a placeholder (e.g. on the first episode): the lone
+         * "next" link would land at index 0 and get read as "prev".
+         */
+        var NAV_SLOTS = '.sv-short-stage-controls > .sv-short-stage-btn.sv-short-nav, '
+                      + '.sv-short-stage-controls > .sv-short-stage-btn.is-disabled';
+
+        /**
+         * Points the stage's arrows at the neighbours of the episode now
+         * showing.
+         *
+         * The server sends these with every stage, so they normally need no
+         * help — except while a placeholder stands in for one, which is exactly
+         * when a viewer is most likely to press them again.
+         */
+        function renderNavSlots() {
+
+            var $slots = $page.find(NAV_SLOTS);
+
+            $.each([-1, 1], function (index, direction) {
+
+                var $slot = $slots.eq(index);
+
+                if (!$slot.length) {
+                    return;
+                }
+
+                var id = neighbourId(direction);
+
+                /* Not the same element either way round — a neighbour is a
+                   link, the end of the series a disabled span — so the slot is
+                   rebuilt rather than relabelled. The caret inside it is
+                   carried over, which is what keeps prev pointing up and next
+                   down without this having to know which is which. */
+                var $new = $(id ? '<a></a>' : '<span></span>')
+                    .addClass('sv-short-stage-btn')
+                    .addClass(id ? 'sv-short-nav' : 'is-disabled')
+                    .html($slot.html());
+
+                if (id) {
+                    $new.attr({
+                        'data-episode': id,
+                        'href': episodeHref(id),
+                        'aria-label': direction < 0 ? jwsDrama.i18n.prevEpisode : jwsDrama.i18n.nextEpisode
+                    });
+                } else {
+                    $new.attr('aria-hidden', 'true');
+                }
+
+                $slot.replaceWith($new);
+            });
         }
 
         /** Warms the episode either side of the one now playing. */
@@ -388,7 +678,8 @@
 
                 $.each(wanted, function (index, id) {
 
-                    if (prefetched[id] || prefetching[id]) {
+                    // An ad-opened neighbour would come back as the paywall.
+                    if (prefetched[id] || prefetching[id] || adOpened[id]) {
                         return;
                     }
 
@@ -664,28 +955,6 @@
         /* Keyboard: up / down move between episodes                           */
         /* ------------------------------------------------------------------ */
 
-        /**
-         * The prev/next slot in .sv-short-stage-controls is always rendered
-         * (stage.php), as either an <a class="sv-short-nav"> when that
-         * neighbour exists or a disabled <span> placeholder when it doesn't
-         * — so the two slots always occupy positions 0 (prev) and 1 (next)
-         * in that order. Selecting only "a.sv-short-nav" and indexing into
-         * *that* filtered set instead would shift position whenever the prev
-         * slot is a placeholder (e.g. on the first episode of a range): the
-         * lone "next" link would land at index 0 and get read as "prev".
-         *
-         * @param {number} direction -1 for the previous episode, 1 for next.
-         * @returns {jQuery} The link, or an empty set if that neighbour
-         *   doesn't exist.
-         */
-        function navLink(direction) {
-
-            return $page
-                .find('.sv-short-stage-controls > .sv-short-stage-btn.sv-short-nav, .sv-short-stage-controls > .sv-short-stage-btn.is-disabled')
-                .eq(direction < 0 ? 0 : 1)
-                .filter('a.sv-short-nav');
-        }
-
         $(document).on('keydown', function (event) {
 
             if (event.metaKey || event.ctrlKey || event.altKey) {
@@ -703,11 +972,11 @@
                 return;
             }
 
-            var $link = navLink(event.key === 'ArrowUp' ? -1 : 1);
+            var id = neighbourId(event.key === 'ArrowUp' ? -1 : 1);
 
-            if ($link.length) {
+            if (id) {
                 event.preventDefault();
-                loadEpisode($link.data('episode'), true);
+                loadEpisode(id, true);
             }
         });
 
@@ -741,9 +1010,8 @@
         }
 
         /* Eases a gesture that never became a swipe back into place, then drops
-           the inline styles again so they don't linger and block the stage's
-           own opacity transition (the dim while the next episode loads) on
-           whatever ends up in this slot next.
+           the inline styles again so they don't linger on whatever ends up in
+           this slot next.
 
            Only ever a snap back: a swipe that did land is carried off by
            swapStage(), in the same movement that brings the next card in. */
@@ -764,7 +1032,7 @@
 
             var touch = event.originalEvent.touches[0];
 
-            if (!touch || loading) {
+            if (!touch) {
                 return;
             }
 
@@ -796,7 +1064,7 @@
 
             // Rubber-band harder toward whichever edge has nowhere to go, the
             // same cue a native list gives once it's out of items to show.
-            var hasNeighbour = navLink(deltaY < 0 ? 1 : -1).length > 0;
+            var hasNeighbour = !!neighbourId(deltaY < 0 ? 1 : -1);
             var travel       = deltaY * SWIPE_RESIST * (hasNeighbour ? 1 : 0.3);
 
             dragOffset($dragCard, Math.max(-SWIPE_CAP, Math.min(SWIPE_CAP, travel)));
@@ -831,9 +1099,9 @@
 
             // Swipe up (finger moves toward the top, deltaY < 0) advances to
             // the next episode, mirroring every other short-video feed.
-            var $link = navLink(deltaY < 0 ? 1 : -1);
+            var id = neighbourId(deltaY < 0 ? 1 : -1);
 
-            if (!$link.length) {
+            if (!id) {
                 snapBack($card);
                 return;
             }
@@ -843,7 +1111,7 @@
                it the rest of the way out, so the gesture and the transition read
                as one movement rather than two that fight over the same
                transform. */
-            loadEpisode($link.data('episode'), true);
+            loadEpisode(id, true);
         });
 
         $page.on('touchcancel', '.sv-short-stage', function () {
@@ -897,7 +1165,7 @@
             /* Nothing that way — at either end of the series, hand the gesture
                back to the page rather than swallowing it into a stage that
                cannot answer it. */
-            if (!navLink(wheel.deltaY > 0 ? 1 : -1).length) {
+            if (!neighbourId(wheel.deltaY > 0 ? 1 : -1)) {
                 return;
             }
 
@@ -920,13 +1188,13 @@
             }
 
             // Scrolling down (deltaY > 0) goes on to the next episode.
-            var $link = navLink(wheelTravel > 0 ? 1 : -1);
+            var id = neighbourId(wheelTravel > 0 ? 1 : -1);
 
             wheelSpent  = true;
             wheelTravel = 0;
 
-            if ($link.length) {
-                loadEpisode($link.data('episode'), true);
+            if (id) {
+                loadEpisode(id, true);
             }
         });
 
@@ -1108,6 +1376,476 @@
                 if ($btn) {
                     $btn.prop('disabled', false).removeClass('is-loading');
                 }
+            });
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Ad unlock                                                           */
+        /* ------------------------------------------------------------------ */
+
+        /* In link mode this is a plain <a> the browser opens itself — a
+           window.open() from script is what pop-up blockers exist for — and all
+           the handler does is start the clock the server will hold the claim to
+           anyway. In video mode it is a <button> and the break plays here. */
+        $page.on('click', '.sv-short-ad-unlock', function () {
+
+            var $btn = $(this);
+            var episodeId = String($btn.data('episode'));
+
+            /* Already running: in link mode the viewer is welcome to open the
+               ad again — the link still navigates — but a second clock would
+               race the first one to the same single-use ticket. */
+            if (!episodeId || $btn.hasClass('is-waiting')) {
+                return;
+            }
+
+            if ($btn.data('adMode') === 'video') {
+                startAdVideo(episodeId, $btn);
+                return;
+            }
+
+            startAdUnlock(episodeId, $btn);
+        });
+
+        /* ------------------------------------------------------------------ */
+        /* Ad unlock: the video break                                          */
+        /* ------------------------------------------------------------------ */
+
+        /* The break on screen, if there is one. At most one ever runs: it takes
+           the whole stage, and there is only one stage. */
+        var adBreak = null;
+
+        /**
+         * Takes down whatever break is running, earned or not.
+         *
+         * Called from swapStage() as well as from the break's own end, so an ad
+         * can never outlive the card it was playing over — a viewer who swipes
+         * away mid-ad leaves nothing behind but an unclaimed ticket, which
+         * expires on its own.
+         */
+        function destroyAdBreak() {
+
+            if (!adBreak) {
+                return;
+            }
+
+            var ending = adBreak;
+
+            adBreak = null;
+
+            try { if (ending.manager) { ending.manager.destroy(); } } catch (e) { }
+            try { if (ending.loader) { ending.loader.destroy(); } } catch (e) { }
+
+            document.removeEventListener('visibilitychange', ending.onVisible);
+
+            ending.$overlay.remove();
+            ending.reset();
+        }
+
+        /**
+         * Plays a rewarded VAST break over the stage and opens the episode if it
+         * is watched to the end.
+         *
+         * IMA is driven directly, the way jws_player_v10.js drives it for the
+         * content player: videojs-ima was never ported to v10, and this break
+         * has no content player to hang off in any case — the stage under it is
+         * the paywall.
+         *
+         * @param {string} episodeId
+         * @param {jQuery} $btn The button that was clicked.
+         */
+        function startAdVideo(episodeId, $btn) {
+
+            var $label = $btn.find('.sv-short-ad-label');
+            var label  = $label.text();
+
+            function reset() {
+                $btn.removeClass('is-waiting');
+                $label.text(label);
+            }
+
+            if (typeof google === 'undefined' || !google.ima || !jwsDrama.adTag) {
+                // A blocked SDK is the norm, not an exception.
+                notify(jwsDrama.i18n.adNoAd, 'error');
+                return;
+            }
+
+            destroyAdBreak();
+
+            $btn.addClass('is-waiting');
+            $label.text(jwsDrama.i18n.adLoading);
+
+            var $overlay = $(
+                '<div class="sv-short-ad-break">' +
+                    '<video class="sv-short-ad-media" playsinline webkit-playsinline></video>' +
+                    '<div class="sv-short-ad-slot"></div>' +
+                    '<button type="button" class="sv-short-ad-resume" hidden>' +
+                        '<i class="jws-icon-play-fill" aria-hidden="true"></i>' +
+                    '</button>' +
+                    '<p class="sv-short-ad-status"></p>' +
+                '</div>'
+            ).appendTo($page.find('.sv-short-stage'));
+
+            /*
+             * Clicking a linear ad opens the advertiser in another tab and
+             * leaves this one paused — that is IMA's behaviour, not a fault,
+             * but the SDK draws no way back from it. It renders the skip button
+             * and the creative's own click-through and nothing else; play and
+             * pause have always been the publisher's to provide, which is why
+             * the content player carries its own ad bar too.
+             *
+             * Without this the viewer came back from the advertiser to a still
+             * frame with no control on it, and an ad that cannot finish is an
+             * episode that never opens.
+             */
+            var $resume = $overlay.find('.sv-short-ad-resume');
+
+            function showResume(paused) {
+                $resume[0].hidden = !paused;
+            }
+
+            $resume.on('click', function (event) {
+
+                /* Kept off the ad underneath: this button sits over the
+                   creative, and a click that reached it would open the
+                   advertiser all over again. */
+                event.stopPropagation();
+
+                if (adBreak && adBreak.manager) {
+                    try { adBreak.manager.resume(); } catch (e) { }
+                }
+            });
+
+            /* Coming back to the tab is the ordinary way out of a click-through,
+               so it resumes on its own — the button is for the times it isn't
+               (a click that never left the page, a pause from the creative). */
+            function onVisible() {
+
+                if ('visible' !== document.visibilityState) {
+                    return;
+                }
+
+                /* Not gated on the button being up: a break can be paused
+                   without IMA having said so — a background tab pauses media
+                   on its own — and resuming an ad that was never paused is a
+                   no-op, while missing one that was leaves the viewer stuck on
+                   a still frame with an episode they cannot reach. */
+                if (adBreak && adBreak.manager) {
+                    try { adBreak.manager.resume(); } catch (e) { }
+                }
+            }
+
+            document.addEventListener('visibilitychange', onVisible);
+
+            $overlay.find('.sv-short-ad-status').text(jwsDrama.i18n.adLoading);
+
+            var slotEl  = $overlay.find('.sv-short-ad-slot')[0];
+            var videoEl = $overlay.find('.sv-short-ad-media')[0];
+
+            /* Inside the click, before anything asynchronous: iOS and Safari
+               only let a media element start from a gesture, and initialize()
+               is what claims this one for the ad to play in later. */
+            var display = new google.ima.AdDisplayContainer(slotEl, videoEl);
+
+            try { display.initialize(); } catch (e) { /* already initialised */ }
+
+            var loader = new google.ima.AdsLoader(display);
+
+            adBreak = {
+                id: episodeId,
+                loader: loader,
+                manager: null,
+                earned: false,
+                $overlay: $overlay,
+                onVisible: onVisible,
+                reset: reset
+            };
+
+            function width()  { return $overlay.width() || 360; }
+            function height() { return $overlay.height() || 640; }
+
+            /** The break is over, one way or another. */
+            function finish(running) {
+
+                var earned = running.earned;
+
+                destroyAdBreak();
+
+                if (!earned) {
+                    notify(jwsDrama.i18n.adNotFinished, 'error');
+                    return;
+                }
+
+                claimAdUnlock(episodeId, running.token, reset);
+            }
+
+            function onError(error) {
+
+                var detail = error;
+
+                try {
+                    var adError = (error && typeof error.getError === 'function') ? error.getError() : error;
+
+                    if (adError && typeof adError.getErrorCode === 'function') {
+                        detail = 'code ' + adError.getErrorCode() + ' — ' + adError.getMessage();
+                    }
+                } catch (e) { /* fall back to the raw value */ }
+
+                window.console && console.warn('[StreamVid] rewarded ad error:', detail);
+
+                var running = adBreak;
+
+                destroyAdBreak();
+
+                /* No ad to watch is not the viewer failing to watch one, so it
+                   is worth saying differently — and it must never be worth an
+                   episode, or an ad blocker would be the cheapest way in. */
+                if (running) {
+                    notify(jwsDrama.i18n.adNoAd, 'error');
+                }
+            }
+
+            loader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onError, false);
+
+            loader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (event) {
+
+                if (!adBreak) {
+                    return; // swiped away while the tag was being fetched
+                }
+
+                var manager = event.getAdsManager(videoEl);
+
+                adBreak.manager = manager;
+
+                manager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onError);
+
+                manager.addEventListener(google.ima.AdEvent.Type.STARTED, function () {
+                    $overlay.addClass('is-playing').find('.sv-short-ad-status').text('');
+                    showResume(false);
+                });
+
+                manager.addEventListener(google.ima.AdEvent.Type.PAUSED, function () {
+                    showResume(true);
+                });
+
+                manager.addEventListener(google.ima.AdEvent.Type.RESUMED, function () {
+                    showResume(false);
+                });
+
+                /*
+                 * The mark the episode is earned at, and never SKIPPED: a
+                 * viewer who skipped past the whole thing is worth nothing to
+                 * the advertiser and so is worth nothing here.
+                 *
+                 * Which mark it is has to be a setting, because a creative that
+                 * declares a skipoffset draws its own Skip button and the SDK
+                 * gives nobody a way to take it away. A site serving skippable
+                 * ads either rewards something short of the end, or rewards
+                 * almost nobody.
+                 */
+                var rewardAt = google.ima.AdEvent.Type.COMPLETE;
+
+                if ('start' === jwsDrama.adReward) {
+                    rewardAt = google.ima.AdEvent.Type.STARTED;
+                } else if ('midpoint' === jwsDrama.adReward) {
+                    rewardAt = google.ima.AdEvent.Type.MIDPOINT;
+                }
+
+                manager.addEventListener(rewardAt, function () {
+                    if (adBreak) {
+                        adBreak.earned = true;
+                    }
+                });
+
+                /* Skipping an ad that has already earned the episode ends the
+                   break there and then: the reward is settled, and making the
+                   viewer watch the SDK tear itself down before the episode
+                   appears reads as the skip not having worked.
+
+                   Only when it is earned, though — skipping the first ad of a
+                   pod that has not paid out yet leaves the rest of the pod its
+                   chance, and ALL_ADS_COMPLETED below is what closes it. */
+                manager.addEventListener(google.ima.AdEvent.Type.SKIPPED, function () {
+                    if (adBreak && adBreak.earned) {
+                        finish(adBreak);
+                    }
+                });
+
+                /* The only event that means "no break is left" — a per-ad check
+                   races the SDK and leaves the slot up over the stage. */
+                manager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, function () {
+                    if (adBreak) {
+                        finish(adBreak);
+                    }
+                });
+
+                try {
+                    manager.init(width(), height(), google.ima.ViewMode.NORMAL);
+                    manager.start();
+                } catch (e) {
+                    onError(e);
+                }
+            }, false);
+
+            /* The ticket first: a viewer who has run out of episodes for today
+               should be told so before an advertiser is billed for showing them
+               anything. */
+            $.ajax({
+                url: jwsDrama.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'jws_drama_ad_start',
+                    episode_id: episodeId,
+                    nonce: jwsDrama.adNonce
+                }
+            }).done(function (response) {
+
+                if (!adBreak) {
+                    return;
+                }
+
+                if (!response || !response.success) {
+                    notify((response && response.data && response.data.message) || jwsDrama.i18n.failed, 'error');
+                    destroyAdBreak();
+                    return;
+                }
+
+                adBreak.token = response.data.token;
+
+                var request = new google.ima.AdsRequest();
+
+                request.adTagUrl = jwsDrama.adTag;
+                request.linearAdSlotWidth  = width();
+                request.linearAdSlotHeight = height();
+                request.nonLinearAdSlotWidth  = width();
+                request.nonLinearAdSlotHeight = Math.floor(height() / 3);
+
+                try {
+                    loader.requestAds(request);
+                } catch (e) {
+                    onError(e);
+                }
+
+            }).fail(function () {
+                notify(jwsDrama.i18n.failed, 'error');
+                destroyAdBreak();
+            });
+        }
+
+        /**
+         * Asks for a ticket, then counts down the wait the server answered with.
+         *
+         * @param {string} episodeId
+         * @param {jQuery} $btn The link that was clicked. It may be gone from
+         *   the page before this finishes — the viewer can swipe on while the
+         *   ad tab is open — which is why nothing here depends on it.
+         */
+        function startAdUnlock(episodeId, $btn) {
+
+            var $label = $btn.find('.sv-short-ad-label');
+            var label  = $label.text();
+
+            function done() {
+                $btn.removeClass('is-waiting');
+                $label.text(label);
+            }
+
+            $btn.addClass('is-waiting');
+            $label.text(jwsDrama.i18n.adClaiming);
+
+            $.ajax({
+                url: jwsDrama.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'jws_drama_ad_start',
+                    episode_id: episodeId,
+                    nonce: jwsDrama.adNonce
+                }
+            }).done(function (response) {
+
+                if (!response || !response.success) {
+                    notify((response && response.data && response.data.message) || jwsDrama.i18n.failed, 'error');
+                    done();
+                    return;
+                }
+
+                countAdDown(episodeId, response.data.token, (response.data.seconds | 0) + 1, $label, done);
+
+            }).fail(function () {
+                notify(jwsDrama.i18n.failed, 'error');
+                done();
+            });
+        }
+
+        /**
+         * One second past what the server asks for, so a claim is never refused
+         * for arriving on the same second it became valid.
+         */
+        function countAdDown(episodeId, token, left, $label, done) {
+
+            if (left <= 0) {
+                $label.text(jwsDrama.i18n.adClaiming);
+                claimAdUnlock(episodeId, token, done);
+                return;
+            }
+
+            $label.text(jwsDrama.i18n.adWait.replace('%d', left));
+
+            setTimeout(function () {
+                countAdDown(episodeId, token, left - 1, $label, done);
+            }, 1000);
+        }
+
+        function claimAdUnlock(episodeId, token, done) {
+
+            $.ajax({
+                url: jwsDrama.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'jws_drama_ad_claim',
+                    episode_id: episodeId,
+                    token: token,
+                    nonce: jwsDrama.adNonce
+                }
+            }).done(function (response) {
+
+                if (!response || !response.success) {
+                    notify((response && response.data && response.data.message) || jwsDrama.i18n.failed, 'error');
+                    done();
+                    return;
+                }
+
+                var data = response.data;
+
+                adOpened[episodeId] = data;
+
+                /* Whatever was warmed for this episode is the lock panel, which
+                   is no longer what the page should show for it. */
+                delete prefetched[episodeId];
+
+                // Watchable for this visit, so it stops being a locked chip.
+                $page.find('.sv-short-episode[data-episode="' + episodeId + '"]')
+                     .removeClass('locked')
+                     .find('.sv-short-lock').remove();
+
+                notify(data.message, 'success');
+
+                /* Only if the viewer is still here. Swiping on while the ad tab
+                   was open is not a request to be dragged back — the episode is
+                   in adOpened either way, and opens without a wall next time
+                   they come to it. */
+                if (currentEpisodeId() === episodeId) {
+                    applyEpisode(data, false);
+                } else {
+                    done();
+                }
+
+            }).fail(function () {
+                notify(jwsDrama.i18n.failed, 'error');
+                done();
             });
         }
 

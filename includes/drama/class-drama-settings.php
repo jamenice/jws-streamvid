@@ -55,6 +55,36 @@ class Jws_Drama_Settings {
 			'currency'      => 'USD',
 
 			/*
+			 * Ad-for-access: the link a viewer opens to earn one viewing of a
+			 * locked episode, and the wait before that click is worth anything.
+			 *
+			 * Nothing about it is recorded — see Jws_Drama_Ad_Unlock — so the
+			 * daily cap is the only thing standing between this and the coin
+			 * sales it exists alongside. 0 lifts the cap entirely.
+			 */
+			'ad_unlock'          => 0,
+
+			/* 'video' plays a VAST break in the stage and opens the episode
+			   when it finishes; 'link' sends the viewer to an advertiser and
+			   counts. */
+			'ad_unlock_mode'     => 'link',
+
+			/* Video mode: an Advertising post, or a tag URL for a site that
+			   has none. */
+			'ad_unlock_tag'      => 0,
+			'ad_unlock_vast_url' => '',
+
+			/* How much of the break earns the episode. Only ever a question
+			   because a creative with a skipoffset draws its own Skip button
+			   and the player cannot take it away. */
+			'ad_unlock_reward'   => 'complete',
+
+			/* Link mode. */
+			'ad_unlock_url'      => '',
+			'ad_unlock_seconds' => 15,
+			'ad_unlock_daily'   => 10,
+
+			/*
 			 * VIP is sold by Paid Memberships Pro: the levels ticked here are
 			 * both what the buy panel offers and what skips the coin wall, so
 			 * the shelf and the access rule can never describe different plans.
@@ -821,6 +851,30 @@ class Jws_Drama_Settings {
 		$out['free_episodes'] = isset( $raw['free_episodes'] ) ? max( 0, (int) $raw['free_episodes'] ) : 0;
 		$out['coin_price']    = isset( $raw['coin_price'] ) ? max( 0, (int) $raw['coin_price'] ) : 0;
 
+		/* Same form as every other General field, so an unticked box here is a
+		   real "off" rather than a section that was never posted. */
+		$out['ad_unlock']      = empty( $raw['ad_unlock'] ) ? 0 : 1;
+		$out['ad_unlock_mode'] = ( isset( $raw['ad_unlock_mode'] ) && 'video' === $raw['ad_unlock_mode'] ) ? 'video' : 'link';
+		$out['ad_unlock_tag']  = isset( $raw['ad_unlock_tag'] ) ? absint( $raw['ad_unlock_tag'] ) : 0;
+
+		$out['ad_unlock_reward'] = ( isset( $raw['ad_unlock_reward'] ) && in_array( $raw['ad_unlock_reward'], array( 'complete', 'midpoint', 'start' ), true ) )
+			? $raw['ad_unlock_reward']
+			: 'complete';
+
+		$out['ad_unlock_vast_url'] = isset( $raw['ad_unlock_vast_url'] )
+			? esc_url_raw( trim( (string) $raw['ad_unlock_vast_url'] ) )
+			: '';
+
+		$out['ad_unlock_url'] = isset( $raw['ad_unlock_url'] )
+			? esc_url_raw( trim( (string) $raw['ad_unlock_url'] ) )
+			: '';
+
+		$out['ad_unlock_seconds'] = isset( $raw['ad_unlock_seconds'] )
+			? max( 3, min( 120, (int) $raw['ad_unlock_seconds'] ) )
+			: 15;
+
+		$out['ad_unlock_daily'] = isset( $raw['ad_unlock_daily'] ) ? max( 0, (int) $raw['ad_unlock_daily'] ) : 0;
+
 		/*
 		 * No form posts a currency any more — the field went when Woo and
 		 * PMPro took over the checkouts. Falling back to what is stored
@@ -1078,6 +1132,96 @@ class Jws_Drama_Settings {
 					<td>
 						<input type="number" min="0" id="coin_price" name="coin_price" value="<?php echo (int) $s['coin_price']; ?>" class="small-text" />
 						<p class="description"><?php echo esc_html__( 'Cost to unlock one episode past the free ones, for a drama that does not set its own price.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock"><?php echo esc_html__( 'Unlock with an ad', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<label>
+							<input type="checkbox" id="ad_unlock" name="ad_unlock" value="1" <?php checked( ! empty( $s['ad_unlock'] ) ); ?> />
+							<?php echo esc_html__( 'Let viewers open a locked episode by visiting an advertiser link', 'jws_streamvid' ); ?>
+						</label>
+						<p class="description">
+							<?php echo esc_html__( 'The episode opens for that visit only — a reload puts it back behind the paywall, and nothing is added to the account. Signed-out visitors can use it too.', 'jws_streamvid' ); ?>
+							<br />
+							<strong><?php echo esc_html__( 'Check your ad network first:', 'jws_streamvid' ); ?></strong>
+							<?php echo esc_html__( 'Google AdSense forbids rewarding clicks and bans accounts for it. Use a network whose terms allow incentivised traffic.', 'jws_streamvid' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_mode"><?php echo esc_html__( 'What the viewer does', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<?php $ad_mode = isset( $s['ad_unlock_mode'] ) ? $s['ad_unlock_mode'] : 'link'; ?>
+						<select id="ad_unlock_mode" name="ad_unlock_mode">
+							<option value="video" <?php selected( 'video', $ad_mode ); ?>><?php echo esc_html__( 'Watch a video ad, in the player', 'jws_streamvid' ); ?></option>
+							<option value="link" <?php selected( 'link', $ad_mode ); ?>><?php echo esc_html__( 'Open an advertiser link, in a new tab', 'jws_streamvid' ); ?></option>
+						</select>
+						<p class="description"><?php echo esc_html__( 'A video break is the one every ad network is happy with, and the episode opens only if it is watched to the end — a skipped ad earns nothing. Fill in the fields below for whichever of the two is chosen.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_tag"><?php echo esc_html__( 'Video ad tag', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<?php
+						$ad_posts = get_posts(
+							array(
+								'post_type'      => array( 'advertising', 'adsvmap' ),
+								'post_status'    => 'publish',
+								'posts_per_page' => 100,
+								'orderby'        => 'title',
+								'order'          => 'ASC',
+							)
+						);
+						?>
+						<select id="ad_unlock_tag" name="ad_unlock_tag">
+							<option value="0"><?php echo esc_html__( '— Use the tag URL below —', 'jws_streamvid' ); ?></option>
+							<?php foreach ( $ad_posts as $ad_post ) : ?>
+								<option value="<?php echo (int) $ad_post->ID; ?>" <?php selected( (int) $ad_post->ID, isset( $s['ad_unlock_tag'] ) ? (int) $s['ad_unlock_tag'] : 0 ); ?>>
+									<?php echo esc_html( $ad_post->post_title . ' (' . $ad_post->post_type . ')' ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description"><?php echo esc_html__( 'An Advertising or VMAP post, the same ones the movie player takes its breaks from. Video mode only.', 'jws_streamvid' ); ?></p>
+						<p>
+							<input type="url" id="ad_unlock_vast_url" name="ad_unlock_vast_url" value="<?php echo esc_attr( isset( $s['ad_unlock_vast_url'] ) ? $s['ad_unlock_vast_url'] : '' ); ?>" class="regular-text" placeholder="https://…/vast.xml" />
+						</p>
+						<p class="description"><?php echo esc_html__( 'Or paste a VAST / VMAP tag URL, used when no post is picked above.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_reward"><?php echo esc_html__( 'What earns the episode', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<?php $ad_reward = isset( $s['ad_unlock_reward'] ) ? $s['ad_unlock_reward'] : 'complete'; ?>
+						<select id="ad_unlock_reward" name="ad_unlock_reward">
+							<option value="complete" <?php selected( 'complete', $ad_reward ); ?>><?php echo esc_html__( 'Watching the whole ad', 'jws_streamvid' ); ?></option>
+							<option value="midpoint" <?php selected( 'midpoint', $ad_reward ); ?>><?php echo esc_html__( 'Watching half of it', 'jws_streamvid' ); ?></option>
+							<option value="start" <?php selected( 'start', $ad_reward ); ?>><?php echo esc_html__( 'The ad simply playing — skipping still counts', 'jws_streamvid' ); ?></option>
+						</select>
+						<p class="description">
+							<?php echo esc_html__( 'Video mode only. A creative that declares a skip offset makes the SDK draw its own Skip button, and no setting here can remove it — so either serve a tag with no skip offset (the Skippable field on the Advertising post), or pick a mark below the whole ad.', 'jws_streamvid' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_url"><?php echo esc_html__( 'Ad link', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<input type="url" id="ad_unlock_url" name="ad_unlock_url" value="<?php echo esc_attr( isset( $s['ad_unlock_url'] ) ? $s['ad_unlock_url'] : '' ); ?>" class="regular-text" placeholder="https://" />
+						<p class="description"><?php echo esc_html__( 'Where the button sends the viewer, in a new tab — usually a direct link from your ad network. Link mode only. Whichever field the chosen mode needs, leaving it empty keeps the feature off however the box above is set.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_seconds"><?php echo esc_html__( 'Seconds before it counts', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<input type="number" min="3" max="120" id="ad_unlock_seconds" name="ad_unlock_seconds" value="<?php echo (int) ( isset( $s['ad_unlock_seconds'] ) ? $s['ad_unlock_seconds'] : 15 ); ?>" class="small-text" />
+						<p class="description"><?php echo esc_html__( 'Link mode: how long after opening the link the episode may be claimed. Checked on the server, so shortening it in the browser achieves nothing. Video mode ignores this — the wait there is the ad break itself.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ad_unlock_daily"><?php echo esc_html__( 'Episodes per viewer per day', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<input type="number" min="0" id="ad_unlock_daily" name="ad_unlock_daily" value="<?php echo (int) ( isset( $s['ad_unlock_daily'] ) ? $s['ad_unlock_daily'] : 0 ); ?>" class="small-text" />
+						<p class="description"><?php echo esc_html__( 'How many episodes one viewer can open this way in a day. 0 means no limit — which also means no reason left to buy coins.', 'jws_streamvid' ); ?></p>
 					</td>
 				</tr>
 				<tr>

@@ -21,6 +21,12 @@ class Jws_Drama_Ajax {
 
 		foreach ( array( 'wp_ajax_', 'wp_ajax_nopriv_' ) as $prefix ) {
 			add_action( $prefix . 'jws_drama_episode', array( $this, 'episode' ) );
+
+			/* Both halves have a nopriv twin: an ad is watched by whoever is in
+			   front of the screen, and this one is open to viewers who have not
+			   signed in — there is no account for it to touch. */
+			add_action( $prefix . 'jws_drama_ad_start', array( $this, 'ad_start' ) );
+			add_action( $prefix . 'jws_drama_ad_claim', array( $this, 'ad_claim' ) );
 		}
 
 		/* Spending coins is not a read — it needs a session and a nonce, so
@@ -303,12 +309,32 @@ class Jws_Drama_Ajax {
 			wp_send_json_error( array( 'message' => esc_html__( 'Episode is not linked to a drama.', 'jws_streamvid' ) ), 400 );
 		}
 
-		$number = Jws_Drama_Wallet::episode_number( $episode_id );
-
 		/* The watch screen warms the episode either side of the one playing, and
 		   says so here. Same markup either way — what it changes is that a stage
 		   nobody has opened does not become the drama's resume point. */
 		$prefetch = ! empty( $_POST['prefetch'] );
+
+		wp_send_json_success( $this->episode_payload( $episode_id, $drama_id, $prefetch ) );
+	}
+
+	/**
+	 * Everything the watch screen needs to be showing one episode: the stage
+	 * markup and the few strings outside it that name the episode.
+	 *
+	 * Shared by the episode switch and by the ad claim below, so a stage opened
+	 * by an ad arrives in exactly the shape the switch already knows how to
+	 * apply — and so an access decision taken between the two can never be
+	 * described two different ways.
+	 *
+	 * @param int  $episode_id
+	 * @param int  $drama_id
+	 * @param bool $prefetch Whether this is a neighbour being warmed rather than
+	 *   an episode the viewer opened.
+	 * @return array
+	 */
+	private function episode_payload( $episode_id, $drama_id, $prefetch = false ) {
+
+		$number = Jws_Drama_Wallet::episode_number( $episode_id );
 
 		/*
 		 * The template parts read the loop, not just their arguments — the player
@@ -332,18 +358,111 @@ class Jws_Drama_Ajax {
 
 		$access = Jws_Drama_Wallet::access( $episode_id );
 
+		return array(
+			'stage'     => $stage,
+			'episodeId' => $episode_id,
+			'dramaId'   => $drama_id,
+			'number'    => $number,
+			'permalink' => get_permalink( $episode_id ),
+			/* translators: %d: episode number */
+			'crumb'     => sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
+			'title'     => html_entity_decode( get_the_title( $drama_id ), ENT_QUOTES, 'UTF-8' ) . ' – ' . sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
+			'locked'    => empty( $access['can_watch'] ),
+		);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Ad unlock                                                           */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Issues the ticket that a visit to the advertiser's link is redeemed with.
+	 *
+	 * Answers with the wait it will be held to, so the button can count the
+	 * same seconds the server is going to check.
+	 */
+	public function ad_start() {
+
+		check_ajax_referer( 'jws_drama_ad', 'nonce' );
+
+		$episode_id = isset( $_POST['episode_id'] ) ? absint( $_POST['episode_id'] ) : 0;
+		$result     = Jws_Drama_Ad_Unlock::start( $episode_id );
+
+		if ( empty( $result['success'] ) ) {
+			wp_send_json_error(
+				array(
+					'reason'  => $result['reason'],
+					'message' => self::ad_message( $result['reason'] ),
+				),
+				200
+			);
+		}
+
 		wp_send_json_success(
 			array(
-				'stage'     => $stage,
-				'episodeId' => $episode_id,
-				'dramaId'   => $drama_id,
-				'number'    => $number,
-				'permalink' => get_permalink( $episode_id ),
-				/* translators: %d: episode number */
-				'crumb'     => sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
-				'title'     => html_entity_decode( get_the_title( $drama_id ), ENT_QUOTES, 'UTF-8' ) . ' – ' . sprintf( __( 'Episode %d', 'jws_streamvid' ), $number ),
-				'locked'    => empty( $access['can_watch'] ),
+				'token'   => $result['token'],
+				'seconds' => Jws_Drama_Ad_Unlock::seconds(),
 			)
 		);
+	}
+
+	/**
+	 * Redeems the ticket and hands back the episode, playable.
+	 *
+	 * The grant lasts as long as this request, which is exactly long enough to
+	 * render the stage below — after that the only copy of it is the markup the
+	 * page is holding.
+	 */
+	public function ad_claim() {
+
+		check_ajax_referer( 'jws_drama_ad', 'nonce' );
+
+		$episode_id = isset( $_POST['episode_id'] ) ? absint( $_POST['episode_id'] ) : 0;
+		$token      = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+
+		if ( ! $episode_id || Jws_Drama_Post_Types::EPISODE !== get_post_type( $episode_id ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unknown episode.', 'jws_streamvid' ) ), 400 );
+		}
+
+		$drama_id = Jws_Drama_Wallet::drama_id_of( $episode_id );
+
+		if ( ! $drama_id ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'This episode cannot be unlocked.', 'jws_streamvid' ) ), 400 );
+		}
+
+		$result = Jws_Drama_Ad_Unlock::claim( $episode_id, $token );
+
+		if ( empty( $result['success'] ) ) {
+			wp_send_json_error(
+				array(
+					'reason'  => $result['reason'],
+					'message' => self::ad_message( $result['reason'] ),
+				),
+				200
+			);
+		}
+
+		$payload            = $this->episode_payload( $episode_id, $drama_id );
+		$payload['message'] = esc_html__( 'Episode unlocked for this visit.', 'jws_streamvid' );
+
+		wp_send_json_success( $payload );
+	}
+
+	/** Why an ad unlock did not happen, in words the viewer can act on. */
+	private static function ad_message( $reason ) {
+
+		$messages = array(
+			'disabled'    => esc_html__( 'This is not available right now.', 'jws_streamvid' ),
+			'invalid'     => esc_html__( 'Unknown episode.', 'jws_streamvid' ),
+			'not_locked'  => esc_html__( 'This episode is already open.', 'jws_streamvid' ),
+			'daily_limit' => esc_html__( "That is all the episodes ads can open today. Come back tomorrow, or unlock this one with coins.", 'jws_streamvid' ),
+			'expired'     => esc_html__( 'That took too long — please try again.', 'jws_streamvid' ),
+			'mismatch'    => esc_html__( 'That took too long — please try again.', 'jws_streamvid' ),
+			'too_soon'    => esc_html__( 'Please give the ad a moment longer.', 'jws_streamvid' ),
+		);
+
+		return isset( $messages[ $reason ] )
+			? $messages[ $reason ]
+			: esc_html__( 'Could not unlock. Please try again.', 'jws_streamvid' );
 	}
 }
