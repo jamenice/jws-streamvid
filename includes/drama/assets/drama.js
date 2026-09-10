@@ -1831,12 +1831,15 @@
                      .removeClass('locked')
                      .find('.sv-short-lock').remove();
 
-                notify(data.message, 'success');
+                /* Nothing is announced: the episode replacing the paywall says
+                   it, and a toast over the opening seconds of a two-minute
+                   episode sits on the very thing the viewer just earned. Only
+                   failures speak up — those are the ones needing words.
 
-                /* Only if the viewer is still here. Swiping on while the ad tab
-                   was open is not a request to be dragged back — the episode is
-                   in adOpened either way, and opens without a wall next time
-                   they come to it. */
+                   Applied only if the viewer is still here. Swiping on while
+                   the ad tab was open is not a request to be dragged back; the
+                   episode is in adOpened either way and opens without a wall
+                   next time they come to it. */
                 if (currentEpisodeId() === episodeId) {
                     applyEpisode(data, false);
                 } else {

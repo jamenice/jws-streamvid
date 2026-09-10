@@ -442,10 +442,8 @@ class Jws_Drama_Ajax {
 			);
 		}
 
-		$payload            = $this->episode_payload( $episode_id, $drama_id );
-		$payload['message'] = esc_html__( 'Episode unlocked for this visit.', 'jws_streamvid' );
-
-		wp_send_json_success( $payload );
+		/* No message: the page says it by showing the episode. */
+		wp_send_json_success( $this->episode_payload( $episode_id, $drama_id ) );
 	}
 
 	/** Why an ad unlock did not happen, in words the viewer can act on. */
