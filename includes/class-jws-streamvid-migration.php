@@ -4,10 +4,11 @@
  * "Sync Data Tables" admin page under Jws Settings.
  *
  * Copies the legacy `{post_type}_liked` / `post_watchlist` / `video_progress_data`
- * usermeta rows into the new jws_favorites / jws_watchlist / jws_history tables
- * (see class-jws-streamvid-tables.php). The migration only inserts — it never
- * touches the old usermeta — so it is safe to run more than once and the old
- * data stays as a backup until cleared explicitly.
+ * / `jws_purchased_videos` / `jws_rented_videos` usermeta rows into the new
+ * jws_favorites / jws_watchlist / jws_history / jws_ppv_access tables (see
+ * class-jws-streamvid-tables.php). The migration only inserts — it never touches
+ * the old usermeta — so it is safe to run more than once and the old data stays
+ * as a backup until cleared explicitly.
  *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes
@@ -83,6 +84,8 @@ class Jws_Streamvid_Migration {
 				$results['watchlist'] = Jws_Watchlist::migrate_from_meta();
 			} elseif ( 'history' === $target ) {
 				$results['history'] = Jws_History::migrate_from_meta();
+			} elseif ( 'ppv' === $target ) {
+				$results['ppv'] = Jws_PPV_Access::migrate_from_meta();
 			}
 		}
 
@@ -95,6 +98,8 @@ class Jws_Streamvid_Migration {
 				$meta_keys = array( 'post_watchlist' );
 			} elseif ( 'history' === $target ) {
 				$meta_keys = array( 'video_progress_data' );
+			} elseif ( 'ppv' === $target ) {
+				$meta_keys = array( Jws_PPV_Access::META_BUY, Jws_PPV_Access::META_RENT );
 			}
 			if ( $meta_keys ) {
 				global $wpdb;
@@ -120,11 +125,21 @@ class Jws_Streamvid_Migration {
 				'meta_keys' => array( 'video_progress_data' ),
 				'table'     => Jws_Streamvid_Tables::table_history(),
 			),
+			'ppv' => array(
+				'label'     => __( 'Purchases &amp; Rentals (Pay Per View)', 'jws_streamvid' ),
+				'meta_keys' => array( Jws_PPV_Access::META_BUY, Jws_PPV_Access::META_RENT ),
+				'table'     => Jws_Streamvid_Tables::table_ppv_access(),
+				/* Unlike the others, this one decides who may watch what they
+				   paid for, so say plainly that nobody loses access by running
+				   it — an admin who skips it simply has it happen per user, on
+				   first read, which is slower but not wrong. */
+				'note'      => __( 'Rows already migrated are left untouched, so a rental someone has started keeps the expiry date it already has. Users this has not reached yet are migrated automatically the first time their access is checked.', 'jws_streamvid' ),
+			),
 		);
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Sync Data Tables', 'jws_streamvid' ); ?></h1>
-			<p><?php esc_html_e( 'Favorites, Watchlist and History now read/write a dedicated table instead of user meta. Use this page to copy existing user meta data into those tables.', 'jws_streamvid' ); ?></p>
+			<p><?php esc_html_e( 'Favorites, Watchlist, History and pay-per-view purchases/rentals now read/write a dedicated table instead of user meta. Use this page to copy existing user meta data into those tables.', 'jws_streamvid' ); ?></p>
 
 			<?php foreach ( $blocks as $key => $block ) : ?>
 				<div class="card" style="max-width:800px;margin-top:20px;">
@@ -140,6 +155,14 @@ class Jws_Streamvid_Migration {
 									(int) ( $r['migrated'] ?? 0 ),
 									(int) ( $r['users'] ?? 0 )
 								);
+								if ( ! empty( $r['failed'] ) ) {
+									echo ' ';
+									printf(
+										/* translators: %d: users whose import failed */
+										esc_html__( '%d user(s) could not be imported and were left for a retry — check the PHP error log.', 'jws_streamvid' ),
+										(int) $r['failed']
+									);
+								}
 								?>
 							</p>
 						</div>
@@ -178,6 +201,9 @@ class Jws_Streamvid_Migration {
 
 					<p class="description" style="margin-top:10px;">
 						<?php esc_html_e( 'Safe to run Migrate Now more than once — rows already present are skipped. Old user meta is kept as backup until you clear it.', 'jws_streamvid' ); ?>
+						<?php if ( ! empty( $block['note'] ) ) : ?>
+							<br><?php echo esc_html( $block['note'] ); ?>
+						<?php endif; ?>
 					</p>
 				</div>
 			<?php endforeach; ?>

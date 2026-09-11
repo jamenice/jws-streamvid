@@ -48,54 +48,37 @@ function jws_streamvid_options($key) {
 
 }
 
+/**
+ * Whether the current user may watch a title they paid for.
+ *
+ * The delay-window and expiry arithmetic this used to carry inline now lives in
+ * Jws_PPV_Access, which the app's endpoints call too — they each had their own
+ * copy of it before, and the copies disagreed. One difference in behaviour is
+ * deliberate: a rental whose delay window had just closed used to be given its
+ * expiry date and then refused for that one request, so the viewer who opened
+ * the page at the wrong moment saw the paywall and had to reload. It is now
+ * allowed straight through, on the same dates as before.
+ */
 function jws_check_buy_rent($video_id) {
-    $user_id = get_current_user_id();
 
+    if ( ! class_exists( 'Jws_PPV_Access' ) ) {
+        return false;
+    }
+
+    $user_id      = get_current_user_id();
+    $video_id     = (int) $video_id;
     $buy_enabled  = get_post_meta($video_id, 'buy_enable', true);
     $rent_enabled = get_post_meta($video_id, 'rent_enable', true);
-    $allowed      = false;
 
-    if ($buy_enabled) {
-        $allowed = false;
-        $user_videos = get_user_meta($user_id, 'jws_purchased_videos', true);
-        if (!empty($user_videos) && is_array($user_videos) && array_key_exists($video_id, $user_videos)) {
-            return true;
-        }
+    if ($buy_enabled && Jws_PPV_Access::has_buy($user_id, $video_id)) {
+        return true;
     }
 
-    if ($rent_enabled) {
-        $allowed = false;
-        $user_videos = get_user_meta($user_id, 'jws_rented_videos', true);
-        $purchase = isset($user_videos[$video_id]) ? $user_videos[$video_id] : array();
-        $expired = isset($purchase['expire']) ? $purchase['expire'] : '';
-        $delay = isset($purchase['delay']) ? (int) $purchase['delay'] : 0;
-        $start = isset($purchase['time']) ? $purchase['time'] : '';
-        $day_rent = isset($purchase['day_rent']) ? (int) $purchase['day_rent'] : 0;
-
-        $delaying = false;
-
-        if ($start) {
-            $delay_time = strtotime($start) + ($delay * DAY_IN_SECONDS);
-            $current_ts = current_time('timestamp');
-
-            if ($expired === 'never' && $delay_time > $current_ts) {
-                $delaying = true;
-            } elseif ($expired === 'never' && $delay_time <= $current_ts) {
-                // set actual expire time and persist
-                $user_videos[$video_id]['expire'] = date('Y-m-d H:i:s', $delay_time + ($day_rent * DAY_IN_SECONDS));
-                update_user_meta($user_id, 'jws_rented_videos', $user_videos);
-                return false;
-            }
-        }
-
-        if (!empty($user_videos) && is_array($user_videos) && array_key_exists($video_id, $user_videos)) {
-            if ((!empty($expired) && strtotime($expired) > time()) || $delaying) {
-                return true;
-            }
-        }
+    if ($rent_enabled && Jws_PPV_Access::has_rent($user_id, $video_id)) {
+        return true;
     }
 
-    return $allowed;
+    return false;
 }
 
 
@@ -254,20 +237,25 @@ function jws_check_video_has_buy_rent($video_id) {
 
 } 
 
+/**
+ * The player reporting that a rental has started playing.
+ *
+ * start_rent() is a no-op once the clock is running, so the player is free to
+ * call this on every play without pushing the expiry date forward each time.
+ */
 function  jws_video_check_start() {
-   $post_id = $_POST['id'];
-   $current_user_id = get_current_user_id();
-   $user_videos = get_user_meta( $current_user_id, 'jws_rented_videos', true );
-   if(isset($user_videos[$post_id])) {
-      $purchase = $user_videos[$post_id];
-      $expire = isset($purchase['expire']) ? $purchase['expire'] : 'never';
-      $day_rent = isset($purchase['day_rent']) ? $purchase['day_rent'] : 0;
-      $start = current_time('mysql');
-      if($expire == 'never') {
-         $user_videos[$post_id]['expire'] = date('Y-m-d H:i:s', strtotime($start) + ((int)$day_rent * 24 * 60 * 60));
-         update_user_meta( $current_user_id, 'jws_rented_videos', $user_videos );
-      }
+
+   if ( ! class_exists( 'Jws_PPV_Access' ) ) {
+      return;
    }
+
+   $post_id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
+
+   if ( ! $post_id ) {
+      return;
+   }
+
+   Jws_PPV_Access::start_rent( get_current_user_id(), $post_id );
 }
 add_action( 'wp_ajax_jws_video_check_start', 'jws_video_check_start' );
 

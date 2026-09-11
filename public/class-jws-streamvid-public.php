@@ -434,11 +434,11 @@ class Jws_Streamvid_Public {
         $post_id = get_the_ID();
         $rent_enabled = get_post_meta($post_id, 'rent_enable', true ); 
 
-        if($rent_enabled) {
-            $user_videos = get_user_meta(get_current_user_id(), 'jws_rented_videos', true);
-            $rent_expire = isset($user_videos[$post_id]['expire']) ? $user_videos[$post_id]['expire'] : '';
+        if($rent_enabled && class_exists('Jws_PPV_Access')) {
+            /* Still 'never' while the rental has not been played, which is what
+               the player's countdown branches on. */
             $fr_varjs['is_rented_video'] = true;
-            $fr_varjs['rent_expire'] = $rent_expire;
+            $fr_varjs['rent_expire'] = Jws_PPV_Access::rent_expire(get_current_user_id(), $post_id);
         }
 
 

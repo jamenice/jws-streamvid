@@ -4,30 +4,33 @@ if( ! defined('ABSPATH' ) ){
 }
 
 $current_user_id = absint(get_queried_object_id());
-$user_videos = get_user_meta( $current_user_id, 'jws_purchased_videos', true );
 
 $videos_with_time = array();
 
-if (!empty($user_videos) && is_array($user_videos)) {
-    foreach ($user_videos as $video_id => $purchase) {
-       $video_status = get_post_status($video_id);
-       if ($video_status !== 'publish') {
-            continue; // Skip if video is not published
-       } 
-       if (isset($purchase['time'])) {
-                    $videos_with_time[] = array(
-                        'video_id' => $video_id,
-                        'time' => $purchase['time'],
-                        'order_id' => isset($purchase['order_id']) ? $purchase['order_id'] : '',
-                        'price' => isset($purchase['price']) ? $purchase['price'] : ''
-                    );
-                }
-    } 
-}
+if ( class_exists( 'Jws_PPV_Access' ) ) {
 
-usort($videos_with_time, function($a, $b) {
-    return strtotime($b['time']) - strtotime($a['time']);
-});
+    // Already newest-first out of the table, so there is nothing left to sort.
+    $purchases = Jws_PPV_Access::list_for_user( $current_user_id, Jws_PPV_Access::TYPE_BUY );
+
+    // One query for every title on the page instead of one per row below.
+    if ( $purchases ) {
+        _prime_post_caches( wp_list_pluck( $purchases, 'post_id' ), false, true );
+    }
+
+    foreach ( $purchases as $purchase ) {
+
+        if ( get_post_status( $purchase->post_id ) !== 'publish' ) {
+            continue; // Skip if video is not published
+        }
+
+        $videos_with_time[] = array(
+            'video_id' => (int) $purchase->post_id,
+            'time'     => $purchase->purchased_at,
+            'order_id' => $purchase->order_number,
+            'price'    => $purchase->price,
+        );
+    }
+}
 
 if (!empty($videos_with_time)) {
     

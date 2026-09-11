@@ -36,7 +36,8 @@ class Jws_Payment_Invoice {
 	}
 
 	/**
-	 * How an order is referenced from the purchase usermeta.
+	 * How an order is referenced from the entitlement it granted (the
+	 * `order_number` column of Jws_PPV_Access's table).
 	 *
 	 * The customer-facing order number, which is unique, unguessable and the
 	 * same string printed on the receipt — so a shopper reading "SV-4K7M-9QF2"

@@ -191,6 +191,7 @@ class Jws_Streamvid {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-favorites.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-watchlist.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-history.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-ppv-access.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-migration.php';
 
         /**

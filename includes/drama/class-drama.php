@@ -84,6 +84,10 @@ class Jws_Drama {
 			add_action( 'init', array( $post_types, 'attach_shared_taxonomies' ), 20 );
 			add_action( 'save_post', array( $post_types, 'sync_episode_order' ), 20, 3 );
 
+			/* After WooCommerce's own menu_order pass (priority 10). */
+			add_filter( 'custom_menu_order', '__return_true' );
+			add_filter( 'menu_order', array( $post_types, 'menu_order' ), 20 );
+
 			add_action( 'acf/init', array( $fields, 'register' ) );
 
 			/* VIP checkout is Paid Memberships Pro's own page; PMPro lets a

@@ -138,7 +138,7 @@ class Jws_Payment_Sync {
 	}
 
 	/** VIP or coins bought through the drama module's own Stripe/PayPal checkout. */
-	public function on_drama_order_paid( $order ) {
+	public function on_drama_order_paid( $order ) { 
 
 		if ( ! Jws_Payment_Settings::is_enabled() || empty( $order ) || empty( $order->id ) ) {
 			return;

@@ -4,28 +4,33 @@ if( ! defined('ABSPATH' ) ){
 }
 
 $current_user_id = absint(get_queried_object_id());
-$user_videos = get_user_meta( $current_user_id, 'jws_rented_videos', true );
 
 $videos_with_time = array();
 
-if (!empty($user_videos) && is_array($user_videos)) {
-    foreach ($user_videos as $video_id => $purchase) {
-         if (isset($purchase['time'])) {
-            $videos_with_time[] = array(
-                'video_id' => $video_id, 
-                'time' => $purchase['time'],
-                'expire' => isset($purchase['expire']) ? $purchase['expire'] : '',
-                'order_id' => isset($purchase['order_id']) ? $purchase['order_id'] : '',
-                'price' => isset($purchase['price']) ? $purchase['price'] : '',
-                'delay' => isset($purchase['delay']) ? $purchase['delay'] : '',
-            );
-        }
+if ( class_exists( 'Jws_PPV_Access' ) ) {
+
+    // Already newest-first out of the table, so there is nothing left to sort.
+    $rentals = Jws_PPV_Access::list_for_user( $current_user_id, Jws_PPV_Access::TYPE_RENT );
+
+    // One query for every title on the page instead of one per row below.
+    if ( $rentals ) {
+        _prime_post_caches( wp_list_pluck( $rentals, 'post_id' ), false, true );
+    }
+
+    foreach ( $rentals as $rental ) {
+        $videos_with_time[] = array(
+            'video_id' => (int) $rental->post_id,
+            'time'     => $rental->purchased_at,
+            /* 'never' for a rental nobody has played yet — the column below
+               still branches on that word to show the delay notice instead of
+               a countdown to a date that does not exist yet. */
+            'expire'   => null === $rental->starts_at ? 'never' : (string) $rental->expires_at,
+            'order_id' => $rental->order_number,
+            'price'    => $rental->price,
+            'delay'    => (int) $rental->delay_days,
+        );
     }
 }
-
-usort($videos_with_time, function($a, $b) {
-    return strtotime($b['time']) - strtotime($a['time']);
-});
 
 if (!empty($videos_with_time)) {
     

@@ -9,11 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * This is the only part of the unified system that changes anyone's access,
  * and every grant it makes is deliberately identical to the one the old path
- * made: a membership is still a Paid Memberships Pro level, a purchase is
- * still a row in `jws_purchased_videos`, a rental is still a row in
- * `jws_rented_videos` with the same keys the theme reads, and coins still go
- * through the drama wallet. Nothing downstream — the player, the access
- * checks, the account pages — can tell which checkout paid for it.
+ * made: a membership is still a Paid Memberships Pro level, a purchase and a
+ * rental still go through Jws_PPV_Access — the same call the WooCommerce path
+ * makes — and coins still go through the drama wallet. Nothing downstream —
+ * the player, the access checks, the account pages — can tell which checkout
+ * paid for it.
  *
  * Called only from Jws_Payment_Orders::mark_paid(), which guarantees it runs
  * exactly once per order.
@@ -95,13 +95,15 @@ class Jws_Payment_Fulfillment {
 				}
 				break;
 
+			/* Scoped to this order, so refunding an old rental does not take
+			   away a newer one of the same title — see Jws_PPV_Access::revoke(). */
 			case 'rent':
-				self::forget_video( $user_id, 'jws_rented_videos', (int) $order->item_id );
+				Jws_PPV_Access::revoke( $user_id, (int) $order->item_id, Jws_PPV_Access::TYPE_RENT, (int) $order->id, (string) $order->order_number );
 				break;
 
 			case 'buy':
 			case 'live':
-				self::forget_video( $user_id, 'jws_purchased_videos', (int) $order->item_id );
+				Jws_PPV_Access::revoke( $user_id, (int) $order->item_id, Jws_PPV_Access::TYPE_BUY, (int) $order->id, (string) $order->order_number );
 				break;
 		}
 	}
@@ -283,7 +285,7 @@ class Jws_Payment_Fulfillment {
 	/* ---------------------------------------------------------------------- */
 
 	/**
-	 * A rental, in the shape the theme's player reads it back in.
+	 * A rental, with its clock not yet running.
 	 *
 	 * Overwrites any earlier rental of the same title on purpose — that is
 	 * what renting again means, and it is what the WooCommerce path did.
@@ -294,22 +296,17 @@ class Jws_Payment_Fulfillment {
 		$video_id = (int) $order->item_id;
 		$meta     = Jws_Payment_Orders::meta( $order );
 
-		$rented = get_user_meta( $user_id, 'jws_rented_videos', true );
-		$rented = is_array( $rented ) ? $rented : array();
-
-		$rented[ $video_id ] = array(
-			'time'     => current_time( 'mysql' ),
+		Jws_PPV_Access::grant_rent( $user_id, $video_id, array(
+			'order_id' => (int) $order->id,
 			/* The order number, not a bare id: the Download-invoice button
 			   feeds this straight to wc_get_order(), and a ledger id collides
 			   with an unrelated WooCommerce order more often than not. */
-			'order_id' => Jws_Payment_Invoice::reference( $order ),
-			'price'    => (float) $order->amount,
-			'delay'    => isset( $meta['delay'] ) ? (int) $meta['delay'] : 3,
-			'day_rent' => isset( $meta['days'] ) ? (int) $meta['days'] : 2,
-			'expire'   => 'never',
-		);
-
-		update_user_meta( $user_id, 'jws_rented_videos', $rented );
+			'order_number' => Jws_Payment_Invoice::reference( $order ),
+			'price'        => (float) $order->amount,
+			'currency'     => (string) $order->currency,
+			'delay_days'   => isset( $meta['delay'] ) ? (int) $meta['delay'] : Jws_PPV_Access::default_delay_days(),
+			'rent_days'    => isset( $meta['days'] ) ? (int) $meta['days'] : Jws_PPV_Access::default_rent_days( $video_id ),
+		) );
 	}
 
 	/**
@@ -324,22 +321,15 @@ class Jws_Payment_Fulfillment {
 		$user_id  = (int) $order->user_id;
 		$video_id = (int) $order->item_id;
 
-		$purchased = get_user_meta( $user_id, 'jws_purchased_videos', true );
-		$purchased = is_array( $purchased ) ? $purchased : array();
-
-		/* Already owned: nothing to add, and re-adding would move the purchase
-		   date of a title they bought a year ago. */
-		if ( ! array_key_exists( $video_id, $purchased ) ) {
-
-			$purchased[ $video_id ] = array(
-				'time'     => current_time( 'mysql' ),
-				/* See grant_rental(): the invoice button reads this value. */
-				'order_id' => Jws_Payment_Invoice::reference( $order ),
-				'price'    => (float) $order->amount,
-			);
-
-			update_user_meta( $user_id, 'jws_purchased_videos', $purchased );
-		}
+		/* Already owned is a no-op inside grant_buy(), which keeps the original
+		   purchase date rather than moving one from a year ago. */
+		Jws_PPV_Access::grant_buy( $user_id, $video_id, array(
+			'order_id' => (int) $order->id,
+			/* See grant_rental(): the invoice button reads this value. */
+			'order_number' => Jws_Payment_Invoice::reference( $order ),
+			'price'        => (float) $order->amount,
+			'currency'     => (string) $order->currency,
+		) );
 
 		self::pay_creator( $order, $video_id, $user_id );
 	}
@@ -377,19 +367,5 @@ class Jws_Payment_Fulfillment {
 				array( 'user_buy' => $buyer_id, 'video_id' => $video_id )
 			);
 		}
-	}
-
-	/** Drops one title out of a purchased/rented usermeta list. */
-	private static function forget_video( $user_id, $meta_key, $video_id ) {
-
-		$list = get_user_meta( $user_id, $meta_key, true );
-
-		if ( ! is_array( $list ) || ! array_key_exists( $video_id, $list ) ) {
-			return;
-		}
-
-		unset( $list[ $video_id ] );
-
-		update_user_meta( $user_id, $meta_key, $list );
 	}
 }

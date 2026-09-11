@@ -211,24 +211,26 @@ class Jws_Payment_Ledger {
 	}
 
 	/**
-	 * Rewrites purchase references in the usermeta to the order number.
+	 * Rewrites purchase references to the customer-facing order number.
 	 *
-	 * Two generations of value are found there. The oldest is a bare ledger id,
-	 * which the Download-invoice button hands to wc_get_order(): ledger ids and
-	 * WooCommerce order ids are separate small integer sequences, so a bare one
-	 * either finds nothing or — worse — finds a different customer's order and
-	 * renders their invoice. The second is `jws-<id>`, which was safe but is
-	 * not the number the customer sees on their receipt.
+	 * Two generations of value are found on older entitlements. The oldest is a
+	 * bare ledger id, which the Download-invoice button hands to wc_get_order():
+	 * ledger ids and WooCommerce order ids are separate small integer sequences,
+	 * so a bare one either finds nothing or — worse — finds a different
+	 * customer's order and renders their invoice. The second is `jws-<id>`,
+	 * which was safe but is not the number the customer sees on their receipt.
 	 *
 	 * An entry is only rewritten when a ledger order with that id exists for
-	 * that same user and that same video, which a coincidental collision with
-	 * a WooCommerce id cannot satisfy.
+	 * that same user and that same title, which a coincidental collision with a
+	 * WooCommerce id cannot satisfy. That condition is now the WHERE clause of a
+	 * single indexed UPDATE per order; it used to mean reading and rewriting the
+	 * whole of each customer's serialized purchase list.
 	 */
 	private static function tag_invoice_references() {
 
 		global $wpdb;
 
-		if ( ! class_exists( 'Jws_Payment_Invoice' ) ) {
+		if ( ! class_exists( 'Jws_Payment_Invoice' ) || ! class_exists( 'Jws_PPV_Access' ) ) {
 			return;
 		}
 
@@ -238,67 +240,25 @@ class Jws_Payment_Ledger {
 			$wpdb->prepare( "SELECT id, user_id, item_id, type, order_number FROM {$table} WHERE source = %s", 'jws' )
 		);
 
-		if ( ! $orders ) {
-			return;
-		}
-
-		/* Grouped by user so each one's meta is read and written once, however
-		   many titles they bought. */
-		$by_user = array();
-
-		foreach ( $orders as $order ) {
+		foreach ( (array) $orders as $order ) {
 
 			if ( ! in_array( $order->type, array( 'buy', 'live', 'rent' ), true ) || ! $order->order_number ) {
 				continue;
 			}
 
-			$key = 'rent' === $order->type ? 'jws_rented_videos' : 'jws_purchased_videos';
+			$entitlement = 'rent' === $order->type ? Jws_PPV_Access::TYPE_RENT : Jws_PPV_Access::TYPE_BUY;
 
-			$by_user[ (int) $order->user_id ][ $key ][ (int) $order->item_id ] = $order;
-		}
-
-		foreach ( $by_user as $user_id => $lists ) {
-			foreach ( $lists as $meta_key => $wanted ) {
-
-				$stored = get_user_meta( $user_id, $meta_key, true );
-
-				if ( ! is_array( $stored ) ) {
-					continue;
-				}
-
-				$changed = false;
-
-				foreach ( $wanted as $video_id => $order ) {
-
-					if ( ! isset( $stored[ $video_id ]['order_id'] ) ) {
-						continue;
-					}
-
-					$current = (string) $stored[ $video_id ]['order_id'];
-
-					/* Already the number this order carries: nothing to do, and
-					   re-running must not churn the meta. */
-					if ( $current === (string) $order->order_number ) {
-						continue;
-					}
-
-					$recognised = array(
-						(string) $order->id,
-						Jws_Payment_Invoice::LEGACY_PREFIX . (int) $order->id,
-					);
-
-					if ( ! in_array( $current, $recognised, true ) ) {
-						continue;
-					}
-
-					$stored[ $video_id ]['order_id'] = Jws_Payment_Invoice::reference( $order );
-					$changed                         = true;
-				}
-
-				if ( $changed ) {
-					update_user_meta( $user_id, $meta_key, $stored );
-				}
-			}
+			Jws_PPV_Access::retag_order_number(
+				(int) $order->user_id,
+				(int) $order->item_id,
+				$entitlement,
+				(string) $order->order_number,
+				(int) $order->id,
+				array(
+					(string) $order->id,
+					Jws_Payment_Invoice::LEGACY_PREFIX . (int) $order->id,
+				)
+			);
 		}
 	}
 

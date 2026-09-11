@@ -35,6 +35,9 @@ class Jws_Payment_Checkout {
 		add_action( 'wp_ajax_jws_payment_start', array( $this, 'ajax_start' ) );
 		add_action( 'wp_ajax_jws_payment_settle', array( $this, 'ajax_settle' ) );
 
+		/* Before anything is printed, so the cookie can still be sent. */
+		add_action( 'init', array( $this, 'remember_app_mode' ), 1 );
+
 		/* A checkout page under page caching would serve one buyer another
 		   buyer's order summary. */
 		add_action( 'template_redirect', array( $this, 'never_cache' ) );
@@ -75,11 +78,61 @@ class Jws_Payment_Checkout {
 	 */
 	const APP_VAR = 'app';
 
+	/**
+	 * Keeps app mode alive after a link or redirect drops the query var.
+	 *
+	 * A session cookie in the WebView's own cookie jar, which the phone's real
+	 * browser never sees. `?app=0` clears it.
+	 */
+	const APP_COOKIE = 'jws_app';
+
 	/** Whether this request is being rendered inside the app's WebView. */
 	public static function is_app_request() {
 
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- presentation only.
+		if ( isset( $_GET[ self::APP_VAR ] ) ) {
+			return ! empty( $_GET[ self::APP_VAR ] );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		return ! empty( $_COOKIE[ self::APP_COOKIE ] );
+	}
+
+	/** Turns `?app=1` into the cookie, and `?app=0` back out of it. */
+	public function remember_app_mode() {
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- presentation only.
-		return ! empty( $_GET[ self::APP_VAR ] );
+		if ( ! isset( $_GET[ self::APP_VAR ] ) || headers_sent() ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- presentation only.
+		$on = ! empty( $_GET[ self::APP_VAR ] );
+
+		if ( $on === ! empty( $_COOKIE[ self::APP_COOKIE ] ) ) {
+			return;
+		}
+
+		setcookie(
+			self::APP_COOKIE,
+			$on ? '1' : '',
+			array(
+				'expires'  => $on ? 0 : time() - YEAR_IN_SECONDS,
+				'path'     => COOKIEPATH ? COOKIEPATH : '/',
+				'domain'   => COOKIE_DOMAIN ? COOKIE_DOMAIN : '',
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				/* Lax still rides along on the top-level GET back from Stripe
+				   and PayPal. */
+				'samesite' => 'Lax',
+			)
+		);
+
+		if ( $on ) {
+			$_COOKIE[ self::APP_COOKIE ] = '1';
+		} else {
+			unset( $_COOKIE[ self::APP_COOKIE ] );
+		}
 	}
 
 	/**
@@ -446,7 +499,7 @@ class Jws_Payment_Checkout {
 		if ( ! is_user_logged_in() ) {
 			return $this->notice(
 				esc_html__( 'Please sign in to complete your purchase.', 'jws_streamvid' ),
-				wp_login_url( self::page_url() ),
+				wp_login_url( self::with_app( self::page_url() ) ),
 				esc_html__( 'Sign in', 'jws_streamvid' )
 			);
 		}
@@ -979,7 +1032,7 @@ class Jws_Payment_Checkout {
 		<div class="jws-checkout jws-checkout--notice">
 			<p><?php echo esc_html( $message ); ?></p>
 			<?php if ( $url && $label ) : ?>
-				<a class="jws-checkout-button button-default" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a>
+				<a class="jws-checkout-button button-default" href="<?php echo esc_url( self::with_app( $url ) ); ?>"><?php echo esc_html( $label ); ?></a>
 			<?php endif; ?>
 		</div>
 		<?php

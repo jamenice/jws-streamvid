@@ -52,6 +52,30 @@ class Jws_Drama_Post_Types {
 		}
 	}
 
+	/**
+	 * Sits Drama Short directly above Movies in the admin sidebar.
+	 *
+	 * Movies, TV Shows and Videos register without a menu_position, so they
+	 * fall in after Comments wherever registration order puts them — no fixed
+	 * number can land next to them reliably, hence moving it by slug instead.
+	 */
+	public function menu_order( $order ) {
+
+		$drama  = 'edit.php?post_type=' . self::DRAMA;
+		$movies = 'edit.php?post_type=movies';
+
+		$from = array_search( $drama, $order, true );
+
+		if ( false === $from || ! in_array( $movies, $order, true ) ) {
+			return $order;
+		}
+
+		array_splice( $order, $from, 1 );
+		array_splice( $order, array_search( $movies, $order, true ), 0, array( $drama ) );
+
+		return $order;
+	}
+
 	private function register_drama() {
 
 		$slug = function_exists( 'jws_streamvid_options' ) ? jws_streamvid_options( 'drama_slug' ) : '';
