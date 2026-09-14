@@ -268,6 +268,95 @@
     }
 
     /* ---------------------------------------------------------------------- */
+    /* Fullscreen orientation                                                  */
+    /* ---------------------------------------------------------------------- */
+
+    /*
+     * Whether the screen should be turned for this viewer at all.
+     *
+     * Desktop Chrome exposes `screen.orientation.lock` and rejects every call
+     * to it, so feature detection alone is not enough — a phone or tablet is
+     * the only place a lock means anything. iPadOS reports itself as a Mac,
+     * hence the touch-point check.
+     */
+    function isHandheld() {
+
+        var ua = navigator.userAgent || '';
+
+        if (/Android|iPhone|iPod|IEMobile|Opera Mini|Mobile/i.test(ua)) {
+            return true;
+        }
+
+        return /iPad|Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    }
+
+
+    /* Set only while *this* script holds a lock, so leaving fullscreen never
+       releases an orientation lock some other part of the page took out. */
+    var orientationLocked = false;
+
+    /**
+     * Turns the phone to landscape on the way into fullscreen and hands the
+     * orientation back on the way out.
+     *
+     * Video.js 10 puts the skin's <media-container> into fullscreen through the
+     * Fullscreen API and stops there — unlike a native <video> fullscreen on
+     * iOS, that does nothing to the device orientation, so a phone held upright
+     * gets a letterboxed strip. The Screen Orientation API is what closes that
+     * gap, and it is deliberately called *after* the fullscreen change rather
+     * than before: `lock()` rejects with a SecurityError unless the document is
+     * already fullscreen.
+     */
+    function syncFullscreenOrientation(media) {
+
+        var orientation = window.screen && window.screen.orientation;
+
+        if (!orientation || typeof orientation.lock !== 'function' || !isHandheld()) {
+            return;
+        }
+
+        if (!(document.fullscreenElement || document.webkitFullscreenElement)) {
+
+            if (orientationLocked) {
+                orientationLocked = false;
+                try { orientation.unlock(); } catch (e) { }
+            }
+
+            return;
+        }
+
+        /*
+         * A portrait video — a vertical clip, a phone-shot upload — is worse off
+         * turned sideways, so leave those alone. Dimensions are still 0 before
+         * metadata arrives; landscape is the right guess there.
+         */
+        var w = media.videoWidth || 0;
+        var h = media.videoHeight || 0;
+
+        if (w && h && h > w) {
+            return;
+        }
+
+        var pending;
+
+        try {
+            pending = orientation.lock('landscape');
+        } catch (e) {
+            return;
+        }
+
+        orientationLocked = true;
+
+        /* Rejects on a device that cannot turn (most tablets in a desktop
+           browser, a screen the OS has already locked). Nothing to report — but
+           the flag has to come back off, or the next exit unlocks a lock that
+           was never taken. */
+        if (pending && typeof pending.catch === 'function') {
+            pending.catch(function () { orientationLocked = false; });
+        }
+    }
+
+    /* ---------------------------------------------------------------------- */
     /* Control bar additions (logo, episode list)                              */
     /* ---------------------------------------------------------------------- */
 
@@ -396,6 +485,63 @@
                over the video. It's only ever this fallback: a real poster comes
                from our own <img slot="poster" src="..."> and always has a src. */
             'media-poster img:not([src]){display:none}' +
+
+            /*
+             * Centre play button.
+             *
+             * The default v10 skin has no equivalent of the legacy
+             * .vjs-big-play-button — play/pause live in the control bar, and the
+             * only thing in the middle is a transient status flash you cannot
+             * click. On a poster that reads as a player with nothing to press,
+             * and after an ad break WebKit refused to resume it is the one thing
+             * that gets the video going again.
+             *
+             * <media-play-button> reflects the store's own `data-paused`, so
+             * visibility needs no scripting: it is on screen exactly while the
+             * content is not playing.
+             */
+            'media-container.media-default-skin .jws-v10-big-play{position:absolute;inset:0;' +
+            'z-index:11;place-items:center;width:66px;height:66px;margin:auto;padding:0;' +
+            'display:none;border:0;border-radius:50%;color:#fff;background:rgba(0,0,0,.55);' +
+            'backdrop-filter:blur(6px);cursor:pointer;' +
+            'transition:background .15s ease-out,scale .15s ease-out}' +
+            'media-container.media-default-skin .jws-v10-big-play[data-paused]{display:grid}' +
+            'media-container.media-default-skin .jws-v10-big-play:hover{background:rgba(0,0,0,.78);scale:1.06}' +
+            /* Optical centring: a triangle's visual mass sits left of its box. */
+            'media-container.media-default-skin .jws-v10-big-play svg{width:30px;height:30px;' +
+            'margin-inline-start:4px}' +
+
+            /*
+             * Startup spinner.
+             *
+             * The skin's own buffering indicator is driven by `waiting && !paused`
+             * (plus a 500ms delay), which is right for a mid-playback stall and
+             * useless for the one window that actually takes time here: the
+             * content is still paused while the ES modules are fetched, the
+             * custom element is waited on and hls.js pulls the manifest. Nothing
+             * is drawn for any of it. The element is already in the skin, so this
+             * only has to show it — jws_player_v10.js owns the attribute and drops
+             * it once the media element has registered.
+             *
+             * The compound is load-bearing. `--media-spinner-animation:none` is
+             * declared at `.media-default-skin .media-buffering-indicator:not(
+             * [data-visible])` — (0,3,0) — so a lone `:host([...]) .class` at
+             * (0,2,0) is overruled and the spinner sits frozen. Restating the
+             * container beats it without reaching for !important.
+             *
+             * `initial` rather than the animation itself: the keyframes live in a
+             * <style> inside the spinner SVG, which reads the token as
+             * `var(--media-spinner-animation, <the real animation>)`. Setting a
+             * custom property to `initial` makes it guaranteed-invalid, so that
+             * fallback applies — and the skin keeps owning its own timing instead
+             * of this file carrying a copy that goes stale on the next bump.
+             */
+            ':host([data-jws-loading]) media-container.media-default-skin .media-buffering-indicator' +
+            '{display:grid;--media-spinner-animation:initial}' +
+            /* One or the other, never a spinner with a play button behind it. */
+            ':host([data-jws-loading]) media-container.media-default-skin .jws-v10-big-play' +
+            '{display:none}' +
+
             /* Drama short is a vertical, single-episode-at-a-time feed — a
                fullscreen toggle is redundant there and the icon just crowds
                the compact control bar, so the skin's own button is hidden
@@ -414,6 +560,17 @@
      * stylesheet — a shadow-root selector cannot reach an ancestor outside its
      * own tree.
      */
+    /* Paired with the attribute styleSkin() sets. Kept out here because both the
+       ready path and the failure path have to be able to stop the spinner. */
+    function clearLoadingFlag(playerEl) {
+
+        var skin = playerEl.querySelector('video-skin');
+
+        if (skin) {
+            skin.removeAttribute('data-jws-loading');
+        }
+    }
+
     function styleSkin(playerEl, waiting) {
 
         var skin = playerEl.querySelector('video-skin');
@@ -421,6 +578,13 @@
 
         if (root) {
             playerEl.jwsV10StyleWaiting = false;
+
+            /* Set here rather than in player.php: the rule it drives lives in the
+               stylesheet injected just below, and until that lands the attribute
+               would mean nothing. attachBehaviour() clears it. */
+            if (!playerEl.jwsV10Ready) {
+                skin.setAttribute('data-jws-loading', '');
+            }
 
             /* --jws-player-radius comes from jws_player_v10.css, which also uses
                it for the pre-upgrade state. Reading it back rather than hard-coding
@@ -451,6 +615,47 @@
 
         if (playerEl.isConnected) {
             requestAnimationFrame(function () { styleSkin(playerEl, true); });
+        }
+    }
+
+    /**
+     * Adds the centre play button the default v10 skin does not ship.
+     *
+     * <media-play-button> is the skin's own element, so this inherits the whole
+     * behaviour — the click toggles through the store, the aria-label tracks the
+     * state and translations, and `data-paused` is reflected for the stylesheet
+     * to key off. Only the markup and the placement are ours.
+     *
+     * It goes in <media-container> rather than <media-controls>: the controls
+     * fade out on idle, and a play button that disappears while the video is
+     * paused is worse than none at all.
+     */
+    function injectCenterPlayButton(root) {
+
+        var container = root.querySelector('media-container');
+
+        if (!container || root.querySelector('.jws-v10-big-play')) {
+            return;
+        }
+
+        var btn = document.createElement('media-play-button');
+
+        btn.className = 'jws-v10-big-play';
+
+        /* Sized to the box in the injected stylesheet rather than to the skin's
+           18x18 control icons — this one is read from across the room. */
+        btn.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+            '<path d="M8 5v14l11-7z"></path>' +
+            '</svg>';
+
+        /* Before <media-controls>, so the bar and its menus still stack over it. */
+        var controls = container.querySelector('media-controls');
+
+        if (controls) {
+            container.insertBefore(btn, controls);
+        } else {
+            container.appendChild(btn);
         }
     }
 
@@ -486,6 +691,10 @@
         /* Normally already done from the load chain, well before first paint;
            this only covers a skin that upgraded late. Injection is idempotent. */
         styleSkin(playerEl);
+
+        /* Above the early return: the centre play button is not conditional on
+           the theme having a logo or the post having episodes. */
+        injectCenterPlayButton(root);
 
         if (!wantsLogo && !wantsEpisodes) {
             return;
@@ -647,6 +856,35 @@
         var started = false;
 
         /*
+         * Ad-path tracing, off unless asked for: `?jwsdebug=1` on the URL, or
+         * `window.jwsPlayerV10Debug = true` from the console before pressing play.
+         *
+         * Everything this path does happens inside the IMA SDK or inside WebKit's
+         * gesture rules, and both fail by doing nothing at all. Without a trace
+         * the only signal is "the ad did not play", which does not distinguish a
+         * tag that never resolved from a creative that never rendered from a
+         * resume that was refused.
+         */
+        var adDebug = /[?&]jwsdebug=1/.test(window.location.search) || !!window.jwsPlayerV10Debug;
+
+        function adLog() {
+
+            if (!adDebug || !window.console) {
+                return;
+            }
+
+            var args = Array.prototype.slice.call(arguments);
+
+            args.unshift('[StreamVid ads]');
+            console.log.apply(console, args);
+        }
+
+        adLog('setup', {
+            mediaTag: config.mediaTag,
+            tag: String(config.adsTagUrl).slice(0, 120)
+        });
+
+        /*
          * True from the moment ads are requested until the first break has
          * either taken the screen or been ruled out. It is the only window in
          * which this code holds the content back; after it, IMA owns the
@@ -726,6 +964,116 @@
             $out.text(left >= 0 ? label + ' · ' + formatTime(left) : label);
         }
 
+        /* ------------------------------------------------------------------ */
+        /* Break-over watchdog                                                 */
+        /* ------------------------------------------------------------------ */
+
+        /*
+         * Set once the ad element itself has been seen playing.
+         *
+         * Which element the creative actually plays in is not ours to decide.
+         * Desktop IMA builds its own inside the ad container and never touches
+         * the <video> handed to AdDisplayContainer; iOS and Android play into
+         * that element directly ("custom playback"). Only the second case gives
+         * us a playhead to watch, so the watchdog below arms itself on evidence
+         * rather than on a user-agent guess.
+         */
+        var adElementPlayed = false;
+
+        adVideoEl.addEventListener('playing', function () {
+            adElementPlayed = true;
+        });
+
+        var quietTicks = 0;
+
+        /*
+         * Whether the creative now on screen is the last of its pod.
+         *
+         * This is what decides how long the watchdog waits, and the wait is what
+         * the viewer feels as dead air after the ad. STARTED fills it in from the
+         * SDK's own pod info; true is the right default because a plain VAST tag
+         * is a pod of one and never reports otherwise.
+         */
+        var lastInPod = true;
+
+        /**
+         * Ends the break when the SDK stops talking.
+         *
+         * On iOS the creative plays through and then IMA simply goes quiet: no
+         * COMPLETE, no CONTENT_RESUME_REQUESTED, no ALL_ADS_COMPLETED. Every
+         * teardown this file has hangs off those events, so nothing ran — the ad
+         * bar stayed up, `.jws-v10-ad-playing` stayed on the wrapper, and the
+         * `visibility: hidden` it puts on the skin left a black rectangle where
+         * the video should have been. That black screen is the bug; the content
+         * never being asked to resume is the same silence seen from the other end.
+         *
+         * A watchdog is the only answer available: there is no second event to
+         * listen for, and the SDK cannot be made to speak.
+         */
+        function checkBreakOver() {
+
+            if (!state.active || adPaused) {
+                quietTicks = 0;
+                return;
+            }
+
+            var over;
+
+            if (adElementPlayed) {
+                /* Custom playback: the element IS the ad, so its own playhead is
+                   authoritative. A pod plays back to back through one element,
+                   and the gap between two ads is well under the grace below. */
+                over = adVideoEl.ended || adVideoEl.paused;
+            } else {
+                /* IMA's own element, which we cannot see. Its clock is all there
+                   is — and `-1` means the SDK does not know, never "finished", so
+                   an unmeasured pod is deliberately left alone rather than being
+                   torn down early. */
+                over = state.remainingTime() === 0;
+            }
+
+            if (!over) {
+                quietTicks = 0;
+                return;
+            }
+
+            /*
+             * Two graces, because the two cases are not equally certain.
+             *
+             * A creative that reached `ended` and was the last of its pod is a
+             * finished break, full stop — nothing more is coming, and the only
+             * thing left to wait for is a healthy SDK getting its own event in
+             * first, which takes a tick or two at most. 750ms.
+             *
+             * Everything else is a guess: an element merely paused, an unfinished
+             * pod, a manager clock reading zero. There the wait also has to cover
+             * the gap between two ads while the next creative loads, so it stays
+             * at ~3s. STARTED zeroes the count as well.
+             *
+             * The long wait was the dead air after the ad — it applied to the
+             * single-preroll case too, which is the one case that never needed it.
+             */
+            var settled = adElementPlayed && adVideoEl.ended && lastInPod;
+
+            if (++quietTicks < (settled ? 3 : 12)) {
+                return;
+            }
+
+            quietTicks = 0;
+
+            adLog('break went quiet with no CONTENT_RESUME_REQUESTED — recovering');
+            window.console && console.warn('[StreamVid] The ad break ended without telling us; resuming the content.');
+
+            /*
+             * Torn down rather than merely hidden, unlike a normal break end. The
+             * SDK has already proved it is not driving this manager any more, so
+             * keeping it around for a midroll it will never announce would only
+             * risk a second silent black screen later in the video.
+             */
+            destroyAds();
+            resumeContent();
+        }
+
         $adBar.on('click', '.jws-v10-ad-toggle', function () {
 
             if (!adsManager) {
@@ -791,8 +1139,14 @@
             syncAdBar();
             drawCountdown();
 
+            /* One timer for both: the watchdog needs exactly the cadence the
+               countdown already runs at, and a second interval would only be
+               another thing to clear. */
             clearInterval(countTimer);
-            countTimer = setInterval(drawCountdown, 250);
+            countTimer = setInterval(function () {
+                drawCountdown();
+                checkBreakOver();
+            }, 250);
         }
 
         /*
@@ -825,6 +1179,45 @@
         }
 
         state.destroy = destroyAds;
+
+        /**
+         * Every "the break is over, carry on" path goes through here.
+         *
+         * A bare media.play() hides the one failure that matters. WebKit refuses a
+         * resume it does not consider gesture-backed by rejecting the promise, and
+         * an unhandled rejection says nothing at all — no log, no UI, just a video
+         * that sits there. That is what made this look like a dead player rather
+         * than a blocked one.
+         *
+         * The refusal itself is now survivable: the content is paused, so the
+         * centre play button is on screen and one tap starts it. This only has to
+         * make the reason findable in the console.
+         */
+        function resumeContent() {
+
+            if (media.ended) {
+                return;
+            }
+
+            var pending;
+
+            try {
+                pending = media.play();
+            } catch (e) {
+                pending = null;
+            }
+
+            if (pending && typeof pending.catch === 'function') {
+                pending.then(function () {
+                    adLog('content resumed');
+                }, function (error) {
+                    window.console && console.warn(
+                        '[StreamVid] The content did not resume after the ad break:',
+                        (error && error.name) || error
+                    );
+                });
+            }
+        }
 
         function resizeAds() {
             if (!adsManager) {
@@ -871,6 +1264,16 @@
 
             adsManager = event.getAdsManager(playhead, settings);
 
+            /* Every event the SDK defines, so a break that dies halfway through
+               says where it stopped instead of just never appearing. */
+            if (adDebug) {
+                Object.keys(google.ima.AdEvent.Type).forEach(function (key) {
+                    adsManager.addEventListener(google.ima.AdEvent.Type[key], function () {
+                        adLog('event', key);
+                    });
+                });
+            }
+
             state.remainingTime = function () {
                 try { return adsManager ? adsManager.getRemainingTime() : -1; } catch (e) { return -1; }
             };
@@ -878,10 +1281,35 @@
             adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
 
             adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function (e) {
+
                 state.adCount++;
                 adPaused = false;
+
+                /* A fresh ad in the pod: whatever quiet the watchdog had counted
+                   during the gap was the SDK working, not the SDK giving up. */
+                quietTicks = 0;
+
+                var ad = e.getAd && e.getAd();
+
+                /*
+                 * How many ads are left decides how patient the watchdog has to
+                 * be. A total of -1 is the SDK saying it does not know — a live
+                 * pod — and an unknown remainder is not a last ad, so those keep
+                 * the long wait rather than risking a teardown mid-break.
+                 */
+                try {
+                    var pod = ad && ad.getAdPodInfo && ad.getAdPodInfo();
+                    var total = pod ? pod.getTotalAds() : 0;
+
+                    lastInPod = !pod || (total > 0 && pod.getAdPosition() >= total);
+                } catch (err) {
+                    lastInPod = true;
+                }
+
+                adLog('ad started', { adCount: state.adCount, lastInPod: lastInPod });
+
                 syncAdBar();
-                $(document.body).trigger('jws_player_v10_ad_started', [playerEl, e.getAd && e.getAd()]);
+                $(document.body).trigger('jws_player_v10_ad_started', [playerEl, ad]);
             });
 
             /* The SDK pauses an ad on its own too — a click-through opening a
@@ -908,9 +1336,7 @@
 
             adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, function () {
                 hideAdUi();
-                if (!media.ended) {
-                    media.play();
-                }
+                resumeContent();
             });
 
             /*
@@ -921,14 +1347,13 @@
             adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, function () {
                 holdingForFirstBreak = false;
                 destroyAds();
-                if (!media.ended) {
-                    media.play();
-                }
+                resumeContent();
             });
 
             try {
                 adsManager.init(adWidth(), adHeight(), google.ima.ViewMode.NORMAL);
                 adsManager.start();
+                adLog('manager started');
             } catch (e) {
                 onAdError(e);
                 return;
@@ -954,11 +1379,13 @@
                 cuePoints = adsManager.getCuePoints() || [];
             } catch (e) { /* not a VMAP; treat as a preroll */ }
 
+            adLog('cue points', cuePoints);
+
             if (cuePoints.length && cuePoints.indexOf(0) === -1) {
                 holdingForFirstBreak = false;
 
-                if (!state.active && !media.ended) {
-                    media.play();
+                if (!state.active) {
+                    resumeContent();
                 }
             }
         }
@@ -984,7 +1411,7 @@
 
             holdingForFirstBreak = false;
             destroyAds();
-            media.play();
+            resumeContent();
         }
 
         var displayContainer = new google.ima.AdDisplayContainer(adContainerEl, adVideoEl);
@@ -992,6 +1419,41 @@
         adsLoader = new google.ima.AdsLoader(displayContainer);
         adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, onAdsManagerLoaded, false);
         adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError, false);
+
+        var primed = false;
+
+        /*
+         * initialize() is the call that claims the element for later ad playback,
+         * and WebKit only honours it from inside a gesture's own call stack.
+         *
+         * startAds() runs from the media element's `play` handler, and that is a
+         * queued task — the gesture has already unwound by then. Safari's
+         * transient activation window is generous enough that it usually still
+         * lands, which is exactly why this went unnoticed: the break played, and
+         * only the resume afterwards failed. Priming from the pointer event
+         * itself removes the guess. The legacy engine wires the same thing to
+         * touchstart in single_global.js.
+         */
+        function primeAdContainer() {
+
+            if (primed) {
+                return;
+            }
+
+            primed = true;
+
+            try {
+                displayContainer.initialize();
+                adLog('display container claimed');
+            } catch (e) {
+                adLog('display container refused', e);
+            }
+        }
+
+        /* Capture phase, so this runs before the skin's own button handler gets
+           the chance to call play() and start the queued-task race above. */
+        playerEl.addEventListener('pointerdown', primeAdContainer, true);
+        playerEl.addEventListener('touchstart', primeAdContainer, true);
 
         state.contentComplete = function () {
             try { adsLoader.contentComplete(); } catch (e) { }
@@ -1011,9 +1473,9 @@
             started = true;
             holdingForFirstBreak = true;
 
-            try {
-                displayContainer.initialize();
-            } catch (e) { /* already initialised */ }
+            /* Normally already done from the pointer event above; this covers a
+               start with no pointer behind it — a hotkey, or an allowed autoplay. */
+            primeAdContainer();
 
             var request = new google.ima.AdsRequest();
 
@@ -1022,6 +1484,8 @@
             request.linearAdSlotHeight = adHeight();
             request.nonLinearAdSlotWidth = adWidth();
             request.nonLinearAdSlotHeight = Math.floor(adHeight() / 3);
+
+            adLog('requesting ads', adWidth() + 'x' + adHeight());
 
             try {
                 adsLoader.requestAds(request);
@@ -1100,12 +1564,21 @@
         var resumeAt = resumeTimeFor(config);
         var continueWatching = (typeof streamvid_script !== 'undefined') && streamvid_script.video_continue_watching === 'yes';
 
+        /*
+         * Startup is over: the media element has registered, so the click shield
+         * comes off and the spinner stops. jwsV10Ready keeps styleSkin() from
+         * putting the attribute straight back if the skin upgrades late, or on a
+         * re-run after the episode AJAX has swapped the markup.
+         */
+        playerEl.jwsV10Ready = true;
         $wrap.removeClass('vjs-waiting loading');
+        clearLoadingFlag(playerEl);
 
         injectControlBarExtras(playerEl, config);
 
         $(document).on('fullscreenchange.jwsV10 webkitfullscreenchange.jwsV10', function () {
             placeEpisodePanel(playerEl);
+            syncFullscreenOrientation(media);
         });
 
         var willPrompt = resumeAt > RESUME_PROMPT_MIN && continueWatching;
@@ -1240,6 +1713,7 @@
         }
 
         $wrap.removeClass('vjs-waiting loading').addClass('jws-v10-failed');
+        clearLoadingFlag(playerEl);
 
         $wrap.append(
             $('<div class="jws-v10-error"><span></span></div>')
