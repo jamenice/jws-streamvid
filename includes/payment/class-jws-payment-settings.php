@@ -100,6 +100,17 @@ class Jws_Payment_Settings {
 			),
 
 			/*
+			 * No credentials, because there are none to hold: this hands the
+			 * payment to the store's own checkout and whatever gateways are
+			 * configured there. Only a switch, so a site running WooCommerce
+			 * for something else entirely does not silently grow a second
+			 * checkout route it never asked for.
+			 */
+			'woocommerce'   => array(
+				'enabled' => 0,
+			),
+
+			/*
 			 * Gateway objects already provisioned for recurring plans, as
 			 * slot => array( stripe_price, stripe_coupon, paypal_product,
 			 * paypal_plan ). Keyed by a hash of the money rather than by the
@@ -124,7 +135,7 @@ class Jws_Payment_Settings {
 
 		/* array_merge is shallow, so a stored `stripe` missing a key added in
 		   a later version would come back short of it. */
-		foreach ( array( 'stripe', 'paypal' ) as $gateway ) {
+		foreach ( array( 'stripe', 'paypal', 'woocommerce' ) as $gateway ) {
 			$out[ $gateway ] = array_merge(
 				self::defaults()[ $gateway ],
 				isset( $saved[ $gateway ] ) && is_array( $saved[ $gateway ] ) ? $saved[ $gateway ] : array()
@@ -228,6 +239,12 @@ class Jws_Payment_Settings {
 				'gateway' => 'stripe',
 				'flow'    => 'redirect',
 			),
+			'woocommerce' => array(
+				'label'   => esc_html__( 'WooCommerce', 'jws_streamvid' ),
+				'note'    => esc_html__( "Hands the payment to the store's own checkout, so the buyer can pay with anything WooCommerce is already set up to take. A membership bought this way is paid one term at a time and does not renew itself.", 'jws_streamvid' ),
+				'gateway' => 'woocommerce',
+				'flow'    => 'redirect',
+			),
 		);
 	}
 
@@ -267,6 +284,16 @@ class Jws_Payment_Settings {
 
 		if ( empty( $config['enabled'] ) ) {
 			return false;
+		}
+
+		/*
+		 * WooCommerce holds no credentials of ours — it is the store's own
+		 * checkout, with the store's own gateways behind it. "Ready" here
+		 * means the plugin is actually active, because with it deactivated
+		 * the button would lead to a page that no longer exists.
+		 */
+		if ( 'woocommerce' === $gateway ) {
+			return class_exists( 'Jws_Payment_Woocommerce' ) && Jws_Payment_Woocommerce::is_available();
 		}
 
 		return 'stripe' === $gateway
@@ -428,6 +455,10 @@ class Jws_Payment_Settings {
 		 * A key changing means the ids cached against the old account point at
 		 * objects this account cannot see, so the cache goes with it.
 		 */
+		$out['woocommerce'] = array(
+			'enabled' => ! empty( $raw['woocommerce']['enabled'] ) ? 1 : 0,
+		);
+
 		if ( $out['stripe']['secret'] !== $stored['stripe']['secret'] || $out['paypal']['client_id'] !== $stored['paypal']['client_id'] ) {
 			$out['gateway_refs'] = array();
 		}
@@ -443,11 +474,12 @@ class Jws_Payment_Settings {
 	private static function tabs() {
 
 		return array(
-			'general'  => esc_html__( 'General', 'jws_streamvid' ),
-			'methods'  => esc_html__( 'Payment methods', 'jws_streamvid' ),
-			'stripe'   => 'Stripe',
-			'paypal'   => 'PayPal',
-			'orders'   => esc_html__( 'Orders', 'jws_streamvid' ),
+			'general'     => esc_html__( 'General', 'jws_streamvid' ),
+			'methods'     => esc_html__( 'Payment methods', 'jws_streamvid' ),
+			'stripe'      => 'Stripe',
+			'paypal'      => 'PayPal',
+			'woocommerce' => 'WooCommerce',
+			'orders'      => esc_html__( 'Orders', 'jws_streamvid' ),
 		);
 	}
 
@@ -460,8 +492,9 @@ class Jws_Payment_Settings {
 	public static function gateway_label( $gateway ) {
 
 		$names = array(
-			'stripe' => 'Stripe',
-			'paypal' => 'PayPal',
+			'stripe'      => 'Stripe',
+			'paypal'      => 'PayPal',
+			'woocommerce' => 'WooCommerce',
 		);
 
 		return isset( $names[ $gateway ] ) ? $names[ $gateway ] : ucfirst( $gateway );
@@ -547,6 +580,7 @@ class Jws_Payment_Settings {
 				<?php $this->panel_methods( $s ); ?>
 				<?php $this->panel_gateway( 'stripe', $s ); ?>
 				<?php $this->panel_gateway( 'paypal', $s ); ?>
+				<?php $this->panel_woocommerce( $s ); ?>
 
 				<p class="submit jws-pay-submit">
 					<button type="submit" class="button button-primary button-hero"><?php echo esc_html__( 'Save Settings', 'jws_streamvid' ); ?></button>
@@ -779,6 +813,74 @@ class Jws_Payment_Settings {
 					</label>
 				<?php endforeach; ?>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The WooCommerce hand-off.
+	 *
+	 * Its own renderer rather than a third call to panel_gateway(), because
+	 * there is nothing here that panel_gateway() renders: no mode, no keys, no
+	 * webhook. The store already holds all of that, and whichever gateways are
+	 * configured there are the ones this offers. A single switch is the whole
+	 * setting.
+	 */
+	private function panel_woocommerce( $s ) {
+
+		$config = isset( $s['woocommerce'] ) ? $s['woocommerce'] : array( 'enabled' => 0 );
+		$active = class_exists( 'Jws_Payment_Woocommerce' ) && Jws_Payment_Woocommerce::is_available();
+		?>
+		<div class="jws-pay-panel" data-panel="woocommerce">
+
+			<div class="jws-pay-gateway-head">
+				<h2>WooCommerce</h2>
+				<?php if ( $active && ! empty( $config['enabled'] ) ) : ?>
+					<span class="jws-pay-badge is-on"><?php echo esc_html__( 'Ready', 'jws_streamvid' ); ?></span>
+				<?php elseif ( ! empty( $config['enabled'] ) ) : ?>
+					<span class="jws-pay-badge is-warn"><?php echo esc_html__( 'WooCommerce not active', 'jws_streamvid' ); ?></span>
+				<?php else : ?>
+					<span class="jws-pay-badge"><?php echo esc_html__( 'Off', 'jws_streamvid' ); ?></span>
+				<?php endif; ?>
+			</div>
+
+			<p class="description jws-pay-panel-lede">
+				<?php echo esc_html__( "Sends the buyer to the store's own checkout to pay, then brings them back here once WooCommerce says the order is paid. Useful for the payment methods this plugin has no gateway of its own for — bank transfer, cash on delivery, a local card processor — since whatever the store already takes, this takes.", 'jws_streamvid' ); ?>
+			</p>
+
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php echo esc_html__( 'Enable', 'jws_streamvid' ); ?></th>
+					<td>
+						<label class="jws-pay-switch">
+							<input type="checkbox" name="woocommerce[enabled]" value="1" <?php checked( ! empty( $config['enabled'] ) ); ?> />
+							<span><?php echo esc_html__( 'Take payments through the WooCommerce checkout', 'jws_streamvid' ); ?></span>
+						</label>
+						<?php if ( ! $active ) : ?>
+							<p class="description"><?php echo esc_html__( 'WooCommerce is not active on this site, so there is no checkout to hand the payment to. The setting is kept either way, and takes effect as soon as WooCommerce is back.', 'jws_streamvid' ); ?></p>
+						<?php endif; ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php echo esc_html__( 'What it sells', 'jws_streamvid' ); ?></th>
+					<td>
+						<p class="description">
+							<?php echo esc_html__( 'One hidden virtual product, created the first time it is needed and priced from the order being paid. It never appears in the shop, and nothing needs to be set up in WooCommerce for it.', 'jws_streamvid' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php echo esc_html__( 'Renewals', 'jws_streamvid' ); ?></th>
+					<td>
+						<p class="description">
+							<?php echo esc_html__( 'A WooCommerce order is a single charge and nothing here can renew it — there is no WooCommerce Subscriptions on this site, and bank transfer or cash on delivery could not renew anything even if there were.', 'jws_streamvid' ); ?>
+						</p>
+						<p class="description">
+							<?php echo esc_html__( 'So a membership bought this way is sold as one paid term: the member gets one billing cycle, the membership then expires, and they buy it again to carry on. Stripe and PayPal remain the methods that renew on their own.', 'jws_streamvid' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
 		</div>
 		<?php
 	}

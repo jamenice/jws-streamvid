@@ -524,7 +524,7 @@ class Jws_Payment_Checkout {
 			return $this->notice( $item->get_error_message(), home_url( '/' ), esc_html__( 'Browse', 'jws_streamvid' ) );
 		}
 
-		$methods = Jws_Payment_Settings::available_methods();
+		$methods = self::methods_for( Jws_Payment_Settings::available_methods(), $item );
 
 		if ( ! $methods ) {
 			return $this->notice( esc_html__( 'No payment method is available right now. Please try again later.', 'jws_streamvid' ) );
@@ -534,6 +534,25 @@ class Jws_Payment_Checkout {
 		$this->render_checkout( $item, $methods );
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * The methods that can take this particular purchase.
+	 *
+	 * available_methods() answers for the site — what the admin switched on,
+	 * backed by a gateway that is configured. This answers for the thing in
+	 * front of the buyer, which is a narrower question: a WooCommerce order is
+	 * a single charge, so it cannot carry a plan that bills again next month.
+	 * Offering it there would take the first payment and then quietly never
+	 * take another.
+	 */
+	private static function methods_for( array $methods, array $item ) {
+
+		if ( isset( $methods['woocommerce'] ) && ! Jws_Payment_Woocommerce::supports( $item ) ) {
+			unset( $methods['woocommerce'] );
+		}
+
+		return $methods;
 	}
 
 	private function render_checkout( array $item, array $methods ) {
@@ -616,8 +635,12 @@ class Jws_Payment_Checkout {
 
 				<ul class="jws-checkout-notices">
 					<?php if ( ! empty( $item['recurring'] ) ) : ?>
-						<li><?php echo esc_html__( 'Auto-renew. Cancel anytime.', 'jws_streamvid' ); ?></li>
-						<li>
+						<?php /* Every line below describes a plan that bills
+						         itself. WooCommerce cannot do that, so picking
+						         it hides these and shows the one after instead
+						         — see selectMethod() in the script. */ ?>
+						<li class="jws-checkout-notice--auto"><?php echo esc_html__( 'Auto-renew. Cancel anytime.', 'jws_streamvid' ); ?></li>
+						<li class="jws-checkout-notice--auto">
 							<?php
 							$period = Jws_Payment_Items::period_phrase( $item['period'], $item['cycle'] );
 
@@ -639,7 +662,7 @@ class Jws_Payment_Checkout {
 							}
 							?>
 						</li>
-						<li>
+						<li class="jws-checkout-notice--auto">
 							<?php
 							printf(
 								/* translators: %s: link to the subscriptions page. */
@@ -648,6 +671,21 @@ class Jws_Payment_Checkout {
 							);
 							?>
 						</li>
+
+						<?php if ( isset( $methods['woocommerce'] ) ) : ?>
+							<?php $term = Jws_Payment_Woocommerce::term_for( $item ); ?>
+							<?php if ( $term ) : ?>
+								<li class="jws-checkout-notice--wc" hidden>
+									<?php
+									printf(
+										/* translators: %s: how long one payment covers, e.g. "month". */
+										esc_html__( 'Paid through WooCommerce, this covers one %s and does not renew itself. Your membership ends when that runs out, and you buy it again to carry on.', 'jws_streamvid' ),
+										esc_html( Jws_Payment_Items::period_phrase( $term['period'], $term['cycle'] ) )
+									);
+									?>
+								</li>
+							<?php endif; ?>
+						<?php endif; ?>
 					<?php else : ?>
 						<li><?php echo esc_html__( 'One-time payment. No renewal.', 'jws_streamvid' ); ?></li>
 					<?php endif; ?>
@@ -694,6 +732,43 @@ class Jws_Payment_Checkout {
 				<?php endif; ?>
 			</div>
 		</div>
+
+		<?php if ( isset( $methods['woocommerce'] ) ) : ?>
+			<?php /* The store's checkout, shown over this page rather than
+			         instead of it. Empty src and hidden until the button is
+			         pressed: an iframe with a real URL here would load the
+			         WooCommerce checkout — and fill a cart — for every buyer
+			         who never picks it. */ ?>
+			<div class="jws-wc-modal" id="jws-wc-modal" role="dialog" aria-modal="true"
+				aria-label="<?php echo esc_attr__( 'Complete payment', 'jws_streamvid' ); ?>" hidden>
+
+				<div class="jws-wc-modal-backdrop" data-close></div>
+
+				<div class="jws-wc-modal-box">
+					<div class="jws-wc-modal-header">
+						<div>
+							<div class="jws-wc-modal-title"><?php echo esc_html__( 'Complete payment', 'jws_streamvid' ); ?></div>
+							<div class="jws-wc-modal-subtitle"><?php echo esc_html__( 'Secure checkout powered by WooCommerce', 'jws_streamvid' ); ?></div>
+						</div>
+
+						<button type="button" class="jws-wc-modal-close" data-close aria-label="<?php echo esc_attr__( 'Close', 'jws_streamvid' ); ?>">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+								<path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+							</svg>
+						</button>
+					</div>
+
+					<div class="jws-wc-modal-body">
+						<iframe class="jws-wc-modal-frame" id="jws-wc-modal-frame" src="" title="<?php echo esc_attr__( 'WooCommerce checkout', 'jws_streamvid' ); ?>" allow="payment"></iframe>
+
+						<div class="jws-wc-modal-loading">
+							<span class="jws-wc-modal-spinner" aria-hidden="true"></span>
+							<p><?php echo esc_html__( 'Loading secure checkout…', 'jws_streamvid' ); ?></p>
+						</div>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -711,6 +786,7 @@ class Jws_Payment_Checkout {
 			'google_pay' => 'google.png',
 			'paypal'     => 'paypal.svg',
 			'quick_pay'  => 'stripe.svg',
+			'woocommerce' => 'woocommerce.png',
 		);
 
 		return isset( $images[ $key ] ) ? $images[ $key ] : '';
@@ -1074,8 +1150,32 @@ class Jws_Payment_Checkout {
 			wp_send_json_error( array( 'message' => $item->get_error_message() ), 400 );
 		}
 
+		$usable = self::methods_for( $methods, $item );
+
+		if ( ! isset( $usable[ $method_key ] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'That payment method cannot be used for this purchase.', 'jws_streamvid' ) ), 400 );
+		}
+
 		$method  = $methods[ $method_key ];
 		$gateway = $method['gateway'];
+
+		/*
+		 * WooCommerce cannot renew anything, so a plan bought through it is
+		 * recorded as one paid term rather than as a subscription. This has to
+		 * happen before the row is written, because `recurring` is what
+		 * grant_membership() reads to decide whether the membership gets an end
+		 * date — left true, PMPro would be handed a plan that never expires and
+		 * a gateway that never bills again, which is permanent access for one
+		 * payment.
+		 */
+		$term = null;
+
+		if ( 'woocommerce' === $gateway && ! empty( $item['recurring'] ) ) {
+			$term = Jws_Payment_Woocommerce::term_for( $item );
+
+			$item['recurring'] = false;
+			$item['renew']     = $item['amount'];
+		}
 
 		/*
 		 * The order is written before the gateway is called, and carries a copy
@@ -1083,7 +1183,28 @@ class Jws_Payment_Checkout {
 		 * arrive before this request has even returned and still find a row to
 		 * fulfil.
 		 */
-		$order_id = Jws_Payment_Orders::create(
+		/*
+		 * A WooCommerce hand-off the buyer opened and walked away from leaves a
+		 * pending row with no WooCommerce order behind it. Picking that one up
+		 * again rather than writing another is what keeps one purchase to one
+		 * line in the orders list, however many times the payment window is
+		 * opened and closed. find_reusable() cannot match anything Stripe or
+		 * PayPal wrote, so this costs them a lookup and changes nothing.
+		 */
+		$reuse = 'woocommerce' === $gateway
+			? Jws_Payment_Orders::find_reusable(
+				array(
+					'user_id'  => get_current_user_id(),
+					'type'     => $item['type'],
+					'item_id'  => $item['item_id'],
+					'method'   => $method_key,
+					'amount'   => $item['amount'],
+					'currency' => $item['currency'],
+				)
+			)
+			: null;
+
+		$order_id = $reuse ? (int) $reuse->id : Jws_Payment_Orders::create(
 			array(
 				'user_id'    => get_current_user_id(),
 				'type'       => $item['type'],
@@ -1103,6 +1224,11 @@ class Jws_Payment_Checkout {
 						'fingerprint' => $item['fingerprint'],
 						'return_to'   => isset( $cart['return_to'] ) ? $cart['return_to'] : '',
 						'app'         => ! empty( $cart['app'] ),
+
+						/* Set only for a renewing plan paid through
+						   WooCommerce: how much time this one payment buys. */
+						'term_cycle'  => $term ? $term['cycle'] : 0,
+						'term_period' => $term ? $term['period'] : '',
 					)
 				),
 			)
@@ -1121,6 +1247,10 @@ class Jws_Payment_Checkout {
 				: Jws_Payment_Paypal::create_order( $order );
 
 			$this->send_redirect_or_fail( $url, $order_id );
+		}
+
+		if ( 'woocommerce' === $gateway ) {
+			$this->send_redirect_or_fail( Jws_Payment_Woocommerce::checkout_url( $order, $item ), $order_id );
 		}
 
 		if ( 'redirect' === $method['flow'] ) {

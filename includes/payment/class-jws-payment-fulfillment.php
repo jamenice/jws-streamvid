@@ -145,11 +145,31 @@ class Jws_Payment_Fulfillment {
 
 		$enddate = '0000-00-00 00:00:00';
 
-		if ( ! $recurring && (int) $level->expiration_number > 0 ) {
-			$enddate = gmdate(
-				'Y-m-d H:i:s',
-				strtotime( '+' . (int) $level->expiration_number . ' ' . $level->expiration_period, $now )
-			);
+		if ( ! $recurring ) {
+
+			/*
+			 * A plan that normally renews, bought through a gateway that
+			 * cannot renew it (WooCommerce). The payment covers one billing
+			 * cycle, so the membership ends when that cycle does and the
+			 * member buys it again. Checked before the level's own expiration
+			 * because a renewing level usually has none set at all — falling
+			 * through to that would leave the end date empty, which PMPro
+			 * reads as "never expires".
+			 */
+			$term_cycle  = isset( $meta['term_cycle'] ) ? (int) $meta['term_cycle'] : 0;
+			$term_period = isset( $meta['term_period'] ) ? (string) $meta['term_period'] : '';
+
+			if ( $term_cycle > 0 && $term_period ) {
+				$enddate = gmdate(
+					'Y-m-d H:i:s',
+					strtotime( '+' . $term_cycle . ' ' . $term_period, $now )
+				);
+			} elseif ( (int) $level->expiration_number > 0 ) {
+				$enddate = gmdate(
+					'Y-m-d H:i:s',
+					strtotime( '+' . (int) $level->expiration_number . ' ' . $level->expiration_period, $now )
+				);
+			}
 		}
 
 		self::$granting_subscription_id = (int) $order->subscription_id;

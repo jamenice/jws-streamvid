@@ -175,6 +175,58 @@ class Jws_Payment_Orders {
 	 * that arrives before the buyer has even finished paying still finds
 	 * something to fulfil.
 	 */
+	/**
+	 * A pending row this same purchase can pick up again, if there is one.
+	 *
+	 * Only ever matches a row the gateway was never actually told about —
+	 * `gateway_ref` still empty. Stripe and PayPal both create something at the
+	 * gateway while the buyer waits and write its id here immediately, so their
+	 * rows never match; WooCommerce is the one whose order does not exist until
+	 * the buyer places it, which is why an abandoned hand-off leaves a row with
+	 * nothing attached to it.
+	 *
+	 * Without this, a buyer who opens the payment window, thinks better of it,
+	 * closes it and tries again leaves one pending order behind per attempt —
+	 * all for a purchase they only ever make once.
+	 *
+	 * Matched on the money as well as the item, so a price change since the
+	 * abandoned attempt starts a new row rather than quietly charging the old
+	 * amount.
+	 *
+	 * @return object|null
+	 */
+	public static function find_reusable( array $args ) {
+
+		global $wpdb;
+
+		$table = Jws_Payment_Ledger::table();
+
+		return $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE source = %s
+				   AND user_id = %d
+				   AND type = %s
+				   AND item_id = %d
+				   AND method = %s
+				   AND status = %s
+				   AND gateway_ref = ''
+				   AND amount = %s
+				   AND currency = %s
+				 ORDER BY id DESC
+				 LIMIT 1",
+				self::SOURCE,
+				(int) $args['user_id'],
+				(string) $args['type'],
+				(int) $args['item_id'],
+				(string) $args['method'],
+				self::STATUS_PENDING,
+				number_format( (float) $args['amount'], 2, '.', '' ),
+				strtoupper( (string) $args['currency'] )
+			)
+		);
+	}
+
 	public static function attach_ref( $order_id, $ref ) {
 
 		global $wpdb;

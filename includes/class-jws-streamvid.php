@@ -211,6 +211,7 @@ class Jws_Streamvid {
         require_once $payment_dir . 'class-jws-payment-fulfillment.php';
         require_once $payment_dir . 'class-jws-payment-stripe.php';
         require_once $payment_dir . 'class-jws-payment-paypal.php';
+        require_once $payment_dir . 'class-jws-payment-woocommerce.php';
         require_once $payment_dir . 'class-jws-payment-events.php';
         require_once $payment_dir . 'class-jws-payment-checkout.php';
         require_once $payment_dir . 'class-jws-payment-invoice.php';
@@ -225,6 +226,9 @@ class Jws_Streamvid {
 
         $payment_router = new Jws_Payment_Router();
         $payment_router->register();
+
+        $payment_woocommerce = new Jws_Payment_Woocommerce();
+        $payment_woocommerce->register();
 
         $payment_invoice = new Jws_Payment_Invoice();
         $payment_invoice->register();

@@ -57,8 +57,16 @@
 		this.elements = null;
 		this.paymentRequest = null;
 
+		this.modalBound = false;
+
+		/* The checkout URL the last WooCommerce hand-off returned. Reopening
+		   the window from here asks the server for nothing at all — see
+		   payInModal(). */
+		this.wcUrl = null;
+
 		this.bindMethodSelection();
 		this.bindSubmit();
+		this.bindModalBridge();
 		this.initStripe();
 	}
 
@@ -129,6 +137,19 @@
 		this.selected = method;
 		this.$cardPanel.prop('hidden', 'card' !== method);
 
+		/*
+		 * The summary's renewal lines describe a plan that bills itself, which
+		 * is true of every method here except WooCommerce — that one takes a
+		 * single payment covering a single term. Swapping the lines rather than
+		 * softening them: "auto-renew, cancel anytime" next to a payment that
+		 * will never renew is the kind of wrong that is found out a month
+		 * later, when access stops without warning.
+		 */
+		var isWoo = 'woocommerce' === method;
+
+		this.$root.find('.jws-checkout-notice--auto').prop('hidden', isWoo);
+		this.$root.find('.jws-checkout-notice--wc').prop('hidden', !isWoo);
+
 		/* Whatever badge the chosen row is showing — its own image, or the
 		   plain card glyph when it has none — copied onto Pay Now rather
 		   than duplicated, so the two can never show two different icons for
@@ -182,8 +203,176 @@
 				return;
 			}
 
+			if ('woocommerce' === self.selected) {
+				self.payInModal();
+				return;
+			}
+
 			self.payByRedirect(self.selected);
 		});
+	};
+
+	/* ---------------------------------------------------------------------- */
+	/* WooCommerce: the store's checkout, in a modal                           */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * Opens the WooCommerce checkout over this page instead of navigating to
+	 * it.
+	 *
+	 * Every other method keeps the buyer on this page — the card form is
+	 * inline, the wallets open the browser's own sheet — and handing the whole
+	 * window to the shop was the one that did not. The order is created first,
+	 * exactly as payByRedirect() does; only the destination of the URL that
+	 * comes back is different.
+	 */
+	Checkout.prototype.payInModal = function () {
+		var self = this;
+
+		/*
+		 * Already asked once on this page. The URL carries the order's own
+		 * token, so reopening it lands the buyer back in the same checkout for
+		 * the same order rather than starting a second one — which is what
+		 * closing the window and changing your mind twice used to do.
+		 *
+		 * The server refuses to write a duplicate either way (see
+		 * find_reusable), so this is about not making the round trip, not
+		 * about correctness.
+		 */
+		if (this.wcUrl) {
+			this.start();
+			this.openModal(this.wcUrl);
+			return;
+		}
+
+		this.start();
+
+		this.createOrder('woocommerce').done(function (response) {
+			if (response && response.success && response.data && response.data.redirect) {
+				self.wcUrl = response.data.redirect;
+				self.openModal(response.data.redirect);
+				return;
+			}
+
+			self.fail(response && response.data ? response.data.message : null);
+		}).fail(function () {
+			self.fail();
+		});
+	};
+
+	/**
+	 * Listens for the bridge the paid checkout lands on inside the frame.
+	 *
+	 * The frame is same-origin, so its own script could in principle reach out
+	 * and drive this page directly. postMessage instead, because a gateway is
+	 * free to bounce the buyer through its own domain on the way back, and a
+	 * message crossing origins is the only thing that still arrives when it
+	 * does.
+	 *
+	 * The origin is checked because a message can be sent by anything that has
+	 * a handle on this window — and acting on this one navigates the page.
+	 */
+	Checkout.prototype.bindModalBridge = function () {
+		var self = this;
+
+		if (!$('#jws-wc-modal').length) {
+			return;
+		}
+
+		window.addEventListener('message', function (event) {
+			if (event.origin !== window.location.origin) {
+				return;
+			}
+
+			var data = event.data;
+
+			if (!data || 'jws_payment_wc_paid' !== data.type || !data.redirect) {
+				return;
+			}
+
+			/*
+			 * Closed rather than left up behind the navigation: replace() does
+			 * not repaint instantly, and a modal still showing the shop while
+			 * the receipt loads reads as a payment that did not take.
+			 */
+			$('#jws-wc-modal').prop('hidden', true).find('.jws-wc-modal-frame').attr('src', '');
+			$('body').removeClass('jws-wc-modal-open');
+
+			self.setSubmitLabel(config.i18n.redirect);
+
+			/* replace(), so Back does not return to a checkout that has
+			   already been paid. */
+			window.location.replace(data.redirect);
+		});
+	};
+
+	Checkout.prototype.openModal = function (url) {
+		var self = this;
+		var $modal = $('#jws-wc-modal');
+
+		if (!$modal.length) {
+			/* No modal on the page to open it in — rather than leave the buyer
+			   with a dead button, send them to the checkout the old way. */
+			window.location.href = url;
+			return;
+		}
+
+		var $frame = $modal.find('.jws-wc-modal-frame');
+		var $loading = $modal.find('.jws-wc-modal-loading');
+
+		$loading.prop('hidden', false);
+		$modal.prop('hidden', false);
+		$('body').addClass('jws-wc-modal-open');
+
+		/*
+		 * Only the first load is the spinner's business. The buyer then moves
+		 * through the shop's own pages inside the frame — and a gateway may
+		 * bounce them through two or three more — and covering each of those
+		 * with a full-panel spinner would hide the checkout they are using.
+		 */
+		$frame.one('load', function () {
+			$loading.prop('hidden', true);
+		});
+
+		$frame.attr('src', url);
+
+		this.$submit.prop('disabled', true);
+
+		/* Bound once, however many times the modal is opened. */
+		if (!this.modalBound) {
+			this.modalBound = true;
+
+			$modal.on('click', '[data-close]', function () {
+				self.closeModal();
+			});
+
+			$(document).on('keydown.jwswcmodal', function (event) {
+				if ('Escape' === event.key && !$modal.prop('hidden')) {
+					self.closeModal();
+				}
+			});
+		}
+	};
+
+	/**
+	 * Closes the modal and puts the button back.
+	 *
+	 * The src is emptied on the way out, so a checkout left half-filled is not
+	 * still sitting there — alive, and holding the shop's cart — behind a
+	 * hidden panel.
+	 */
+	Checkout.prototype.closeModal = function () {
+		var $modal = $('#jws-wc-modal');
+
+		if (!$modal.length) {
+			return;
+		}
+
+		$modal.prop('hidden', true);
+		$modal.find('.jws-wc-modal-frame').attr('src', '');
+		$('body').removeClass('jws-wc-modal-open');
+
+		this.reset();
 	};
 
 	/** PayPal, the hosted page — anything that sends the buyer away and back. */

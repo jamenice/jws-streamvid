@@ -108,6 +108,14 @@
 	margin-top: 4px;
 }
 
+/* The renewal lines are swapped for the WooCommerce one and back as the
+   method changes. Spelled out rather than left to the browser's default
+   because any author rule setting `display` on these beats a UA [hidden] —
+   the same reason the wallet rows and the card panel need it. */
+.jws-checkout-notices li[hidden] {
+	display: none !important;
+}
+
 .jws-checkout-notices a {
 	color: inherit;
 	text-decoration: underline;
@@ -134,9 +142,9 @@
 
 /* Payment ---------------------------------------------------------------- */
 
-/* Radio list: card, PayPal, the hosted page, Apple Pay, Google Pay —
-   whichever methods are switched on and, for the two wallets, whichever the
-   browser actually confirms it can offer. */
+/* Radio list: card, PayPal, the hosted page, WooCommerce, Apple Pay, Google
+   Pay — whichever methods are switched on and, for the two wallets, whichever
+   the browser actually confirms it can offer. */
 .jws-checkout-methods {
 	border: 1px solid var(--border-color, rgba(255, 255, 255, .12));
 	border-radius: 10px;
@@ -203,6 +211,14 @@
    with its glyph. */
 .jws-checkout-method-icon--image {
 	padding: 0;
+}
+
+/* The WooCommerce art is a bare wordmark rather than a badge, and it is wide
+   enough that `contain` sizes it to the chip's full width — leaving it touching
+   both edges. A little breathing room, unlike the badges, which are drawn with
+   their own. */
+.jws-checkout-method-icon--woocommerce {
+	padding: 0 5px;
 }
 
 .jws-checkout-method-label {
@@ -491,5 +507,182 @@
 		margin: 0;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
 		border-radius: 0;
+	}
+}
+
+/* WooCommerce modal --------------------------------------------------------- */
+
+/* The store's checkout, over this page rather than instead of it. Everything
+   else on offer keeps the buyer here — the card form is inline, the wallets
+   open the browser's own sheet — so sending them away to WooCommerce and back
+   was the one method that broke that. */
+.jws-wc-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+}
+
+/* The markup carries [hidden] until the button is pressed, and `display: flex`
+   above would otherwise win against the browser's default at equal
+   specificity — the same reason the wallet rows need it. */
+.jws-wc-modal[hidden] {
+	display: none !important;
+}
+
+.jws-wc-modal-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, .68);
+	-webkit-backdrop-filter: blur(3px);
+	backdrop-filter: blur(3px);
+}
+
+.jws-wc-modal-box {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	width: min(720px, 100%);
+	height: min(680px, 90vh);
+	overflow: hidden;
+	border: 1px solid var(--border-color, rgba(255, 255, 255, .12));
+	border-radius: 14px;
+	background: var(--background-item, #16161a);
+	box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
+	animation: jws-wc-modal-in .26s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes jws-wc-modal-in {
+	from { opacity: 0; transform: translateY(12px) scale(.98); }
+	to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.jws-wc-modal-box { animation: none; }
+}
+
+.jws-wc-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex: 0 0 auto;
+	padding: 14px 18px;
+	border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, .1));
+}
+
+.jws-wc-modal-title {
+	color: var(--heading, #fff);
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.jws-wc-modal-subtitle {
+	margin-top: 2px;
+	color: var(--jws-color-text, #9a9a9a);
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.jws-wc-modal-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, .08);
+	color: var(--heading, #fff);
+	cursor: pointer;
+	transition: background .18s;
+}
+
+.jws-wc-modal-close:hover,
+.jws-wc-modal-close:focus-visible {
+	background: rgba(255, 255, 255, .18);
+}
+
+.jws-wc-modal-close svg {
+	pointer-events: none;
+}
+
+.jws-wc-modal-body {
+	position: relative;
+	flex: 1 1 auto;
+	overflow: hidden;
+}
+
+.jws-wc-modal-frame {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+/* Sits over the frame while it loads: an iframe whose src was only just set
+   paints white (or nothing) for a beat, which on a dark page reads as a
+   broken modal rather than a loading one. */
+.jws-wc-modal-loading {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	background: var(--background-item, #16161a);
+}
+
+.jws-wc-modal-loading[hidden] {
+	display: none !important;
+}
+
+.jws-wc-modal-loading p {
+	margin: 0;
+	color: var(--jws-color-text, #9a9a9a);
+	font-size: 13px;
+}
+
+.jws-wc-modal-spinner {
+	width: 38px;
+	height: 38px;
+	border: 3px solid rgba(255, 255, 255, .12);
+	border-top-color: var(--main, #e50914);
+	border-radius: 50%;
+	animation: jws-wc-spin .7s linear infinite;
+}
+
+@keyframes jws-wc-spin {
+	to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.jws-wc-modal-spinner { animation-duration: 2s; }
+}
+
+/* While the modal is up, the page behind it must not scroll under it. */
+body.jws-wc-modal-open {
+	overflow: hidden;
+}
+
+@media (max-width: 640px) {
+	.jws-wc-modal {
+		padding: 0;
+		align-items: flex-end;
+	}
+
+	.jws-wc-modal-box {
+		width: 100%;
+		height: 94vh;
+		border-radius: 16px 16px 0 0;
+		border-bottom: 0;
 	}
 }
