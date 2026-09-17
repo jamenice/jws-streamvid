@@ -195,6 +195,25 @@ class Jws_Streamvid {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-migration.php';
 
         /**
+         * Built-in meta box system replacing the ACF groups, switched on per
+         * post type from Sync Data > Meta System. Stores the same meta keys
+         * as ACF, so both can run side by side while it is being tested.
+         */
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/class-jws-metabox-settings.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/class-jws-metabox.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/class-jws-content-badges.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/shared.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/tv-shows.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/movies.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/videos.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/drama.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/misc.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/terms.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/users-blog.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/fields/episodes.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/metabox/class-jws-acf-compat.php';
+
+        /**
          * The unified payment system: one checkout for membership, buy/rent
          * and coins, taking payment with its own Stripe and PayPal
          * credentials. Everything front-facing is gated on the master switch

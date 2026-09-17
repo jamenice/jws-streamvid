@@ -406,36 +406,124 @@ if(!function_exists('jws_check_trailer')) {
 }
 
 
-if(!function_exists('jws_episodes_check_type')) {
-    function jws_episodes_check_type( $id ) { 
-         
-            $args = array(
-                'post_type' => 'tv_shows',
-                'fields' => 'ids',
-                'posts_per_page' => -1,
-                'orderby' => 'modified',
-                'meta_query' => array(
-                'relation'      => 'OR',
-                    array(
-                        'key' => 'tv_shows_seasons_$_episodes',
-                        'value' => $id,
-                        'compare' => 'LIKE'
-                    )
-                )
-            );
-            
-            
-            $cast = new WP_Query($args);
-            $cast = $cast->posts;
-            if(!empty($cast)) {
-                return $cast[0];
+if(!function_exists('jws_tv_show_lists_episode')) {
+    /**
+     * Does this TV show list the episode in one of its seasons?
+     *
+     * Reads the season rows (`tv_shows_seasons_{i}_episodes`) and compares real
+     * ids, so no id can match another by being part of it.
+     */
+    function jws_tv_show_lists_episode( $show_id, $episode_id ) {
+
+        $count = (int) get_post_meta( $show_id, 'tv_shows_seasons', true );
+
+        for ( $i = 0; $i < $count; $i++ ) {
+            $episodes = get_post_meta( $show_id, 'tv_shows_seasons_' . $i . '_episodes', true );
+
+            if ( is_array( $episodes ) && in_array( (int) $episode_id, array_map( 'intval', $episodes ), true ) ) {
+                return true;
             }
-           
-    
-        
-    }  
-  
-} 
+        }
+
+        return false;
+    }
+}
+
+if(!function_exists('jws_episodes_find_shows')) {
+    /**
+     * Every published TV show that lists the episode, most recently modified first.
+     *
+     * The LIKE only narrows the rows down — serialized arrays hold ids as
+     * `"123"` (meta box / ACF) or `i:123;` (importers) — and each candidate is
+     * then checked against the real ids.
+     *
+     * @return int[]
+     */
+    function jws_episodes_find_shows( $episode_id ) {
+
+        global $wpdb;
+
+        $episode_id = (int) $episode_id;
+
+        if ( ! $episode_id ) {
+            return array();
+        }
+
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT DISTINCT pm.post_id
+                 FROM {$wpdb->postmeta} pm
+                 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                 WHERE pm.meta_key LIKE %s
+                   AND ( pm.meta_value LIKE %s OR pm.meta_value LIKE %s )
+                   AND p.post_type = 'tv_shows'
+                   AND p.post_status = 'publish'
+                 ORDER BY p.post_modified DESC",
+                $wpdb->esc_like( 'tv_shows_seasons_' ) . '%' . $wpdb->esc_like( '_episodes' ),
+                '%' . $wpdb->esc_like( '"' . $episode_id . '"' ) . '%',
+                '%' . $wpdb->esc_like( 'i:' . $episode_id . ';' ) . '%'
+            )
+        );
+
+        $shows = array();
+
+        foreach ( $rows as $show_id ) {
+            if ( jws_tv_show_lists_episode( (int) $show_id, $episode_id ) ) {
+                $shows[] = (int) $show_id;
+            }
+        }
+
+        return $shows;
+    }
+}
+
+if(!function_exists('jws_episodes_check_type')) {
+    /**
+     * The TV show an episode belongs to.
+     *
+     * `tv_show_id` is written whenever a show is saved (and by Sync Episodes),
+     * so it answers this in one cached meta read; the season lists are only
+     * scanned when that meta is missing or stale. An episode listed by several
+     * shows resolves to the one its meta points at, which is also the show the
+     * episode's season/episode numbers belong to.
+     *
+     * @param int $id Episode id.
+     * @return int|null
+     */
+    function jws_episodes_check_type( $id ) {
+
+        $id = (int) $id;
+
+        if ( ! $id ) {
+            return null;
+        }
+
+        static $cache = array();
+
+        if ( array_key_exists( $id, $cache ) ) {
+            return $cache[ $id ];
+        }
+
+        $show   = (int) get_post_meta( $id, 'tv_show_id', true );
+        $status = $show ? get_post_status( $show ) : false;
+
+        // A trashed show is no answer at all, and a published one wins over a draft.
+        if ( $show && 'tv_shows' === get_post_type( $show ) && 'publish' === $status && jws_tv_show_lists_episode( $show, $id ) ) {
+            $cache[ $id ] = $show;
+            return $cache[ $id ];
+        }
+
+        $shows = jws_episodes_find_shows( $id );
+
+        if ( ! $shows && $show && 'tv_shows' === get_post_type( $show ) && in_array( $status, array( 'draft', 'pending', 'future', 'private' ), true ) && jws_tv_show_lists_episode( $show, $id ) ) {
+            $shows = array( $show );
+        }
+
+        $cache[ $id ] = $shows ? $shows[0] : null;
+
+        return $cache[ $id ];
+    }
+}
 
 if(!function_exists('jws_episodes_check_season')) {
     function jws_episodes_check_season( $args ) { 

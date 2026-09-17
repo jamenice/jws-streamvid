@@ -2,9 +2,10 @@
 
 
 function save_comment_rating( $comment_id ) {
-    $rating = isset( $_POST['comment_rating'] ) ? intval( $_POST['comment_rating'] ) : '';
-    if(!empty($rating)) {
-       add_comment_meta( $comment_id, 'rating', $rating, true ); 
+    $rating = isset( $_POST['comment_rating'] ) ? intval( $_POST['comment_rating'] ) : 0;
+
+    if ( $rating > 0 ) {
+        add_comment_meta( $comment_id, 'rating', min( 5, $rating ), true );
     }
 }
 add_action( 'comment_post', 'save_comment_rating' );
@@ -25,111 +26,113 @@ function add_comment_rating_column($columns) {
 add_filter('manage_edit-comments_columns', 'add_comment_rating_column');
 
 // Display number rating
-function show_comment_rating_column($column, $comment_id) { 
-    $comment = get_comment($comment_id);
-    $post_type = get_post_type($comment->comment_post_ID);
-    
-    switch ($column) {
-        case 'comment_rating':
-            $rating = get_comment_meta($comment_id, 'rating', true);
-            echo esc_html( $rating );
-            break;
+function show_comment_rating_column($column, $comment_id) {
+
+    if ( 'comment_rating' !== $column ) {
+        return;
     }
-    
-   
- 
+
+    echo esc_html( get_comment_meta( $comment_id, 'rating', true ) );
 }
 add_filter('manage_comments_custom_column', 'show_comment_rating_column', 10, 2);
 
-add_action( 'restrict_manage_comments', 'add_post_type_filter_dropdown' );
 
-function add_post_type_filter_dropdown() {
-    global $wpdb;
-
-    if ( isset( $_GET['post_type_filter'] ) && $_GET['post_type_filter'] != '' ) {
-        $post_type_filter = $_GET['post_type_filter'];
-    } else {
-        $post_type_filter = -1;
-    }
-
-    ?>
-    <select name="post_type_filter" id="post_type_filter">
-        <option value="-1"><?php esc_html_e( 'All Post Types', 'textdomain' ); ?></option>
-    
-    </select>
-    <?php
-}
-
-
+/**
+ * Average star rating of a post.
+ *
+ * Templates call this on every card and detail page, so it answers from the
+ * active review system only — the legacy path adds up the ratings in one
+ * query instead of reading meta comment by comment — and remembers the answer
+ * for the rest of the request.
+ *
+ * @param int $id Post id.
+ * @return float|int|false Average, or false when nothing is rated.
+ */
 function jws_ci_comment_rating_get_average_ratings( $id ) {
-	$comments = get_approved_comments( $id );
 
-    if(jws_theme_get_option('enable_new_comment_system')) {
-        $new_reviews = Jws_Review_Comment::get_average_rating($id);
-        $comment_global = isset($new_reviews['average']) ? $new_reviews['average'] : 0;
-        return $comment_global;
-    }
-  
+	$id = (int) $id;
 
-	if ( $comments ) {
-		$i = 0;
-		$total = 0;
-		foreach( $comments as $comment ){
-			$rate = get_comment_meta( $comment->comment_ID, 'rating', true );
-			if( isset( $rate ) && '' !== $rate ) {
-				$i++;
-				$total += $rate;
-			}
-		}
-
-		if ( 0 === $i ) {
-			return false;
-		} else {
-			return round( $total / $i, 1 );
-		}
-	} else {
+	if ( ! $id ) {
 		return false;
 	}
+
+	static $cache = array();
+
+	if ( array_key_exists( $id, $cache ) ) {
+		return $cache[ $id ];
+	}
+
+	if ( jws_theme_get_option( 'enable_new_comment_system' ) && class_exists( 'Jws_Review_Comment' ) ) {
+		$new_reviews  = Jws_Review_Comment::get_average_rating( $id );
+		$cache[ $id ] = isset( $new_reviews['average'] ) ? $new_reviews['average'] : 0;
+
+		return $cache[ $id ];
+	}
+
+	global $wpdb;
+
+	$average = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT AVG( cm.meta_value + 0 )
+			 FROM {$wpdb->commentmeta} cm
+			 INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
+			 WHERE cm.meta_key = 'rating'
+			   AND cm.meta_value <> ''
+			   AND c.comment_post_ID = %d
+			   AND c.comment_approved = '1'",
+			$id
+		)
+	);
+
+	$cache[ $id ] = ( null === $average ) ? false : round( (float) $average, 1 );
+
+	return $cache[ $id ];
 }
 
 if(!function_exists('jws_save_post_all')) {
     
+    /** Give new videos, movies and tv shows their view/like counters. */
     function jws_save_post_all($post_id) {
-        
-        if( ! current_user_can( 'edit_post', $post_id ) ){
+
+        if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) ) {
             return;
         }
 
-        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        if ( ! in_array( get_post_type( $post_id ), array( 'videos', 'movies', 'tv_shows' ), true ) ) {
             return;
         }
-        
-        if ( get_post_type( $post_id ) == 'videos' ||  get_post_type( $post_id ) == 'movies' ||  get_post_type( $post_id ) == 'tv_shows' ) {
-            
-            $liked = get_post_meta($post_id, 'likes', true);
-            $views = get_post_meta($post_id, 'views', true);
-            
-            if (empty($views)) {
-                update_post_meta( $post_id, 'views', 0 );
-            } 
-            if (empty($liked)) {
-                update_post_meta( $post_id, 'likes', 0 );
-            } 
 
-  
+        if ( ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
         }
-   
+
+        foreach ( array( 'views', 'likes' ) as $counter ) {
+            if ( '' === (string) get_post_meta( $post_id, $counter, true ) ) {
+                update_post_meta( $post_id, $counter, 0 );
+            }
+        }
     }
     add_action('save_post','jws_save_post_all');  
 }
 
+/**
+ * Stamp every episode of a tv show with its show, season and position when the
+ * show is saved through ACF. The meta box system runs the same routine on its
+ * own save, so both keep tv_show_id in step (including dropping the stamp from
+ * episodes that left the show).
+ */
 add_action('acf/save_post', function ($post_id) {
 
         if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
         if (get_post_type($post_id) !== 'tv_shows') return;
-      
+
+        if ( function_exists( 'jws_metabox_tv_shows_sync_episodes' ) ) {
+            jws_metabox_tv_shows_sync_episodes( $post_id );
+            return;
+        }
+
         $seasons = get_field('tv_shows_seasons', $post_id);
-     
+
         if (empty($seasons) || !is_array($seasons)) return;
 
         foreach ($seasons as $season_index => $season) {
@@ -145,23 +148,22 @@ add_action('acf/save_post', function ($post_id) {
             }
         }
 
-         
-    //}
-
-
 }, 20); 
 
 
 // filter
 function my_posts_where( $where, $query ) {
 
-   
     $meta_query = $query->get('meta_query');
     if (empty($meta_query)) {
         return $where;
     }
 
-  
+    // Cheap check first: these repeater keys all end with "_$" in the meta query.
+    if ( false === strpos( $where, '_$' ) ) {
+        return $where;
+    }
+
     $replacements = [
         "meta_key = 'cast_$"            => "meta_key LIKE 'cast_%",
         "meta_key = 'crew_$"            => "meta_key LIKE 'crew_%",

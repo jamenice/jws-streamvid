@@ -457,7 +457,8 @@ class Jws_Streamvid_Media {
             'image_size'   =>  'full',
             'post_id'   =>  get_the_ID(),
             'edit'      => false,
-            'img_two' => false
+            'img_two' => false,
+            'bage' => true,
         ) );
 
         extract( $args ); 
@@ -487,9 +488,58 @@ class Jws_Streamvid_Media {
         }
 
         echo !empty($image) ? $image : '';
+        if($bage) {
         echo $pre;
-        
+
         if(!empty($live)) printf( '<span class="live-bage fs-small cl-light">%s</span>', esc_html__('Live','jws_streamvid') );
+        
+           $this->content_badges($post_id);     
+        }        
+        
+    }
+
+    /**
+     * Poster-corner labels an admin attached from the `content_badge`
+     * taxonomy (4K, ENSUB, NEW, Trending…) — shared by movies, tv_shows and
+     * drama, each term carrying its own pill color as term meta. A no-op on
+     * every other post type post_videos_media() also runs on (videos,
+     * episodes…): they were never given the field, so there are no terms.
+     *
+     * @param int $post_id
+     */
+    private function content_badges( $post_id ) {
+        if ( ! taxonomy_exists( JWS_CONTENT_BADGE_TAX ) ) {
+            return;
+        }
+
+        $terms = get_the_terms( $post_id, JWS_CONTENT_BADGE_TAX );
+        if ( empty( $terms ) || is_wp_error( $terms ) ) {
+            return;
+        }
+
+        /**
+         * Terms to show on the poster corner for this post, and how many.
+         * Admins can pick as many as they like; only the first few fit a
+         * poster well.
+         */
+        $terms = apply_filters( 'jws_content_badges', $terms, $post_id );
+        $limit = (int) apply_filters( 'jws_content_badges_limit', 3 );
+        $terms = $limit > 0 ? array_slice( $terms, 0, $limit ) : $terms;
+
+        if ( empty( $terms ) ) {
+            return;
+        }
+
+        echo '<div class="jws-content-badges">';
+        foreach ( $terms as $term ) {
+            $color = get_term_meta( $term->term_id, 'badge_color', true );
+            printf(
+                '<span class="jws-content-badge"%s>%s</span>',
+                $color ? ' style="background:' . esc_attr( $color ) . '"' : '',
+                esc_html( $term->name )
+            );
+        }
+        echo '</div>';
     }
     
 

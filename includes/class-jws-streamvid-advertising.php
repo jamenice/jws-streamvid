@@ -204,9 +204,9 @@ class Jws_Streamvid_Advertising {
         $cat_slug = $post_type.'_cat';
         $ads_option = 'ads_'.$post_type;
       
-        $terms = wp_get_post_terms($id, $cat_slug);
+        $terms = taxonomy_exists($cat_slug) ? wp_get_post_terms($id, $cat_slug) : array();
         
-        foreach($terms as $term) {
+        foreach((is_wp_error($terms) ? array() : $terms) as $term) {
             
             $cat_ct[] = $term->slug;
             
