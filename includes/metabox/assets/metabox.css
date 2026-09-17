@@ -1297,18 +1297,27 @@ body.jws-mb-modal-open {
 
 /* ---- Video preview ------------------------------------------------------ */
 
-.jws-mb__preview .videos_player {
+.jws-mb__preview-frame {
+	position: relative;
 	max-width: 720px;
+	aspect-ratio: 16 / 9;
 	overflow: hidden;
 	border-radius: var(--jws-radius);
 	background: #000;
 }
 
-.jws-mb__preview .video-js {
+.jws-mb__preview-frame iframe {
+	position: absolute;
+	inset: 0;
 	width: 100%;
-	height: auto;
-	aspect-ratio: 16 / 9;
+	height: 100%;
+	border: 0;
 }
+
+.jws-mb__ratio-21x9 { aspect-ratio: 21 / 9; }
+.jws-mb__ratio-4x3  { aspect-ratio: 4 / 3; }
+.jws-mb__ratio-3x4  { aspect-ratio: 3 / 4; }
+.jws-mb__ratio-1x1  { aspect-ratio: 1 / 1; }
 
 .jws-mb__preview code {
 	word-break: break-all;

@@ -1071,17 +1071,7 @@ class Jws_Payment_Settings {
 			<form method="post" id="jws-pay-repair-form" class="jws-pay-repair">
 				<?php wp_nonce_field( self::REPAIR_NONCE, 'jws_payment_repair_nonce' ); ?>
 				<input type="hidden" name="active_tab" value="orders" />
-				<span class="description">
-					<?php
-					printf(
-						/* translators: 1: orders table name, 2: subscriptions table name. */
-						esc_html__( 'Tables: %1$s and %2$s.', 'jws_streamvid' ),
-						'<code>' . esc_html( Jws_Payment_Ledger::table() ) . '</code>',
-						'<code>' . esc_html( Jws_Payment_Ledger::table_subscriptions() ) . '</code>'
-					);
-					?>
-					<button type="submit" class="button-link"><?php echo esc_html__( 'Repair tables', 'jws_streamvid' ); ?></button>
-				</span>
+				<button type="submit" class="button-link"><?php echo esc_html__( 'Repair tables', 'jws_streamvid' ); ?></button>
 			</form>
 		</div>
 		<?php

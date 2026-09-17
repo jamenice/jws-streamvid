@@ -1,12 +1,12 @@
 <?php
 
 /**
- * "Meta System" tab on the Sync Data page: switches post types from the ACF
- * field groups to Jws_Metabox, one post type at a time, so each can be tested
- * before ACF is removed.
+ * "Meta System" tab on the Sync Data page: shows which screens are handled by
+ * Jws_Metabox instead of the ACF field groups, and the ACF compatibility state.
  *
- * Both systems read and write the same post meta, so switching back and forth
- * is safe — nothing needs migrating.
+ * The new meta box system is always on — every screen that has a box
+ * registered uses it, and the matching ACF groups are hidden. Both systems
+ * read and write the same post meta, so nothing needed migrating.
  *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes/metabox
@@ -18,7 +18,6 @@ if ( ! defined( 'WPINC' ) ) {
 
 class Jws_Metabox_Settings {
 
-	const OPTION = 'jws_meta_system';
 	const NONCE  = 'jws_meta_system_save';
 
 	public function __construct() {
@@ -26,14 +25,17 @@ class Jws_Metabox_Settings {
 		add_filter( 'acf/load_field_groups', array( $this, 'hide_acf_groups' ), 30 );
 	}
 
-	/** @return string[] Post types switched to the new system. */
+	/** @return string[] Every screen on the new system — i.e. all of them. */
 	public static function enabled_post_types() {
-		$value = get_option( self::OPTION, array() );
-		return is_array( $value ) ? $value : array();
+		return array_merge( Jws_Metabox::supported_post_types(), array_keys( Jws_Metabox::term_toggles() ) );
 	}
 
+	/**
+	 * The new meta box system is always used. Kept as a method because the box
+	 * registry calls it per post type / toggle key.
+	 */
 	public static function is_enabled( $post_type ) {
-		return in_array( $post_type, self::enabled_post_types(), true );
+		return true;
 	}
 
 	/** Every post type that will eventually move, in display order. */
@@ -67,7 +69,7 @@ class Jws_Metabox_Settings {
 	}
 
 	/**
-	 * Drop the ACF groups a switched-on box replaces. Only on admin screens
+	 * Drop the ACF groups the new boxes replace. Only on admin screens
 	 * (and ACF's own screen-check ajax) — get_field() on the front end reads
 	 * fields by key from the local store and is not affected either way.
 	 */
@@ -100,14 +102,7 @@ class Jws_Metabox_Settings {
 			return;
 		}
 
-		$supported = array_merge( Jws_Metabox::supported_post_types(), array_keys( Jws_Metabox::term_toggles() ) );
-		$saved     = false;
-
-		if ( isset( $_POST['jws_meta_system_submit'] ) && check_admin_referer( self::NONCE, '_nonce_meta_system' ) ) {
-			$posted = isset( $_POST['jws_meta_system'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['jws_meta_system'] ) ) : array();
-			update_option( self::OPTION, array_values( array_intersect( $posted, $supported ) ), false );
-			$saved = true;
-		}
+		$supported = self::enabled_post_types();
 
 		$schema_msg = '';
 		if ( isset( $_POST['jws_acf_schema_export'] ) && check_admin_referer( self::NONCE, '_nonce_meta_system' ) ) {
@@ -116,63 +111,40 @@ class Jws_Metabox_Settings {
 				? __( 'Field schema saved.', 'jws_streamvid' )
 				: __( 'Could not write acf-schema.php — check file permissions.', 'jws_streamvid' );
 		}
-
-		$enabled = self::enabled_post_types();
 		?>
 		<div class="card" style="max-width:800px;margin-top:20px;">
 			<h2><?php esc_html_e( 'Meta System', 'jws_streamvid' ); ?></h2>
-			<p><?php esc_html_e( 'Replace the ACF meta boxes with the built-in meta box system, one post type at a time. Both systems store data in the same post meta keys, so you can switch back at any time without losing anything.', 'jws_streamvid' ); ?></p>
-
-			<?php if ( $saved ) : ?>
-				<div class="notice notice-success inline"><p><?php esc_html_e( 'Settings saved.', 'jws_streamvid' ); ?></p></div>
-			<?php endif; ?>
+			<p><?php esc_html_e( 'The built-in meta box system is used everywhere it has boxes registered, and the ACF field groups it replaces are hidden. Both systems store data in the same meta keys, so nothing was migrated.', 'jws_streamvid' ); ?></p>
 
 			<?php if ( ! function_exists( 'acf_add_local_field_group' ) ) : ?>
-				<div class="notice notice-warning inline"><p><?php esc_html_e( 'ACF is not active. Post types left on ACF currently have no meta boxes.', 'jws_streamvid' ); ?></p></div>
+				<div class="notice notice-warning inline"><p><?php esc_html_e( 'ACF is not active. Screens with no built-in meta box have no field UI.', 'jws_streamvid' ); ?></p></div>
 			<?php endif; ?>
 
-			<form method="post">
-				<?php wp_nonce_field( self::NONCE, '_nonce_meta_system' ); ?>
-				<table class="widefat striped" style="margin:10px 0;">
-					<thead>
+			<table class="widefat striped" style="margin:10px 0;">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Screen', 'jws_streamvid' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'jws_streamvid' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $this->all_post_types() as $type => $label ) : ?>
 						<tr>
-							<th><?php esc_html_e( 'Screen', 'jws_streamvid' ); ?></th>
-							<th><?php esc_html_e( 'Use new meta system', 'jws_streamvid' ); ?></th>
-							<th><?php esc_html_e( 'Status', 'jws_streamvid' ); ?></th>
+							<td><strong><?php echo esc_html( $label ); ?></strong> <code><?php echo esc_html( $type ); ?></code></td>
+							<td>
+								<?php
+								if ( in_array( $type, $supported, true ) ) {
+									echo '<span style="color:#008a20;">' . esc_html__( 'New meta system', 'jws_streamvid' ) . '</span>';
+								} else {
+									esc_html_e( 'No built-in box yet — still on ACF', 'jws_streamvid' );
+								}
+								?>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $this->all_post_types() as $type => $label ) : ?>
-							<?php $available = in_array( $type, $supported, true ); ?>
-							<tr>
-								<td><strong><?php echo esc_html( $label ); ?></strong> <code><?php echo esc_html( $type ); ?></code></td>
-								<td>
-									<label>
-										<input type="checkbox" name="jws_meta_system[]" value="<?php echo esc_attr( $type ); ?>"
-											<?php checked( in_array( $type, $enabled, true ) ); ?>
-											<?php disabled( ! $available ); ?>>
-										<?php esc_html_e( 'Enabled', 'jws_streamvid' ); ?>
-									</label>
-								</td>
-								<td>
-									<?php
-									if ( ! $available ) {
-										esc_html_e( 'Coming soon — still on ACF', 'jws_streamvid' );
-									} elseif ( in_array( $type, $enabled, true ) ) {
-										echo '<span style="color:#008a20;">' . esc_html__( 'New meta system', 'jws_streamvid' ) . '</span>';
-									} else {
-										esc_html_e( 'ACF', 'jws_streamvid' );
-									}
-									?>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-				<?php submit_button( __( 'Save', 'jws_streamvid' ), 'primary', 'jws_meta_system_submit', false ); ?>
-			</form>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
 		</div>
-
 		<?php
 		$schema    = Jws_Acf_Compat::schema();
 		$acf_on    = Jws_Acf_Compat::acf_active();

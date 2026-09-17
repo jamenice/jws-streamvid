@@ -500,7 +500,8 @@ class Jws_Payment_Checkout {
 			return $this->notice(
 				esc_html__( 'Please sign in to complete your purchase.', 'jws_streamvid' ),
 				wp_login_url( self::with_app( self::page_url() ) ),
-				esc_html__( 'Sign in', 'jws_streamvid' )
+				esc_html__( 'Sign in', 'jws_streamvid' ),
+				'jws-checkout-login'
 			);
 		}
 
@@ -1101,14 +1102,14 @@ class Jws_Payment_Checkout {
 		}
 	}
 
-	private function notice( $message, $url = '', $label = '' ) {
+	private function notice( $message, $url = '', $label = '', $class = '' ) {
 
 		ob_start();
 		?>
 		<div class="jws-checkout jws-checkout--notice">
 			<p><?php echo esc_html( $message ); ?></p>
 			<?php if ( $url && $label ) : ?>
-				<a class="jws-checkout-button button-default" href="<?php echo esc_url( self::with_app( $url ) ); ?>"><?php echo esc_html( $label ); ?></a>
+				<a class="<?php echo esc_attr( trim( 'jws-checkout-button button-default ' . $class ) ); ?>" href="<?php echo esc_url( self::with_app( $url ) ); ?>"><?php echo esc_html( $label ); ?></a>
 			<?php endif; ?>
 		</div>
 		<?php

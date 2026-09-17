@@ -47,7 +47,7 @@ function jws_content_badges_register() {
 		array(
 			'hierarchical'      => false, // Labels, not categories — no parent/child.
 			'labels'            => $labels,
-			'show_ui'           => true,
+			'show_ui'           => false,
 			'show_admin_column' => false, // The color swatch column below replaces the default term-list one.
 			'query_var'         => true,
 			'rewrite'           => false, // No public archive page for a badge.

@@ -665,6 +665,31 @@
 		});
 	};
 
+	/* Signed-out buyers get the theme's login popup instead of wp-login.php,
+	   and come back to this exact checkout URL (query args and all) once
+	   signed in. Without the popup on the page, the link still works. */
+	$(document).on('click', '.jws-checkout-login', function (e) {
+		var $popup = $('.jws-form-login-popup');
+
+		if (!$popup.length) {
+			return;
+		}
+
+		e.preventDefault();
+
+		$popup.find('form').each(function () {
+			var $redirect = $(this).find('input[name="redirect"]');
+
+			if (!$redirect.length) {
+				$redirect = $('<input type="hidden" name="redirect">').appendTo(this);
+			}
+
+			$redirect.val(window.location.href);
+		});
+
+		$popup.addClass('open');
+	});
+
 	$(function () {
 		$('.jws-checkout[data-type]').each(function () {
 			new Checkout($(this));

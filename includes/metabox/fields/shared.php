@@ -317,152 +317,61 @@ function jws_mb_fields_side_images( $k ) {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Admin player for the saved video settings — the markup the theme's ACF
- * `videos_preview` field printed, which admin/js/jws-streamvid-admin.js turns
- * into a video.js player. Shared by every post type with a video.
+ * Admin preview: the post's own embed page in an iframe. The embed template
+ * runs the real front-end player, so the box always matches what visitors get
+ * instead of rebuilding the player — and every source type (mp4, hls, youtube,
+ * iframe, shortcode, live, bunny, cloudflare) is handled in one place.
+ *
+ * Shared by every post type with a video.
  */
 function jws_metabox_render_video_preview( $post ) {
-	$post_id = $post->ID;
-	if ( 'auto-draft' === $post->post_status ) {
-		echo '<p class="jws-mb__desc">' . esc_html__( 'Save the post once to see a preview.', 'jws_streamvid' ) . '</p>';
+	if ( ! in_array( $post->post_status, array( 'publish', 'private' ), true ) ) {
+		echo '<div class="jws-mb__preview-empty"><span class="dashicons dashicons-format-video"></span><p>' . esc_html__( 'Publish the post to preview the player.', 'jws_streamvid' ) . '</p></div>';
 		return;
 	}
 
-	$opt = function ( $name ) {
-		return function_exists( 'jws_theme_get_option' ) ? jws_theme_get_option( $name ) : '';
-	};
-
-	$ratio = get_post_meta( $post_id, 'video_ratio', true );
-	$ratio = $ratio ? $ratio : $opt( 'video_ratio' );
-
-	$poster_id = get_post_meta( $post_id, 'featured_image_two', true );
-	$poster_id = $poster_id ? $poster_id : get_post_thumbnail_id( $post_id );
-	$poster    = $poster_id ? wp_get_attachment_image_url( $poster_id, 'full' ) : '';
-
-	$videos_type = get_post_meta( $post_id, 'videos_type', true );
-	$attr        = '';
-	$live_data   = 'videos' === $post->post_type ? get_post_meta( $post_id, 'live_data', true ) : '';
-
-	if ( 'url' === $videos_type ) {
-		$video_url = get_post_meta( $post_id, 'videos_url', true );
-		$type      = 'video/mp4';
-		if ( function_exists( 'jws_is_youtube_url' ) && jws_is_youtube_url( $video_url ) ) {
-			$type = 'video/youtube';
-		}
-		if ( function_exists( 'jws_check_m3u8_video' ) && jws_check_m3u8_video( $video_url ) ) {
-			$type = 'application/x-mpegURL';
-		}
-		if ( function_exists( 'jws_has_iframe_in_text' ) && jws_has_iframe_in_text( $video_url ) ) {
-			$type = 'iframe';
-		}
-		if ( function_exists( 'jws_has_shortcode_video' ) && jws_has_shortcode_video( $video_url ) ) {
-			$type = 'shortcode';
-		}
-	} else {
-		$video_id  = get_post_meta( $post_id, 'videos_file', true );
-		$type      = $video_id ? get_post_mime_type( $video_id ) : 'video/mp4';
-		$video_url = $video_id ? wp_get_attachment_url( $video_id ) : '';
-		$engine    = $opt( 'video_advenced' );
-		$encoded   = $video_id ? get_post_meta( $video_id, 'encode_url', true ) : '';
-		$bunny     = $video_id ? get_post_meta( $video_id, 'bunny_id', true ) : '';
-		$cf        = $video_id ? get_post_meta( $video_id, 'cloudflare_id', true ) : '';
-		if ( $encoded && 'encode' === $engine ) {
-			$video_url = get_site_url() . strstr( $encoded, '/wp-content' );
-			$type      = 'application/x-mpegURL';
-		}
-		if ( $bunny && 'bunny' === $engine ) {
-			$video_url = '//' . $opt( 'bn_host_name' ) . '/' . $bunny . '/playlist.m3u8';
-			$type      = 'application/x-mpegURL';
-		}
-		if ( $cf && 'cloudflare' === $engine ) {
-			$video_url = '//' . $opt( 'cl_host_name' ) . '/' . $cf . '/manifest/video.m3u8';
-			$type      = 'application/x-mpegURL';
-		}
+	$ratio = get_post_meta( $post->ID, 'video_ratio', true );
+	if ( ! $ratio && function_exists( 'jws_theme_get_option' ) ) {
+		$ratio = jws_theme_get_option( 'video_ratio' );
 	}
+	$ratio = $ratio ? $ratio : '16x9';
 
-	if ( is_array( $live_data ) && isset( $live_data['uid'] ) && function_exists( 'jws_streamvid' ) ) {
-		$attr      = $live_data['uid'];
-		$video_url = jws_streamvid()->get()->live_videos->get_live_stream_url( $live_data['uid'] );
-		$type      = 'application/x-mpegURL';
-	}
-
-	$quality = array();
-	if ( 'many_quality' === $videos_type ) {
-		foreach ( (array) get_field( 'quality_lists', $post_id ) as $row ) {
-			if ( empty( $row['quality_url'] ) ) {
-				continue;
-			}
-			$q_type = 'video/mp4';
-			if ( function_exists( 'jws_is_youtube_url' ) && jws_is_youtube_url( $row['quality_url'] ) ) {
-				$q_type = 'video/youtube';
-			}
-			if ( function_exists( 'jws_check_m3u8_video' ) && jws_check_m3u8_video( $row['quality_url'] ) ) {
-				$q_type = 'application/x-mpegURL';
-			}
-			$quality[] = array( 'url' => $row['quality_url'], 'label' => $row['label'], 'type' => $q_type );
-		}
-		if ( empty( $video_url ) && $quality ) {
-			$video_url = $quality[0]['url'];
-			$type      = $quality[0]['type'];
-		}
-	}
-
-	if ( empty( $video_url ) ) {
-		echo '<div class="jws-mb__preview-empty"><span class="dashicons dashicons-format-video"></span><p>' . esc_html__( 'No video source saved yet.', 'jws_streamvid' ) . '</p></div>';
-		return;
-	}
-
-	$setup = array(
-		'controls'      => true,
-		'muted'         => (bool) $opt( 'video_muted' ),
-		'autoplay'      => false,
-		'preload'       => 'auto',
-		'playbackRates' => array( 0.5, 1, 1.5, 2 ),
-		'logo'          => array( 'url' => '' ),
-		'sources'       => array( array( 'src' => $video_url, 'type' => $type ) ),
-	);
-	if ( $poster ) {
-		$setup['poster'] = $poster;
-	}
-	$setup             = apply_filters( 'streamvid/player/setup', $setup, $post_id );
-	$setup['autoplay'] = false;
+	$src = add_query_arg( 'jws_mb_preview', '1', get_post_embed_url( $post->ID ) );
 
 	echo '<div class="jws-mb__preview">';
 	printf(
-		'<div class="videos_player ratio_%s %s" data-playerid="%d"%s>',
+		'<div class="jws-mb__preview-frame jws-mb__ratio-%1$s"><iframe src="%2$s" title="%3$s" loading="lazy" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>',
 		esc_attr( $ratio ),
-		esc_attr( $type ),
-		(int) $post_id,
-		$attr ? ' data-live-uid="' . esc_attr( $attr ) . '"' : ''
+		esc_url( $src ),
+		esc_attr( get_the_title( $post ) )
 	);
-
-	if ( 'iframe' === $type || 'shortcode' === $type ) {
-		echo do_shortcode( $video_url ); // phpcs:ignore WordPress.Security.EscapeOutput -- admin-authored embed, as in the ACF field.
-	} else {
-		printf(
-			'<video id="videos_player" class="jws_player video-js vjs-default-skin" data-playerid="%1$d" data-player="%2$s" data-quality="%3$s" poster="%4$s">',
-			(int) $post_id,
-			esc_attr( wp_json_encode( $setup ) ),
-			esc_attr( wp_json_encode( $quality ) ),
-			esc_url( $poster )
-		);
-		foreach ( (array) get_field( 'sub_titles', $post_id ) as $i => $sub ) {
-			if ( ! is_array( $sub ) ) {
-				continue;
-			}
-			$url = ! empty( $sub['vtt_url'] ) ? $sub['vtt_url'] : ( isset( $sub['vtt_file']['url'] ) ? $sub['vtt_file']['url'] : '' );
-			if ( $url ) {
-				printf(
-					'<track label="%1$s" kind="subtitles" srclang="%1$s" src="%2$s"%3$s>',
-					esc_attr( $sub['language'] ),
-					esc_url( $url ),
-					0 === $i ? ' default' : ''
-				);
-			}
-		}
-		echo '</video>';
-	}
-	echo '</div>';
-	printf( '<p class="jws-mb__desc">%s <code>%s</code></p>', esc_html( $type ), esc_html( wp_trim_words( $video_url, 12, '…' ) ) );
+	printf(
+		'<p class="jws-mb__desc"><a href="%1$s" target="_blank" rel="noopener">%2$s</a> <code>%1$s</code></p>',
+		esc_url( $src ),
+		esc_html__( 'Open in a new tab', 'jws_streamvid' )
+	);
 	echo '</div>';
 }
+
+/**
+ * Post types with no embed-{post_type}.php of their own fall back to WordPress'
+ * little link card, which is no use as a player preview — point those at the
+ * theme's movies embed instead. Only for the preview iframe, so what the rest
+ * of the web gets from oEmbed is unchanged.
+ */
+function jws_metabox_preview_embed_template( $template ) {
+	if ( empty( $_GET['jws_mb_preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification -- read-only template switch, capability checked below.
+		return $template;
+	}
+	$post = get_post();
+	if ( ! $post || ! current_user_can( 'edit_post', $post->ID ) ) {
+		return $template;
+	}
+	// A theme template was found (not WordPress' theme-compat card) — keep it.
+	if ( $template && false === strpos( $template, '/theme-compat/' ) ) {
+		return $template;
+	}
+	$fallback = locate_template( 'embed-movies.php' );
+	return $fallback ? $fallback : $template;
+}
+add_filter( 'embed_template', 'jws_metabox_preview_embed_template', 20 );
