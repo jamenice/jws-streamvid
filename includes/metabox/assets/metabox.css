@@ -1303,7 +1303,7 @@ body.jws-mb-modal-open {
 	aspect-ratio: 16 / 9;
 	overflow: hidden;
 	border-radius: var(--jws-radius);
-	background: #000;
+	background: #000 center / cover no-repeat;
 }
 
 .jws-mb__preview-frame iframe {
@@ -1312,6 +1312,46 @@ body.jws-mb-modal-open {
 	width: 100%;
 	height: 100%;
 	border: 0;
+}
+
+/* Until the play button is pressed the iframe has no src, so keep it out of
+   the way: an empty frame would otherwise paint white over the poster. */
+.jws-mb__preview-frame.is-idle iframe {
+	visibility: hidden;
+}
+
+.jws-mb__preview-play {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: rgba(0, 0, 0, 0.35);
+	color: #fff;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.jws-mb__preview-play:hover,
+.jws-mb__preview-play:focus-visible {
+	background: rgba(0, 0, 0, 0.15);
+}
+
+.jws-mb__preview-play .dashicons {
+	font-size: 34px;
+	width: 68px;
+	height: 68px;
+	line-height: 68px;
+	border-radius: 50%;
+	background: var(--jws-accent, #2271b1);
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.jws-mb__preview-frame:not(.is-idle) .jws-mb__preview-play {
+	display: none;
 }
 
 .jws-mb__ratio-21x9 {

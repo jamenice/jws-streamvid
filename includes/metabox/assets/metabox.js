@@ -1360,6 +1360,18 @@
 				}
 			});
 
+			/* The video preview ships without a src so opening a post to edit
+			   it never starts playing audio on its own. Hand the iframe its
+			   real URL the first time the editor asks for the player. */
+			$box.on('click', '.jws-mb__preview-play', function () {
+				var $frame = $(this).closest('.jws-mb__preview-frame');
+				var $iframe = $frame.find('iframe');
+				if (!$iframe.attr('src')) {
+					$iframe.attr('src', $iframe.data('src'));
+				}
+				$frame.removeClass('is-idle');
+			});
+
 			$box.on('click', '.jws-mb__media-pick', function () {
 				openMedia($(this).closest('.jws-mb__media'));
 			});

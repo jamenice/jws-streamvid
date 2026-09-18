@@ -37,7 +37,7 @@ class Jws_Metabox {
 	const INPUT         = 'jws_mb';
 	const NONCE_ACTION  = 'jws_metabox_save';
 	const AJAX_NONCE    = 'jws_metabox_ajax';
-	const ASSET_VERSION = '1.3.1';
+	const ASSET_VERSION = '1.3.2';
 
 	/** @var array Registered boxes keyed by id. */
 	private static $boxes = array();

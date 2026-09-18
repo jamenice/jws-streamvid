@@ -322,6 +322,13 @@ function jws_mb_fields_side_images( $k ) {
  * instead of rebuilding the player — and every source type (mp4, hls, youtube,
  * iframe, shortcode, live, bunny, cloudflare) is handled in one place.
  *
+ * The iframe ships with no `src`: that player starts on its own (and some
+ * sources, YouTube included, start with sound), so merely opening the post to
+ * edit a title used to blast audio at whoever was editing. The real URL sits in
+ * `data-src` behind a poster and a play button, and metabox.js moves it over on
+ * the first click — nothing loads, and no request reaches the source, until the
+ * editor actually asks to watch.
+ *
  * Shared by every post type with a video.
  */
 function jws_metabox_render_video_preview( $post ) {
@@ -338,12 +345,21 @@ function jws_metabox_render_video_preview( $post ) {
 
 	$src = add_query_arg( 'jws_mb_preview', '1', get_post_embed_url( $post->ID ) );
 
+	// The post's own poster stands in for the player until it is asked for.
+	$poster = get_the_post_thumbnail_url( $post->ID, 'large' );
+	$style  = $poster ? sprintf( ' style="background-image:url(%s)"', esc_url( $poster ) ) : '';
+
 	echo '<div class="jws-mb__preview">';
 	printf(
-		'<div class="jws-mb__preview-frame jws-mb__ratio-%1$s"><iframe src="%2$s" title="%3$s" loading="lazy" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>',
+		'<div class="jws-mb__preview-frame jws-mb__ratio-%1$s is-idle"%5$s>' .
+			'<iframe data-src="%2$s" title="%3$s" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>' .
+			'<button type="button" class="jws-mb__preview-play" aria-label="%4$s"><span class="dashicons dashicons-controls-play"></span></button>' .
+		'</div>',
 		esc_attr( $ratio ),
 		esc_url( $src ),
-		esc_attr( get_the_title( $post ) )
+		esc_attr( get_the_title( $post ) ),
+		esc_attr__( 'Load the player', 'jws_streamvid' ),
+		$style // phpcs:ignore WordPress.Security.EscapeOutput -- built from esc_url() above.
 	);
 	printf(
 		'<p class="jws-mb__desc"><a href="%1$s" target="_blank" rel="noopener">%2$s</a> <code>%1$s</code></p>',
