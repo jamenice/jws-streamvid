@@ -24,6 +24,58 @@
     pointer-events: none;
 }
 
+/* Trailer played behind a blocked player message — see
+   jws_streamvid_message_trailer_html(), theme option `video_message_trailer`.
+   .videos-message is itself a stacking context (position + z-index: 20), so
+   z-index: -1 puts the trailer above that element's own poster background and
+   still under its dimming ::before and the .message-inner text. */
+.videos-message-trailer {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.videos-message-trailer video,
+.videos-message-trailer iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    border: 0;
+}
+
+.videos-message > .change-speaker {
+    position: absolute;
+    bottom: 16px;
+    inset-inline-end: 20px;
+    z-index: 2;
+    background: rgba(0, 0, 0, .45);
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    padding: 0;
+    transition: background .2s;
+}
+
+.videos-message > .change-speaker:hover {
+    background: rgba(0, 0, 0, .7);
+}
+
 /* Poster-corner labels (content_badges meta box field) — see
    Jws_Streamvid_Media::content_badges(), fired from post_videos_media(). */
 .post-media {

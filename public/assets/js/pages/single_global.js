@@ -1101,6 +1101,65 @@ var jwsSingleGlobal;
             doLoadEpisode();
         });
 
+        /* ------------------------------------------------------------------ */
+        /* Movies layout v3: the player lives in a #video-popup magnificPopup  */
+        /* moves in and out of its own wrap                                   */
+        /* ------------------------------------------------------------------ */
+
+        /*
+         * Video.js 10 cannot be moved once it is running: a YouTube or Vimeo
+         * source is an <iframe> in the media element's shadow root, and
+         * re-inserting an iframe reloads it — the adapter is left holding a
+         * handle to a window that is gone, so the controls go dead, the
+         * spinner never clears and the reloaded embed autoplays itself even
+         * after the popup is closed. jws_player_v10.js therefore builds
+         * nothing while the markup sits in .mfp-hide, and this rebuilds it
+         * from the untouched original once the popup has stopped moving.
+         */
+        var jws_v10_popup_html = null;
+
+        /**
+         * The media element of the Video.js 10 player, or false on the legacy
+         * engine / before the player has finished loading. `jwsMedia` is set by
+         * attachBehaviour() in js/player/jws_player_v10.js.
+         */
+        function jws_v10_media() {
+
+            var el = document.querySelector('video-player.jws_player_v10');
+
+            return (el && el.jwsMedia) ? el.jwsMedia : false;
+
+        }
+
+        function jws_v10_popup_build() {
+
+            var $popup = $('#video-popup');
+
+            if (!$popup.length || jws_v10_popup_html === null) {
+                return;
+            }
+
+            $popup.html(jws_v10_popup_html);
+
+            var el = $popup.find('video-player.jws_player_v10').get(0);
+
+            if (!el) {
+                return;
+            }
+
+            /* Autoplay is the media element's own attribute, so a source that
+               has it starts on its own; this covers the rest, and matches what
+               the legacy engine did with playerjs.play() on open. */
+            $(el).one('jws:v10ready', function () {
+                try { el.jwsMedia.play(); } catch (e) { }
+            });
+
+            if (typeof jwsPlayerV10 !== 'undefined' && typeof jwsPlayerV10.initAll === 'function') {
+                jwsPlayerV10.initAll();
+            }
+
+        }
+
         function player_action() {
 
             var player;
@@ -1119,12 +1178,22 @@ var jwsSingleGlobal;
 
                 });
 
-                $('.single-movies .version-v3 .video-play .jws-play').magnificPopup({
-                    type: 'inline',
-                    midClick: true,
-                    mainClass: 'mfp-fade',
-                    callbacks: {
-                        beforeOpen: function () {
+            }
+
+            /* The v3 "Watch Now" popup is bound outside the `videojs` guard on
+               purpose: the Video.js 10 engine never defines that global (see
+               enqueue_scripts in class-jws-streamvid-public.php), so binding it
+               in there left the button doing nothing at all on v10. The player
+               each engine puts inside #video-popup is what differs, and only
+               the play/pause calls below need to know which one it is. */
+            $('.single-movies .version-v3 .video-play .jws-play').magnificPopup({
+                type: 'inline',
+                midClick: true,
+                mainClass: 'mfp-fade',
+                callbacks: {
+                    beforeOpen: function () {
+
+                        if (typeof videojs == 'function') {
 
                             if (!playerjs) {
                                 start_player($('.videos_player'));
@@ -1132,19 +1201,60 @@ var jwsSingleGlobal;
                                 playerjs.play();
                             }
 
-                            this.st.mainClass = 'videojs-popup animation-popup';
-                        },
-                        beforeClose: function () {
-                            if (playerjs) {
-                                playerjs.pause();
-                                playerjs.disablePictureInPicture();
-                            }
+                        } else if (jws_v10_popup_html === null) {
+
+                            /* Taken before anything has touched the markup —
+                               jws_player_v10.js leaves a parked player alone,
+                               so this is the pristine server output and stays
+                               the template every open is built from. */
+                            jws_v10_popup_html = $('#video-popup').html();
 
                         }
-                    },
-                });
 
-            }
+                        this.st.mainClass = 'videojs-popup animation-popup';
+                    },
+                    open: function () {
+
+                        /* Built here, not in beforeOpen: magnificPopup detaches
+                           #video-popup and appends it to its own wrap in
+                           between, and the player must not exist for that move.
+                           This callback still runs inside the click handler, so
+                           the user gesture that allows playback is intact. */
+                        if (typeof videojs != 'function') {
+                            jws_v10_popup_build();
+                        }
+
+                    },
+                    beforeClose: function () {
+
+                        if (playerjs) {
+                            playerjs.pause();
+                            playerjs.disablePictureInPicture();
+                            return;
+                        }
+
+                        var media = jws_v10_media();
+
+                        if (media) {
+                            try { media.pause(); } catch (e) { }
+                        }
+
+                    },
+                    close: function () {
+
+                        /* magnificPopup has put #video-popup back by now (its
+                           inline module restores the element before this runs).
+                           Emptying it is what actually stops a YouTube embed:
+                           the iframe goes with it, so nothing can keep playing
+                           behind the closed popup, and the next open starts
+                           from the untouched markup again. */
+                        if (typeof videojs != 'function') {
+                            $('#video-popup').empty();
+                        }
+
+                    }
+                },
+            });
 
 
             $(document).on('click', '.sources-videos button', function (e) {
@@ -1188,7 +1298,13 @@ var jwsSingleGlobal;
                     $('.videos_player').replaceWith(response.data.content);
                     player = start_player($('.videos_player'), true);
 
-
+                    /* v3 popup, v10 engine: every open rebuilds from the
+                       snapshot, so it has to follow the source just picked.
+                       Read now, while the fresh markup is still untouched —
+                       jws_player_v10.js only gets to it a tick later. */
+                    if (jws_v10_popup_html !== null) {
+                        jws_v10_popup_html = $('#video-popup').html();
+                    }
 
                 }).complete(function () {
                     $('.videos_player').removeClass('loading');

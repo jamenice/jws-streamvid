@@ -35,7 +35,7 @@ function jws_metabox_register_tv_shows() {
 			'title'      => __( 'TV Show Settings', 'jws_streamvid' ),
 			'post_types' => array( 'tv_shows' ),
 			'acf_groups' => array( 'tv_shows_metabox' ),
-			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'genres', 'topics', 'countries', 'ages', 'tv_shows_cat', 'tv_shows_tag' ) ),
+			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'genres', 'topics', 'countries', 'ages', 'tv_shows_cat', 'tv_shows_tag', JWS_CONTENT_BADGE_TAX ) ),
 			'on_save'    => 'jws_metabox_tv_shows_sync_episodes',
 			'fields'     => array_merge(
 				array(

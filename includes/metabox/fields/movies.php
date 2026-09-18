@@ -40,7 +40,7 @@ function jws_metabox_register_movies() {
 			'title'      => __( 'Movie Settings', 'jws_streamvid' ),
 			'post_types' => array( 'movies' ),
 			'acf_groups' => array( 'movies_metabox' ),
-			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'movies_cat', 'genres', 'topics', 'countries', 'ages', 'movies_tag', 'movies_playlist' ) ),
+			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'movies_cat', 'genres', 'topics', 'countries', 'ages', 'movies_tag', 'movies_playlist', JWS_CONTENT_BADGE_TAX ) ),
 			'fields'     => array_merge(
 				array(
 					jws_mb_tab( __( 'Video', 'jws_streamvid' ), 'dashicons-video-alt3' ),

@@ -400,6 +400,7 @@ if($type == 'blocked'){
     if($has_membership && ($buy_enable || $rent_enable)) {
         ?>
         <div style="background:url(<?php echo esc_url($image); ?>),#000000" class="videos-message">
+            <?php echo function_exists('jws_streamvid_message_trailer_html') ? jws_streamvid_message_trailer_html($pmpro_id) : ''; ?>
             <div class="message-inner">
                 <ul class="jws-tabs">
                     <li class="active" data-tab="tab-subscriber"><?php echo esc_html__('Subscription', 'jws_streamvid'); ?></li>
@@ -460,6 +461,7 @@ if($type == 'blocked'){
      
         ?>
         <div style="background:url(<?php echo esc_url($image); ?>),#000000" class="videos-message">
+            <?php echo function_exists('jws_streamvid_message_trailer_html') ? jws_streamvid_message_trailer_html($pmpro_id) : ''; ?>
             <div class="message-inner">
                 <?php
                 if(function_exists('pmpro_has_membership_access') && !pmpro_has_membership_access( $pmpro_id, get_current_user_id())) {

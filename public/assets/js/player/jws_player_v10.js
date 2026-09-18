@@ -178,6 +178,14 @@
      * preload="auto" on a cached file `loadedmetadata` has often already
      * fired by the time this runs — a listener alone would then never be
      * called and the resume point would be silently dropped.
+     *
+     * An iframe embed takes the seek without honouring it. YouTube accepts a
+     * seekTo() issued before it has the video itself, starts from zero anyway,
+     * and the adapter's own 50ms poll then writes that zero back over the
+     * position — `seeking` at 45s followed by `seeked` at 0 is exactly what a
+     * resumed watch looked like. The position only sticks once playback is
+     * actually running, so for those the seek is made again on the first
+     * `playing`, and only if it did not take the first time.
      */
     function seekTo(media, time) {
 
@@ -187,10 +195,24 @@
 
         if (media.readyState >= 1) {
             apply();
-            return;
+        } else {
+            media.addEventListener('loadedmetadata', apply, { once: true });
         }
 
-        media.addEventListener('loadedmetadata', apply, { once: true });
+        if (time > 0 && (media.localName === 'youtube-video' || media.localName === 'vimeo-video')) {
+
+            media.addEventListener('playing', function reapply() {
+
+                media.removeEventListener('playing', reapply);
+
+                /* A second's grace: the embed may have landed close enough on
+                   its own, and seeking again would only stutter. */
+                if (Math.abs(media.currentTime - time) > 1.5) {
+                    apply();
+                }
+
+            });
+        }
     }
 
     function formatTime(seconds) {
@@ -1558,6 +1580,10 @@
             return;
         }
 
+        /* Handed to single_global.js so the v3 "Watch Now" popup can start and
+           stop this player the way it does the legacy `playerjs` handle. */
+        playerEl.jwsMedia = media;
+
         var $wrap = $(playerEl).closest('.videos_player');
         var hasPlayed = false;
         var lastSavedTime = 0;
@@ -1731,6 +1757,29 @@
             return;
         }
 
+        /*
+         * Movies layout v3 parks the player inside a hidden #video-popup and
+         * magnificPopup *moves* that subtree into its own wrap when the viewer
+         * clicks "Watch Now" — and moves it back on close.
+         *
+         * A player cannot survive that. <youtube-video> and <vimeo-video> put
+         * an <iframe> in their shadow root, and re-inserting an iframe anywhere
+         * reloads its document: the YT.Player handle the adapter is holding
+         * then talks to a window that no longer exists, so play/pause do
+         * nothing, no state event ever arrives again (the spinner never
+         * clears), and the reloaded embed starts itself from the autoplay=1 in
+         * its own src — which is the video still playing after the popup has
+         * been closed. custom-media-element also destroys the media host a
+         * microtask after a disconnect it does not see reversed.
+         *
+         * So nothing is built here while the markup is still parked. The popup
+         * rebuilds it in place once it has stopped moving, and empties it again
+         * on close — see the .jws-play handler in pages/single_global.js.
+         */
+        if (playerEl.closest('.mfp-hide')) {
+            return;
+        }
+
         playerEl.jwsV10Init = true;
 
         var config;
@@ -1792,6 +1841,10 @@
             return new Promise(function (resolve) { requestAnimationFrame(resolve); });
         }).then(function () {
             attachBehaviour(playerEl, config);
+
+            /* The v3 popup waits on this to press play — by the time it opens,
+               the player may still be a few module fetches away from ready. */
+            $(playerEl).trigger('jws:v10ready');
         }).catch(function (error) {
             failPlayer(playerEl, error);
         });
@@ -1802,6 +1855,10 @@
             initPlayer(this);
         });
     }
+
+    /* Lets the v3 popup build its player the moment the markup has landed in
+       its final place, rather than waiting on the MutationObserver below. */
+    jwsPlayerV10.initAll = initAll;
 
     $(function () {
 

@@ -9,14 +9,14 @@
  * that starts the plugin.
  *
  * @link              https://jwsuperthemes.com
- * @since             8.7.0
+ * @since             9.0.0
  * @package           Jws_Streamvid
  *
  * @wordpress-plugin
  * Plugin Name:       Jws Streamvid
  * Plugin URI:        https://streamvid.jwsuperthemes.com
  * Description:       Jws Streamvid is a key plugin for the StreamVid theme, providing essential functions and core features that power video streaming, user interaction, and theme-specific functionality. It ensures the StreamVid theme operates smoothly with all required integrations and custom features.
- * Version:           8.7.0
+ * Version:           9.0.0
  * Author:            JWSThemes team
  * Author URI:        https://jwsuperthemes.com 
  * License:           GPL-2.0+
@@ -34,10 +34,10 @@ if ( ! defined( 'WPINC' ) ) {
 
 /**
  * Currently plugin version.
- * Start at version 8.7.0 and use SemVer - https://semver.org
+ * Start at version 9.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'JWS_STREAMVID_VERSION', '8.7.0' );
+define( 'JWS_STREAMVID_VERSION', '9.0.0' );
 define( 'JWS_STREAMVID_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) . 'public' );
 define( 'JWS_STREAMVID_PATH_PUBLIC', trailingslashit( plugin_dir_path( __FILE__ ) ) . 'public' );
 define( 'JWS_STREAMVID_URL_PUBLIC', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'public' );

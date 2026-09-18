@@ -400,7 +400,145 @@ if(!function_exists('jws_check_trailer')) {
         }
   
         return $url;
-        
+
+    }
+
+}
+
+if(!function_exists('jws_streamvid_message_trailer_html')) {
+
+    /**
+     * Trailer played as the background of a blocked `.videos-message`
+     * (public/movies/player.php), in place of the poster image — the same look
+     * `.jws-banner-trailer` gives single-global-v2, see
+     * themes/streamvid/template-parts/content/movies_v2/post-banner.php.
+     *
+     * Off unless the "Trailer Background On Blocked Video" switch
+     * (theme option `video_message_trailer`, Video Global → Player Settings)
+     * is on and the post has a trailer. The poster background stays underneath,
+     * so a trailer that cannot play leaves the message exactly as it was.
+     *
+     * The media tags are written here rather than built by JS: an mp4 autoplays
+     * muted on its own and YouTube/Vimeo autoplay through url params, so the
+     * background works on templates that never load single_global.js (embeds,
+     * playlist taxonomies). Only the sound toggle needs script.
+     *
+     * @param int $post_id
+     * @return string HTML, empty when the option is off or there is no trailer.
+     */
+    function jws_streamvid_message_trailer_html( $post_id ) {
+
+        if ( ! function_exists( 'jws_theme_get_option' ) || ! jws_theme_get_option( 'video_message_trailer' ) ) {
+            return '';
+        }
+
+        $trailer = jws_check_trailer( $post_id );
+
+        if ( empty( $trailer ) ) {
+            return '';
+        }
+
+        $media = '';
+
+        if ( jws_is_youtube_url( $trailer ) ) {
+
+            preg_match( '/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/', $trailer, $match );
+
+            if ( empty( $match[1] ) ) {
+                return '';
+            }
+
+            // playlist=<id> is what makes loop=1 work on a single video.
+            $src = add_query_arg(
+                array(
+                    'autoplay'       => 1,
+                    'mute'           => 1,
+                    'loop'           => 1,
+                    'playlist'       => $match[1],
+                    'controls'       => 0,
+                    'modestbranding' => 1,
+                    'playsinline'    => 1,
+                    'rel'            => 0,
+                    'enablejsapi'    => 1,
+                ),
+                'https://www.youtube.com/embed/' . $match[1]
+            );
+
+            $media = '<iframe src="' . esc_url( $src ) . '" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+
+        } elseif ( jws_is_vimeo_url( $trailer ) ) {
+
+            preg_match( '/vimeo\.com\/(?:video\/)?(\d+)/', $trailer, $match );
+
+            if ( empty( $match[1] ) ) {
+                return '';
+            }
+
+            $src = add_query_arg(
+                array(
+                    'autoplay'   => 1,
+                    'muted'      => 1,
+                    'loop'       => 1,
+                    'background' => 1,
+                ),
+                'https://player.vimeo.com/video/' . $match[1]
+            );
+
+            $media = '<iframe src="' . esc_url( $src ) . '" frameborder="0" allow="autoplay" allowfullscreen></iframe>';
+
+        } else {
+
+            // HLS needs a player to run outside Safari; the poster stays instead.
+            if ( stripos( $trailer, '.m3u8' ) !== false ) {
+                return '';
+            }
+
+            $media = '<video autoplay muted playsinline loop preload="auto"><source src="' . esc_url( $trailer ) . '" type="video/mp4"></video>';
+
+        }
+
+        $html  = '<div class="videos-message-trailer" data-trailer="' . esc_attr( $trailer ) . '">' . $media . '</div>';
+        $html .= '<button type="button" class="change-speaker muted" aria-label="' . esc_attr__( 'Toggle sound', 'jws_streamvid' ) . '"><i class="jws-icon-speaker-x"></i></button>';
+
+        static $script_printed = false;
+
+        if ( ! $script_printed ) {
+
+            $script_printed = true;
+
+            $html .= '<script>
+jQuery(function($){
+    $(document).on("click", ".videos-message .change-speaker", function(){
+        var $btn = $(this),
+            $wrap = $btn.closest(".videos-message").find(".videos-message-trailer"),
+            video = $wrap.find("video").get(0),
+            iframe = $wrap.find("iframe").get(0),
+            muted = $btn.hasClass("muted");
+
+        if (video) {
+            video.muted = !muted;
+        } else if (iframe && iframe.contentWindow) {
+            // YouTube and Vimeo both take commands over postMessage, no API file needed.
+            if (iframe.src.indexOf("vimeo") !== -1) {
+                iframe.contentWindow.postMessage(JSON.stringify({ method: "setVolume", value: muted ? 1 : 0 }), "*");
+            } else {
+                iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: muted ? "unMute" : "mute", args: [] }), "*");
+            }
+        }
+
+        if (muted) {
+            $btn.removeClass("muted").html(\'<i class="jws-icon-speaker-high"></i>\');
+        } else {
+            $btn.addClass("muted").html(\'<i class="jws-icon-speaker-x"></i>\');
+        }
+    });
+});
+</script>';
+
+        }
+
+        return $html;
+
     }
 
 }

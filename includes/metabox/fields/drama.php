@@ -46,7 +46,7 @@ function jws_metabox_register_drama() {
 			'title'      => __( 'Drama Settings', 'jws_streamvid' ),
 			'post_types' => array( $drama ),
 			'acf_groups' => array( 'jws_drama_metabox' ),
-			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'genres', 'countries', 'ages', $tag_tax ) ),
+			'hide_boxes' => jws_mb_taxonomy_boxes( array( 'genres', 'countries', 'ages', $tag_tax, JWS_CONTENT_BADGE_TAX ) ),
 			'on_save'    => 'jws_metabox_drama_save_episodes',
 			'fields'     => array(
 				jws_mb_tab( __( 'Episodes', 'jws_streamvid' ), 'dashicons-playlist-video' ),
