@@ -596,7 +596,7 @@
 	padding: 0;
 }
 
-.jws-mb .button:not(.wp-picker-open, .wp-picker-clear, .wp-color-result) {
+.jws-mb .button:not(.wp-picker-open, .wp-picker-clear, .wp-color-result, .wp-picker-default) {
 	display: flex;
 	gap: 6px;
 	background: linear-gradient(248.28deg, var(--btn-bgcolor) 9.539999999999999%, rgba(142, 97, 255, 0) 32.8%), radial-gradient(81.70999999999999% 279.87% at -16.57% -92%, var(--btn-bgcolor2) 28.69%, rgba(205, 219, 248, 0) 69.54000000000001%), var(--btn-bgcolor3) !important;
@@ -609,7 +609,7 @@
 	border-radius: 7px;
 }
 
-.jws-mb .button:not(.wp-picker-open, .wp-picker-clear, .wp-color-result):hover {
+.jws-mb .button:not(.wp-picker-open, .wp-picker-clear, .wp-color-result, .wp-picker-default):hover {
 	box-shadow: 0px 15px 40px -8px rgba(158, 97, 255, 0.5);
 	transform: translateY(-1px);
 	color: var(--btn-color2);
@@ -1314,10 +1314,21 @@ body.jws-mb-modal-open {
 	border: 0;
 }
 
-.jws-mb__ratio-21x9 { aspect-ratio: 21 / 9; }
-.jws-mb__ratio-4x3  { aspect-ratio: 4 / 3; }
-.jws-mb__ratio-3x4  { aspect-ratio: 3 / 4; }
-.jws-mb__ratio-1x1  { aspect-ratio: 1 / 1; }
+.jws-mb__ratio-21x9 {
+	aspect-ratio: 21 / 9;
+}
+
+.jws-mb__ratio-4x3 {
+	aspect-ratio: 4 / 3;
+}
+
+.jws-mb__ratio-3x4 {
+	aspect-ratio: 3 / 4;
+}
+
+.jws-mb__ratio-1x1 {
+	aspect-ratio: 1 / 1;
+}
 
 .jws-mb__preview code {
 	word-break: break-all;

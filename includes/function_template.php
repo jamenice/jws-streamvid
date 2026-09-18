@@ -398,7 +398,14 @@ if(!function_exists('jws_check_trailer')) {
             $video_id =  get_post_meta($post_id , 'videos_trailer_file' , true);
             $url = wp_get_attachment_url($video_id);
         }
-  
+
+        /* Site-wide stand-in for a post that was saved without a trailer:
+           "Trailer Default Url" (Theme Options → Video Global → Video Default).
+           Empty by default, so nothing changes until a site fills it in. */
+        if ( empty( $url ) && function_exists( 'jws_theme_get_option' ) ) {
+            $url = jws_theme_get_option( 'video_player_default_trailer_url' );
+        }
+
         return $url;
 
     }
@@ -433,6 +440,28 @@ if(!function_exists('jws_streamvid_message_trailer_html')) {
         }
 
         $trailer = jws_check_trailer( $post_id );
+
+        /*
+         * The trailer belongs to the show, not to each episode — the episode
+         * screens have no trailer field to fill in — so an episode plays its TV
+         * show's. Anything the episode itself carries is only a last resort, for
+         * a show that has none.
+         */
+        if ( 'episodes' === get_post_type( $post_id ) && function_exists( 'jws_episodes_check_type' ) ) {
+
+            $tv_show = jws_episodes_check_type( $post_id );
+
+            if ( ! empty( $tv_show ) ) {
+
+                $tv_show_trailer = jws_check_trailer( $tv_show );
+
+                if ( ! empty( $tv_show_trailer ) ) {
+                    $trailer = $tv_show_trailer;
+                }
+
+            }
+
+        }
 
         if ( empty( $trailer ) ) {
             return '';

@@ -62,9 +62,35 @@ if(is_embed()) $class_player .= ' has-embed';
 
 $post_type = get_post_type();
 
-$image = function_exists('jws_poster_banner_url') ? jws_poster_banner_url($post_id, $image_size = 'full') : '';
+/*
+ * Poster art for the player. Episodes are routinely saved without art of their
+ * own, and jws_poster_banner_url() answers that with the site-wide placeholder,
+ * so the absence never shows up in the returned url — ask the meta directly and
+ * borrow the TV show's art when the episode has none. TMDB paths only count
+ * while the TMDB image option is on, the same condition the helpers read them
+ * under.
+ */
+$banner_id = $post_id;
 
-$featured_image_two = function_exists('jws_backdrop_banner_url') ? jws_backdrop_banner_url($post_id, $image_size = 'full') : '';
+if ( 'episodes' === get_post_type( $post_id ) && function_exists( 'jws_episodes_check_type' ) ) {
+
+    $tmdb_images = jws_theme_get_option( 'tmdb_enable_image_url', false );
+
+    $has_own_banner = get_post_thumbnail_id( $post_id )
+        || get_post_meta( $post_id, 'featured_image_two', true )
+        || ( $tmdb_images && ( get_post_meta( $post_id, 'poster_path', true ) || get_post_meta( $post_id, 'backdrop_path', true ) ) );
+
+    $tv_show = jws_episodes_check_type( $post_id );
+
+    if ( ! $has_own_banner && ! empty( $tv_show ) ) {
+        $banner_id = $tv_show;
+    }
+
+}
+
+$image = function_exists('jws_poster_banner_url') ? jws_poster_banner_url($banner_id, $image_size = 'full') : '';
+
+$featured_image_two = function_exists('jws_backdrop_banner_url') ? jws_backdrop_banner_url($banner_id, $image_size = 'full') : '';
 
 if(!empty($featured_image_two)) {
    $image   = $featured_image_two; 
