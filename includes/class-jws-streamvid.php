@@ -237,6 +237,14 @@ class Jws_Streamvid {
         require_once $payment_dir . 'class-jws-payment-router.php';
         require_once $payment_dir . 'class-jws-payment-sync.php';
 
+        /*
+         * The PMPro gateway class for orders this checkout took. It extends
+         * PMProGateway, which Paid Memberships Pro — loading after this plugin
+         * — has not declared yet, so the file waits for `plugins_loaded` and
+         * returns without defining anything if PMPro is not active at all.
+         */
+        add_action( 'plugins_loaded', array( 'Jws_Payment_Fulfillment', 'load_pmpro_gateway' ), 20 );
+
         $payment_checkout = new Jws_Payment_Checkout();
         $payment_checkout->register();
 

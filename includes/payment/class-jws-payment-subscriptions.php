@@ -133,6 +133,31 @@ class Jws_Payment_Subscriptions {
 		);
 	}
 
+	/**
+	 * The same lookup, when all that is known is the reference itself.
+	 *
+	 * Paid Memberships Pro records these subscriptions under this checkout's
+	 * own gateway name rather than Stripe's or PayPal's, so it can hand back a
+	 * reference but never the gateway that issued it. The references are a
+	 * gateway's own ids and do not collide between the two, which is why
+	 * matching on the reference alone is safe here and the unique key is still
+	 * on the pair.
+	 */
+	public static function find_by_ref_any_gateway( $ref ) {
+
+		global $wpdb;
+
+		if ( ! $ref ) {
+			return null;
+		}
+
+		$table = Jws_Payment_Ledger::table_subscriptions();
+
+		return $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table} WHERE gateway_ref = %s ORDER BY id DESC LIMIT 1", $ref )
+		);
+	}
+
 	/** Everything on this person's account, newest first. */
 	public static function for_user( $user_id ) {
 

@@ -38,6 +38,20 @@ class Jws_Payment_Fulfillment {
 	 */
 	public static $granting_subscription_id = 0;
 
+	/**
+	 * Loads the PMPro gateway class named by PMPRO_GATEWAY.
+	 *
+	 * Hooked to `plugins_loaded` rather than required with the rest of the
+	 * payment system: the class extends one of PMPro's, and PMPro is not
+	 * loaded yet when this plugin's files are.
+	 */
+	public static function load_pmpro_gateway() {
+
+		if ( ! class_exists( 'PMProGateway_jws_payment' ) ) {
+			require_once plugin_dir_path( __FILE__ ) . 'class-pmprogateway-jws-payment.php';
+		}
+	}
+
 	public static function grant( $order ) {
 
 		switch ( $order->type ) {
