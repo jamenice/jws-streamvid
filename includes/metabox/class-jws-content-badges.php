@@ -88,12 +88,11 @@ function jws_content_badges_defaults() {
 		'4K'        => '#2271b1',
 		'HDR'       => '#0f766e',
 		'Full HD'   => '#2271b1',
-		'VietSub'   => '#7c3aed',
 		'EngSub'    => '#7c3aed',
 		'NEW'       => '#16a34a',
 		'Trending'  => '#ea580c',
 		'Exclusive' => '#b45309',
-		'Uncut'     => '#b91c1c',
+		'Uncut'     => '#b91c1c', 
 	);
 }
 
