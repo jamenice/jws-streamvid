@@ -7,7 +7,8 @@ if (!$user_id) {
 $post_watchlisted = Jws_Watchlist::get_ids($user_id);
 $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
 $current_filter = isset($_POST['watchlist_filter']) ? sanitize_text_field($_POST['watchlist_filter']) : (isset($current_filter) ? $current_filter : 'movies');
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+// Kept in step with the tab list in watchlist.php — 'episodes' dropped.
+$valid_post_types = ['movies', 'tv_shows', 'videos'];
 if ( post_type_exists( 'drama' ) ) {
     $valid_post_types[] = 'drama';
 }

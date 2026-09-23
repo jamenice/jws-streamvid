@@ -5,7 +5,8 @@ if( ! defined('ABSPATH' ) ){
 $user_id = absint(get_queried_object_id()); 
 wp_enqueue_script('jws-youtube-api');
 $post_watchlisted = Jws_Watchlist::get_ids($user_id);
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+// No separate "episodes" tab — dropped from the watchlist tab list.
+$valid_post_types = ['movies', 'tv_shows', 'videos'];
 if ( post_type_exists( 'drama' ) ) {
     $valid_post_types[] = 'drama';
 }

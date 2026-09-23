@@ -832,6 +832,20 @@ if(!function_exists('jws_watchlist_button')) {
     function jws_watchlist_button($id = '') {
         if(!jws_streamvid_options('videos_watchlist')) return false;
         $post_id = $id ? absint($id) : get_the_ID();
+
+        /*
+         * Watchlisting a single episode surfaces nowhere: the profile tabs are
+         * Movies / Tv Shows / Videos only. So the button on an episode page
+         * stores the parent show, the same way jws_download_button() resolves
+         * PMPro access.
+         */
+        if ('episodes' === get_post_type($post_id)) {
+            $show_id = jws_episodes_check_type($post_id);
+            if ($show_id) {
+                $post_id = (int) $show_id;
+            }
+        }
+
         $watchlisted = jws_watchlist_check($post_id); 
         $class = 'watchlist-add'.$watchlisted
         ?>

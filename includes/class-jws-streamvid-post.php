@@ -913,7 +913,13 @@ function jws_custom_episodes_playlist() {
 
 add_filter('the_title', function($title, $post_id) {
     
-    if (is_admin() && get_post_type($post_id) === 'episodes') {
+    /*
+     * admin-ajax.php also runs under is_admin(), so without excluding AJAX the
+     * "- Season: 1 - (Show)" suffix — which only exists to tell episodes apart
+     * in the admin list — leaks into frontend responses such as the history
+     * list and the episode player.
+     */
+    if (is_admin() && ! wp_doing_ajax() && get_post_type($post_id) === 'episodes') {
      
         $tv_show_id = jws_episodes_check_type($post_id);
         $season_index = get_post_meta($post_id, 'season_number', true);

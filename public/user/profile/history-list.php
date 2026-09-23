@@ -1,6 +1,7 @@
 <?php
 if (!isset($video_progress_data) || !isset($current_filter)) return;
-$valid_post_types = ['movies', 'tv_shows', 'episodes', 'videos'];
+// Kept in step with the tab list in history.php — 'episodes' dropped.
+$valid_post_types = ['movies', 'tv_shows', 'videos'];
 if ( post_type_exists( 'drama' ) ) {
     $valid_post_types[] = 'drama';
 }
