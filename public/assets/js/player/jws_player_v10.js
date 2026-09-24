@@ -78,6 +78,311 @@
         return moduleCache[path];
     }
 
+    /* ---------------------------------------------------------------------- */
+    /* Native HLS on Safari: AirPlay, and the quality menu that comes with it   */
+    /* ---------------------------------------------------------------------- */
+
+    var HLS_TYPE = 'application/vnd.apple.mpegurl';
+
+    function setNativeSource(media, src) {
+        media.source = { src: src, type: HLS_TYPE, preferPlayback: 'native' };
+    }
+
+    /**
+     * Pull the variant streams out of an HLS master playlist.
+     *
+     * Only what the quality menu needs: a URL to play and enough of the
+     * attribute list to label it. A playlist with no #EXT-X-STREAM-INF is a
+     * variant already and yields nothing, which is the right answer — there is
+     * no ladder to choose from.
+     */
+    function parseMasterPlaylist(text, baseUrl) {
+
+        var lines = text.split('\n');
+        var variants = [];
+
+        for (var i = 0; i < lines.length; i++) {
+
+            var line = lines[i].trim();
+
+            if (line.indexOf('#EXT-X-STREAM-INF:') !== 0) {
+                continue;
+            }
+
+            /* The URI is the next line that is neither blank nor a tag. */
+            var uri = '';
+
+            for (var j = i + 1; j < lines.length; j++) {
+                var candidate = lines[j].trim();
+
+                if (!candidate || candidate.charAt(0) === '#') {
+                    continue;
+                }
+
+                uri = candidate;
+                break;
+            }
+
+            if (!uri) {
+                continue;
+            }
+
+            var attrs = line.slice('#EXT-X-STREAM-INF:'.length);
+            var resolution = /RESOLUTION=(\d+)x(\d+)/.exec(attrs);
+            var bandwidth = /[^-]BANDWIDTH=(\d+)/.exec(' ' + attrs);
+            var frameRate = /FRAME-RATE=([\d.]+)/.exec(attrs);
+            var codecs = /CODECS="([^"]*)"/.exec(attrs);
+            var src;
+
+            try {
+                src = new URL(uri, baseUrl).href;
+            } catch (e) {
+                continue;
+            }
+
+            variants.push({
+                src: src,
+                width: resolution ? parseInt(resolution[1], 10) : undefined,
+                height: resolution ? parseInt(resolution[2], 10) : undefined,
+                bitrate: bandwidth ? parseInt(bandwidth[1], 10) : undefined,
+                frameRate: frameRate ? parseFloat(frameRate[1]) : undefined,
+                codec: codecs ? codecs[1] : undefined
+            });
+        }
+
+        return variants;
+    }
+
+    /** Renditions from the quality list the metabox filled in, when it has one. */
+    function renditionsFromConfig(config) {
+
+        if (!config.qualities || config.qualities.length < 2) {
+            return [];
+        }
+
+        var out = [];
+
+        for (var i = 0; i < config.qualities.length; i++) {
+
+            var quality = config.qualities[i];
+
+            if (!quality.src) {
+                continue;
+            }
+
+            /* "1080p", "720P HD", "Full HD 1080" — take the first number that
+               looks like a height and let the skin label it; anything with no
+               number at all still gets an entry, just an unlabelled one. */
+            var height = /(\d{3,4})\s*[pP]?/.exec(quality.label || '');
+
+            out.push({
+                src: quality.src,
+                height: height ? parseInt(height[1], 10) : undefined
+            });
+        }
+
+        return out.length > 1 ? out : [];
+    }
+
+    /**
+     * A stand-in for the `videoRenditions` list a media element exposes.
+     *
+     * Safari's own HLS stack keeps its ladder to itself, so with hls.js out of
+     * the picture the skin's quality menu has nothing to list. This is the list
+     * the player looks for, built from the master playlist and defined straight
+     * onto the media element: `selectedIndex` reloads the chosen variant URL
+     * rather than asking the engine to switch level, which is the one lever
+     * native playback gives us.
+     *
+     * Switching costs a reload — position and play state are carried across, but
+     * the picture stops for as long as the new playlist takes to buffer. That is
+     * the price of a hand-picked quality here; Auto never pays it, because Auto
+     * is the master playlist and Safari does its own adapting.
+     */
+    function attachNativeRenditions(media, masterSrc, initial) {
+
+        /* A DocumentFragment is the event target: the player subscribes with an
+           AbortSignal, and a real EventTarget handles that for free. */
+        var bus = document.createDocumentFragment();
+        var items = [];
+        var selectedIndex = -1;
+
+        function select(index) {
+
+            var next = index >= 0 && index < items.length ? index : -1;
+
+            if (next === selectedIndex) {
+                return;
+            }
+
+            var time = media.currentTime;
+            var wasPlaying = !media.paused;
+
+            selectedIndex = next;
+
+            for (var i = 0; i < items.length; i++) {
+                items[i].selected = i === next;
+            }
+
+            var resume = function () {
+
+                media.removeEventListener('loadedmetadata', resume);
+
+                try {
+                    media.currentTime = time;
+                } catch (e) { }
+
+                if (wasPlaying) {
+                    var played = media.play();
+
+                    if (played && played.catch) {
+                        played.catch(function () { });
+                    }
+                }
+            };
+
+            media.addEventListener('loadedmetadata', resume);
+
+            setNativeSource(media, next === -1 ? masterSrc : items[next].src);
+
+            bus.dispatchEvent(new Event('change'));
+        }
+
+        var list = {
+            get length() { return items.length; },
+            get selectedIndex() { return selectedIndex; },
+            set selectedIndex(index) { select(index); },
+            addEventListener: function (type, listener, options) { bus.addEventListener(type, listener, options); },
+            removeEventListener: function (type, listener, options) { bus.removeEventListener(type, listener, options); },
+            dispatchEvent: function (event) { return bus.dispatchEvent(event); }
+        };
+
+        /* `[...media.videoRenditions]` is how the player reads it. */
+        list[Symbol.iterator] = function () { return items.slice()[Symbol.iterator](); };
+
+        /*
+         * Nothing here ever marks itself active. With no `active` flag anywhere
+         * in the list the player falls back to matching the ladder against the
+         * video's own dimensions, which is what makes the menu read
+         * "Auto (720p)" while Safari does the picking.
+         */
+        function add(renditions) {
+
+            if (!renditions.length) {
+                return;
+            }
+
+            /* Tallest first, the way a quality menu is read. */
+            renditions = renditions.slice().sort(function (a, b) {
+                return (b.height || b.bitrate || 0) - (a.height || a.bitrate || 0);
+            });
+
+            for (var i = 0; i < renditions.length; i++) {
+                items.push({
+                    id: 'q' + items.length,
+                    src: renditions[i].src,
+                    width: renditions[i].width,
+                    height: renditions[i].height,
+                    bitrate: renditions[i].bitrate,
+                    frameRate: renditions[i].frameRate,
+                    codec: renditions[i].codec,
+                    selected: false
+                });
+            }
+
+            /* The player re-reads the whole list on any of these, so one event
+               covers however many arrived. */
+            bus.dispatchEvent(new Event('addrendition'));
+        }
+
+        try {
+            Object.defineProperty(media, 'videoRenditions', {
+                value: list,
+                configurable: true,
+                enumerable: true
+            });
+        } catch (e) {
+            return null;
+        }
+
+        add(initial);
+
+        return { list: list, add: add };
+    }
+
+    /*
+     * AirPlay, on Safari, for an HLS source.
+     *
+     * The skin already ships the AirPlay button and the player already talks to
+     * WebKit's AirPlay API — nothing needs adding for an MP4. HLS is the odd one
+     * out: <hlsjs-video> picks hls.js whenever `Hls.isSupported()`, and that is
+     * true in Safari too, so the video plays off an MSE blob. AirPlay has no URL
+     * to hand the Apple TV then, reports no target, and the skin keeps the
+     * button hidden. `preferPlayback: 'native'` puts Safari back on its own HLS
+     * stack, where the button finds a target.
+     *
+     * The test is `WebKitPlaybackTargetAvailabilityEvent` — the AirPlay API
+     * itself — rather than the user agent. It is present exactly where this
+     * trade pays for itself, and every browser that has it plays HLS natively.
+     */
+    function preferNativeHls(playerEl, config) {
+
+        if (!config.airplay || config.mediaTag !== 'hlsjs-video' || !config.src) {
+            return;
+        }
+
+        if (!('WebKitPlaybackTargetAvailabilityEvent' in window)) {
+            return;
+        }
+
+        var media = playerEl.querySelector('hlsjs-video');
+
+        /* Set as a property, so this has to run after the element has upgraded —
+           it has, the module that defines it resolved a step ago. On an element
+           still waiting to upgrade this would write an own property that shadows
+           the setter forever, and the swap would silently never happen. */
+        if (!media || !('source' in media)) {
+            return;
+        }
+
+        /* The list goes on before the source does. Swapping the source fires
+           loadstart, which is when the player goes looking for renditions again;
+           define it afterwards and the menu stays empty until some later
+           loadstart that may never come. */
+        var fromConfig = renditionsFromConfig(config);
+        var renditions = attachNativeRenditions(media, config.src, fromConfig);
+
+        try {
+            setNativeSource(media, config.src);
+        } catch (e) {
+            /* Leaves hls.js in place: no AirPlay, but playback is untouched. */
+            return;
+        }
+
+        if (!renditions || fromConfig.length) {
+            return;
+        }
+
+        /*
+         * No hand-made quality list, so the ladder comes from the master
+         * playlist. Fetching it costs one request that Safari is making anyway,
+         * and a CORS refusal or a single-variant playlist simply leaves the menu
+         * on Auto — the player is already playing by then either way.
+         */
+        fetch(config.src, { credentials: 'same-origin' }).then(function (response) {
+            return response.ok ? response.text() : '';
+        }).then(function (text) {
+
+            var variants = text ? parseMasterPlaylist(text, config.src) : [];
+
+            /* One variant is not a ladder, and the menu is better off absent
+               than offering a single choice that changes nothing. */
+            if (variants.length > 1) {
+                renditions.add(variants);
+            }
+        }).catch(function () { });
+    }
+
     function matchLocale(locale) {
 
         if (!locale) {
@@ -1822,8 +2127,34 @@
              */
             styleSkin(playerEl);
 
+            /*
+             * Chromecast, and it goes here — after the preset, before the media
+             * adapter.
+             *
+             * <google-cast> is a media component, not a media element: it
+             * registers a RemotePlayback implementation backed by the Cast SDK,
+             * and that is the only thing that makes the skin's cast button find
+             * a device and stop hiding. The player reads `media.remote` once,
+             * when the media element attaches, so the component has to be
+             * registered by then — load it after the adapter and the player has
+             * already settled on the media element's own RemotePlayback, which
+             * reports no devices for an MSE source and leaves the button hidden
+             * exactly as it was before this ran at all.
+             *
+             * The module pulls the Cast sender script in itself, so nothing is
+             * enqueued for it, and a failure here costs the cast button rather
+             * than the player.
+             */
+            return config.cast ? loadModule('media/google-cast.js').catch(function () { }) : null;
+        }).then(function () {
+
             return config.mediaModule ? loadModule(config.mediaModule) : null;
         }).then(function () {
+            /* Before the locale rather than after: the media element has just
+               upgraded and taken the src, so the sooner the engine is settled,
+               the less hls.js buffers only to be thrown away. */
+            preferNativeHls(playerEl, config);
+
             // A missing translation should never stop the player from loading.
             return locale ? loadModule('locales/' + locale + '.js').catch(function () { }) : null;
         }).then(function () {

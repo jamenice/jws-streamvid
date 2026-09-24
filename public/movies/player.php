@@ -597,6 +597,26 @@ if($type == 'blocked'){
             $v10_module = '';
     }
 
+    /* Chromecast. The v7 engine bolted @silvermine/videojs-chromecast on; v10
+       ships the cast button in the skin already and only needs <google-cast>,
+       a media component that hands the player a RemotePlayback implementation
+       backed by the Cast SDK. Without it the button has no devices to report
+       and the skin keeps it hidden — which is exactly how "v10 lost casting"
+       looked. Off for YouTube/Vimeo: an embed has no URL the receiver could
+       load on its own. */
+    $v10_cast = function_exists( 'jws_theme_get_option' ) && jws_theme_get_option( 'video_chromcast' ) ? true : false;
+
+    if ( in_array( $v10_tag, array( 'youtube-video', 'vimeo-video' ), true ) ) {
+        $v10_cast = false;
+    }
+
+    /* AirPlay rides the same switch, the way it did on v7, and is off for the
+       same sources. The skin's AirPlay button is always in the control bar —
+       what this flag buys is the Safari-side engine swap in jws_player_v10.js,
+       so turning Chromecast off in Theme Options also puts Safari back on
+       hls.js. */
+    $v10_airplay = $v10_cast;
+
     $v10_config = array(
         'postId'      => $post_id,
         'src'         => $v10_src,
@@ -611,6 +631,8 @@ if($type == 'blocked'){
         'qualities'   => $v10_qualities,
         /* Surfaced so a site can tell that IMA never ran on this engine. */
         'adsTagUrl'   => isset( $setup['ads_tag_url'] ) ? $setup['ads_tag_url'] : '',
+        'cast'        => $v10_cast,
+        'airplay'     => $v10_airplay,
     );
     ?>
 
@@ -660,6 +682,16 @@ if($type == 'blocked'){
                 <img slot="poster" src="<?php echo esc_url( $v10_config['poster'] ); ?>" alt="" />
             <?php endif; ?>
         </video-skin>
+        <?php if ( $v10_cast ) : ?>
+            <?php
+            /* A sibling of <video-skin>, not a child of it: the media context is
+               provided by <video-player>, so anywhere inside it works, and
+               staying out of the skin keeps it clear of the slotted markup.
+               src is left off on purpose — <google-cast> reads it off the media
+               element, so a quality switch follows along. */
+            ?>
+            <google-cast></google-cast>
+        <?php endif; ?>
     </video-player>
 
     <?php
