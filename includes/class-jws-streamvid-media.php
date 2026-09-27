@@ -459,31 +459,36 @@ class Jws_Streamvid_Media {
             'edit'      => false,
             'img_two' => false,
             'bage' => true,
+            /* A picture other than the post's own — a Live TV card shows
+               the program on air. Empty: the featured image, as before. */
+            'attach_id' => 0,
         ) );
 
-        extract( $args ); 
+        extract( $args );
 
-        $background_banner = get_post_meta( $post_id , 'featured_image_two', true );  
+        $explicit_image = ! empty( $attach_id );
+
+        $background_banner = get_post_meta( $post_id , 'featured_image_two', true );
         $live = get_post_meta($post_id , 'live_data' , true);
         $pre = jws_premium_videos($post_id);
-        $attach_id = get_post_thumbnail_id($post_id);
+        $attach_id = $explicit_image ? (int) $attach_id : get_post_thumbnail_id($post_id);
 
         $tmdb_enable_image_url = jws_theme_get_option('tmdb_enable_image_url',false);
         $tmdb_image_url = jws_theme_get_option( 'tmdb_image_url',' https://image.tmdb.org/t/p/original' );
         $poster_path = get_post_meta( $post_id , 'poster_path', true );
-        $backdrop_path = get_post_meta( $post_id , 'backdrop_path', true );  
+        $backdrop_path = get_post_meta( $post_id , 'backdrop_path', true );
 
-            
-        if($img_two && !empty($background_banner)) {
+
+        if($img_two && !empty($background_banner) && ! $explicit_image) {
           $attach_id = $background_banner;
         }
-        $image = jws_image_advanced(array('attach_id' => $attach_id, 'thumb_size' => $image_size)); 
-       
-        if($tmdb_enable_image_url && !empty($poster_path)) {
+        $image = jws_image_advanced(array('attach_id' => $attach_id, 'thumb_size' => $image_size));
+
+        if($tmdb_enable_image_url && !empty($poster_path) && ! $explicit_image) {
             $image =  function_exists('jws_poster_banner_image') ? jws_poster_banner_image($post_id, $image_size) : '';
        }
 
-        if($img_two && $tmdb_enable_image_url && !empty($backdrop_path) ) {
+        if($img_two && $tmdb_enable_image_url && !empty($backdrop_path) && ! $explicit_image) {
             $image = function_exists('jws_backdrop_banner_image') ? jws_backdrop_banner_image($post_id, $image_size) : '';
         }
 

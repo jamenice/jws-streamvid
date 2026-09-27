@@ -89,6 +89,9 @@
 				return;
 			}
 			$el.addClass('is-animating').toggleClass('is-collapsed', next);
+			// A closed body stays out of the tab order.
+			$el.children('.jws-mb__collapse').prop('inert', next);
+			$el.find('> .jws-mb__row-bar .jws-mb__row-toggle').attr('aria-expanded', next ? 'false' : 'true');
 			clearTimeout($el.data('jwsAnim'));
 			$el.data('jwsAnim', setTimeout(function () { $el.removeClass('is-animating'); }, reduceMotion ? 0 : 280));
 		});
@@ -581,9 +584,52 @@
 	/* Repeater                                                           */
 	/* ------------------------------------------------------------------ */
 
+	/** What a row's field shows: the chosen option's label, or the typed value. */
+	function rowFieldText($row, name) {
+		var $f = $row.find('> .jws-mb__collapse > .jws-mb__row-body > .jws-mb__field[data-name="' + name + '"]');
+		var $select = $f.find('select').first();
+		if ($select.length) {
+			return $select.val() ? $.trim($select.find('option:selected').text()) : '';
+		}
+		return $.trim($f.find('input:not([type="hidden"]), textarea').first().val() || '');
+	}
+
+	/**
+	 * The row_meta summary: ["a", ["b", "c"], "d|e"] → "a · b–c · d (or e)".
+	 */
+	function rowMeta($row, spec) {
+		return $.map(spec, function (part) {
+			if ($.isArray(part)) {
+				return [$.map(part, function (name) { return rowFieldText($row, name) || null; }).join('–')] ;
+			}
+			var names = String(part).split('|');
+			for (var i = 0; i < names.length; i++) {
+				var v = rowFieldText($row, names[i]);
+				if (v) {
+					return v;
+				}
+			}
+			return null;
+		}).filter(Boolean).join(' · ');
+	}
+
+	/** The head's Expand all / Collapse all switch follows the rows. */
+	function syncRowsToggle($rep) {
+		var $btn = $rep.find('> .jws-mb__repeater-head .jws-mb__rows-toggle');
+		if (!$btn.length) {
+			return;
+		}
+		var $rows = $rep.find('> .jws-mb__rows > .jws-mb__row');
+		var anyOpen = $rows.filter(':not(.is-collapsed)').length > 0;
+		$btn.prop('hidden', !$rows.length).attr('aria-expanded', anyOpen ? 'true' : 'false');
+		$btn.find('.jws-mb__rows-toggle-label').text(anyOpen ? $btn.data('collapse') : $btn.data('expand'));
+		$btn.find('.dashicons').toggleClass('dashicons-arrow-up-alt2', anyOpen).toggleClass('dashicons-arrow-down-alt2', !anyOpen);
+	}
+
 	function refreshRepeater($rep) {
 		var $rows = $rep.find('> .jws-mb__rows > .jws-mb__row');
 		var titleField = $rep.data('row-title');
+		var metaSpec = $rep.data('row-meta');
 		$rows.each(function (i) {
 			var $row = $(this);
 			$row.find('> .jws-mb__row-bar .jws-mb__row-index').text(i + 1);
@@ -594,10 +640,14 @@
 			}
 			var person = $row.find('.jws-mb__chip-title').first().text();
 			$row.find('> .jws-mb__row-bar .jws-mb__row-title').text([person, title].filter(Boolean).join(' — '));
+			if ($.isArray(metaSpec)) {
+				$row.find('> .jws-mb__row-bar .jws-mb__row-meta').text(rowMeta($row, metaSpec));
+			}
 		});
 		$rep.find('> .jws-mb__repeater-head .jws-mb__count').text($rows.length);
 		var max = Number($rep.data('max'));
 		$rep.find('> .jws-mb__add-row').prop('disabled', max > 0 && $rows.length >= max);
+		syncRowsToggle($rep);
 	}
 
 	function initRepeater($rep) {
@@ -1397,7 +1447,27 @@
 			});
 			$box.on('click', '.jws-mb__row-toggle', function () {
 				setCollapsed($(this).closest('.jws-mb__row'));
+				syncRowsToggle($(this).closest('.jws-mb__repeater'));
 			});
+			// The bar's text opens and closes the row too — a bigger target than the arrow.
+			$box.on('click', '.jws-mb__row-bar > .jws-mb__row-index, .jws-mb__row-bar > .jws-mb__row-title, .jws-mb__row-bar > .jws-mb__row-meta', function () {
+				setCollapsed($(this).closest('.jws-mb__row'));
+				syncRowsToggle($(this).closest('.jws-mb__repeater'));
+			});
+			$box.on('click', '.jws-mb__rows-toggle', function () {
+				var $rep = $(this).closest('.jws-mb__repeater');
+				var $rows = $rep.find('> .jws-mb__rows > .jws-mb__row');
+				setCollapsed($rows, $rows.filter(':not(.is-collapsed)').length > 0);
+				syncRowsToggle($rep);
+			});
+			// A field the browser rejects on submit must be visible to be shown.
+			$box[0].addEventListener('invalid', function (e) {
+				var $row = $(e.target).closest('.jws-mb__row.is-collapsed');
+				if ($row.length) {
+					setCollapsed($row, false);
+					syncRowsToggle($row.closest('.jws-mb__repeater'));
+				}
+			}, true);
 			$box.on('click', '.jws-mb__chip-remove', function () {
 				var $rep = $(this).closest('.jws-mb__repeater');
 				setTimeout(function () { if ($rep.length) { refreshRepeater($rep); } }, 0);

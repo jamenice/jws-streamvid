@@ -23,6 +23,11 @@
  * `render` callback, nothing stored). A field with `virtual` => true is
  * rendered but never stored — the box's on_save callback gets its value.
  * `conditions` is one { field, value } rule or a list of them (all must match).
+ * A "rows" repeater also takes `collapsed` (saved rows start closed),
+ * `toggle_all` (an Expand all / Collapse all switch in its head) and
+ * `row_meta` (a summary in each row's bar, for rows read while closed: a list
+ * of field names; a nested list is joined as a range, "a|b" shows the first
+ * of the two that has a value).
  *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes/metabox
@@ -37,7 +42,7 @@ class Jws_Metabox {
 	const INPUT         = 'jws_mb';
 	const NONCE_ACTION  = 'jws_metabox_save';
 	const AJAX_NONCE    = 'jws_metabox_ajax';
-	const ASSET_VERSION = '1.3.2';
+	const ASSET_VERSION = '1.3.3';
 
 	/** @var array Registered boxes keyed by id. */
 	private static $boxes = array();
@@ -1074,20 +1079,38 @@ class Jws_Metabox {
 	private static function render_repeater( $field, $rows, $input, $post ) {
 		$rows      = is_array( $rows ) ? $rows : array();
 		$row_title = isset( $field['row_title'] ) ? $field['row_title'] : '';
+		$row_meta  = ! empty( $field['row_meta'] ) ? (array) $field['row_meta'] : array();
+		$collapsed = ! empty( $field['collapsed'] );
 		$add_label = isset( $field['add_label'] ) ? $field['add_label'] : __( 'Add row', 'jws_streamvid' );
 
-		printf( '<div class="jws-mb__repeater" data-max="%d" data-row-title="%s">', isset( $field['max'] ) ? (int) $field['max'] : 0, esc_attr( $row_title ) );
+		printf(
+			'<div class="jws-mb__repeater" data-max="%d" data-row-title="%s"%s>',
+			isset( $field['max'] ) ? (int) $field['max'] : 0,
+			esc_attr( $row_title ),
+			$row_meta ? ' data-row-meta="' . esc_attr( wp_json_encode( $row_meta ) ) . '"' : ''
+		);
 		echo '<div class="jws-mb__repeater-head">';
 		if ( $field['label'] ) {
 			printf( '<span class="jws-mb__label">%s</span>', esc_html( $field['label'] ) );
 		}
 		printf( '<span class="jws-mb__count">%d</span>', count( $rows ) );
+		if ( ! empty( $field['toggle_all'] ) ) {
+			printf(
+				'<button type="button" class="button-link jws-mb__rows-toggle" aria-expanded="%1$s" data-expand="%2$s" data-collapse="%3$s"%4$s><span class="dashicons dashicons-arrow-%5$s-alt2" aria-hidden="true"></span><span class="jws-mb__rows-toggle-label">%6$s</span></button>',
+				$collapsed ? 'false' : 'true',
+				esc_attr__( 'Expand all', 'jws_streamvid' ),
+				esc_attr__( 'Collapse all', 'jws_streamvid' ),
+				$rows ? '' : ' hidden',
+				$collapsed ? 'down' : 'up',
+				esc_html( $collapsed ? __( 'Expand all', 'jws_streamvid' ) : __( 'Collapse all', 'jws_streamvid' ) )
+			);
+		}
 		echo '</div>';
 		// Present so an emptied repeater still posts and gets cleared.
 		printf( '<input type="hidden" name="%s" value="">', esc_attr( $input . '[__present]' ) );
 		echo '<ol class="jws-mb__rows">';
 		foreach ( $rows as $row ) {
-			self::render_repeater_row( $field, $row, $input . '[' . self::row_key() . ']', $post );
+			self::render_repeater_row( $field, $row, $input . '[' . self::row_key() . ']', $post, $collapsed );
 		}
 		echo '</ol>';
 		echo '<script type="text/html" class="jws-mb__tpl">';
@@ -1099,13 +1122,18 @@ class Jws_Metabox {
 		echo '</div>';
 	}
 
-	private static function render_repeater_row( $field, $row, $input, $post ) {
-		echo '<li class="jws-mb__row">';
+	/** A new row (the template) always opens; saved rows follow the field's `collapsed`. */
+	private static function render_repeater_row( $field, $row, $input, $post, $collapsed = false ) {
+		echo '<li class="jws-mb__row' . ( $collapsed ? ' is-collapsed' : '' ) . '">';
 		echo '<div class="jws-mb__row-bar"><span class="jws-mb__handle dashicons dashicons-menu" title="' . esc_attr__( 'Drag to reorder', 'jws_streamvid' ) . '"></span>';
 		echo '<span class="jws-mb__row-index"></span><span class="jws-mb__row-title"></span>';
-		echo '<button type="button" class="jws-mb__row-toggle dashicons dashicons-arrow-up-alt2" aria-label="' . esc_attr__( 'Collapse', 'jws_streamvid' ) . '"></button>';
+		if ( ! empty( $field['row_meta'] ) ) {
+			echo '<span class="jws-mb__row-meta"></span>';
+		}
+		echo '<button type="button" class="jws-mb__row-toggle dashicons dashicons-arrow-up-alt2" aria-expanded="' . ( $collapsed ? 'false' : 'true' ) . '" aria-label="' . esc_attr__( 'Show or hide this row', 'jws_streamvid' ) . '"></button>';
 		echo '<button type="button" class="jws-mb__row-remove dashicons dashicons-trash" aria-label="' . esc_attr__( 'Remove', 'jws_streamvid' ) . '"></button></div>';
-		echo '<div class="jws-mb__collapse"><div class="jws-mb__row-body jws-mb__grid">';
+		/* inert keeps a closed row's fields out of the tab order. */
+		echo '<div class="jws-mb__collapse"' . ( $collapsed ? ' inert' : '' ) . '><div class="jws-mb__row-body jws-mb__grid">';
 		foreach ( $field['sub_fields'] as $sub ) {
 			$sub = self::field_defaults( $sub );
 			$val = isset( $row[ $sub['name'] ] ) ? $row[ $sub['name'] ] : $sub['default'];

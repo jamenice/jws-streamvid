@@ -74,11 +74,13 @@ class Jws_Streamvid_Public {
 		 */
          $is_playlist_tax = is_tax('movies_playlist') || is_tax('videos_playlist') || is_tax('episodes_playlist');
          $is_drama = is_singular( array( 'drama', 'drama_ep' ) );
+         /* A Live TV channel plays its stream through the same player. */
+         $is_live_tv = is_singular( 'tv_channel' );
         
 
         wp_enqueue_style( $this->plugin_name, JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/jws-streamvid-public.css', array(), $this->version, 'all' );
 
-        if($is_drama || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') )) {
+        if($is_drama || $is_live_tv || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') )) {
 
         if ( class_exists( 'Jws_Streamvid_Player_Engine' ) && Jws_Streamvid_Player_Engine::is_v10() ) {
 
@@ -173,7 +175,10 @@ class Jws_Streamvid_Public {
         
         wp_register_script( 'jws-single-global', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/single_global.js', array( 'jquery' ), $this->version, true );
             
-        if($is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') ) || is_singular( array( 'tv_shows')) || is_singular( array( 'person'))) { 
+        /* A Live TV channel plays its stream through the same player. */
+        $is_live_tv = is_singular( 'tv_channel' );
+
+        if($is_live_tv || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') ) || is_singular( array( 'tv_shows')) || is_singular( array( 'person'))) { 
             
              wp_enqueue_script( 'jws-single-global');
             
@@ -184,7 +189,7 @@ class Jws_Streamvid_Public {
            so it needs the same player scripts. */
         $is_drama = is_singular( array( 'drama', 'drama_ep' ) );
 
-        if($is_drama || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') ) || is_singular( array( 'tv_shows')) || is_singular( array( 'person'))) {
+        if($is_drama || $is_live_tv || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') ) || is_singular( array( 'tv_shows')) || is_singular( array( 'person'))) {
             
             
             if ( class_exists( 'Jws_Streamvid_Player_Engine' ) && Jws_Streamvid_Player_Engine::is_v10() ) {
@@ -560,6 +565,11 @@ class Jws_Streamvid_Public {
 
                 if(empty($progress['time'])) {
                    return;
+                }
+
+                /* A live channel has no position to resume from. */
+                if('tv_channel' === get_post_type($id)) {
+                   wp_send_json_success();
                 }
 
                 Jws_History::set_item($user_id, $id, $progress['time'], $progress['endtime']);

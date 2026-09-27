@@ -642,13 +642,28 @@
             return;
         }
 
-        if (!(document.fullscreenElement || document.webkitFullscreenElement)) {
+        var fullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
+
+        if (!fullscreenEl) {
 
             if (orientationLocked) {
                 orientationLocked = false;
                 try { orientation.unlock(); } catch (e) { }
             }
 
+            return;
+        }
+
+        /*
+         * Short drama stays upright. Its page is laid out as a portrait stage,
+         * and an episode file can still be 16:9 (or the site-wide default URL),
+         * so the size check below is not enough on its own. Tested on the
+         * fullscreen element rather than the player: .sv-short-fullscreen puts
+         * .sv-short-page itself into fullscreen, the control-bar button puts the
+         * skin inside it, and an episode swap leaves this listener bound to a
+         * player that is no longer in the page.
+         */
+        if ($(fullscreenEl).closest('.sv-short-page').length) {
             return;
         }
 

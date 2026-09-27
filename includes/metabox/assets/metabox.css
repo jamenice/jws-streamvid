@@ -518,6 +518,49 @@
 	white-space: nowrap;
 }
 
+/* The bar's text opens and closes the row (metabox.js). */
+.jws-mb__row-bar>.jws-mb__row-index,
+.jws-mb__row-bar>.jws-mb__row-title,
+.jws-mb__row-bar>.jws-mb__row-meta {
+	cursor: pointer;
+	user-select: none;
+}
+
+/* row_meta: a short summary read while the row is closed. */
+.jws-mb__row-meta {
+	flex-shrink: 0;
+	max-width: 45%;
+	overflow: hidden;
+	color: var(--jws-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.jws-mb__row-meta:empty {
+	display: none;
+}
+
+/* toggle_all: Expand all / Collapse all, at the end of the repeater head. */
+.jws-mb__rows-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-inline-start: auto;
+	text-decoration: none;
+}
+
+.jws-mb__rows-toggle[hidden] {
+	display: none;
+}
+
+.jws-mb__rows-toggle .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
 .jws-mb__row-toggle,
 .jws-mb__row-remove {
 	border: 0;

@@ -46,7 +46,14 @@ function jws_metabox_register_terms() {
 			'title'      => __( 'Genre display', 'jws_streamvid' ),
 			'taxonomies' => array( 'genres' ),
 			'acf_groups' => array( 'genres_settings' ),
-			'fields'     => $look( 'field_genres_', 'genres_image' ),
+			'fields'     => array_merge(
+				$look( 'field_genres_', 'genres_image' ),
+				array(
+					array( 'type' => 'image', 'name' => 'genres_banner', 'key' => 'field_genres_genres_banner', 'label' => __( 'Banner', 'jws_streamvid' ), 'desc' => __( 'Wide picture on the right of the genre page title bar and on its Featured tile (16:9 or wider, at least 1280px). Without one the most watched posters are shown.', 'jws_streamvid' ), 'return_format' => 'array' ),
+					array( 'type' => 'toggle', 'name' => 'genres_featured', 'key' => 'field_genres_genres_featured', 'label' => __( 'Featured', 'jws_streamvid' ), 'desc' => __( 'Show in the large row at the top of the Genres page.', 'jws_streamvid' ), 'width' => 50 ),
+					array( 'type' => 'number', 'name' => 'genres_order', 'key' => 'field_genres_genres_order', 'label' => __( 'Featured order', 'jws_streamvid' ), 'desc' => __( 'Lower comes first.', 'jws_streamvid' ), 'width' => 50 ),
+				)
+			),
 		)
 	);
 

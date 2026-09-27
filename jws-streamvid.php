@@ -84,6 +84,13 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-jws-streamvid-player-
 require_once plugin_dir_path( __FILE__ ) . 'includes/drama/class-drama.php';
 Jws_Drama::boot();
 
+/**
+ * Live TV: channels with a stream and a program guide.
+ * Everything it needs lives in includes/tv_channel/.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'includes/tv_channel/class-tv-channel.php';
+Jws_Tv_Channel::boot();
+
 
 include_once( 'check_update.php' );
 
