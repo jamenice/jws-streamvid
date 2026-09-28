@@ -43,7 +43,7 @@ class Jws_Tv_Channel_Fields {
 						'name'        => 'tv_stream_url',
 						'key'         => $k . 'stream_url',
 						'label'       => __( 'Stream', 'jws_streamvid' ),
-						'desc'        => __( 'An HLS playlist (.m3u8), a YouTube live link, or an embed code. Played by the site player, so membership rules and the player logo apply.', 'jws_streamvid' ),
+						'desc'        => __( 'An HLS playlist (.m3u8), a YouTube live link, or an embed code. Played by the site player, so membership rules and the player logo apply. Left empty, the channel plays the site-wide "Live TV Default Url" from Jws Settings → Video Options → Video Default.', 'jws_streamvid' ),
 						'placeholder' => 'https://…/live/playlist.m3u8',
 						'rows'        => 3,
 					),

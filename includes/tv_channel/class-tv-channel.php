@@ -177,6 +177,20 @@ class Jws_Tv_Channel {
 		$terms    = get_the_terms( $id, self::TAX );
 		$terms    = $terms && ! is_wp_error( $terms ) ? array_values( $terms ) : array();
 
+		/*
+		 * Falls back to the site-wide "Live TV Default Url" (Jws Settings →
+		 * Video Options → Video Default) for a channel saved without a Stream, so
+		 * a half-imported or demo line-up still plays something. Resolved here
+		 * rather than in the player template because everything that streams a
+		 * channel reads it from here — the watch page, the archive hero, the
+		 * Live TV widget and the app's REST route all get the same url.
+		 */
+		$stream = trim( (string) get_post_meta( $id, 'tv_stream_url', true ) );
+
+		if ( '' === $stream && function_exists( 'jws_theme_get_option' ) ) {
+			$stream = trim( (string) jws_theme_get_option( 'video_player_default_live_tv_url' ) );
+		}
+
 		return array(
 			'id'       => (int) $id,
 			'name'     => get_the_title( $id ),
@@ -186,7 +200,7 @@ class Jws_Tv_Channel {
 			'cover'    => $cover_id ? wp_get_attachment_image_url( $cover_id, 'large' ) : '',
 			'quality'  => (string) get_post_meta( $id, 'tv_channel_quality', true ),
 			'language' => (string) get_post_meta( $id, 'tv_channel_language', true ),
-			'stream'   => trim( (string) get_post_meta( $id, 'tv_stream_url', true ) ),
+			'stream'   => $stream,
 			'featured' => (bool) get_post_meta( $id, 'tv_channel_featured', true ),
 			'terms'    => $terms,
 			'category' => $terms ? $terms[0]->name : '',

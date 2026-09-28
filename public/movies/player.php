@@ -176,6 +176,19 @@ if(isset($live_data['uid'])) {
     
 }
 
+/*
+ * A live stream has no timeline to scrub. A Live TV channel and a Cloudflare
+ * live input both play a sliding window with no past and no end, so the player
+ * pins its progress bar to the live edge and drops every seek control instead
+ * of offering a scrub that cannot land anywhere — see lockLiveControls() in
+ * assets/js/player/jws_player_v10.js.
+ *
+ * Filterable so a site that streams live from somewhere else can say so.
+ */
+$is_live_stream = ( 'tv_channel' === get_post_type( $post_id ) ) || isset( $live_data['uid'] );
+
+$is_live_stream = (bool) apply_filters( 'streamvid/player/is_live', $is_live_stream, $post_id );
+
 if(empty($video_url)) {
  
  $default_video_type = jws_theme_get_option('video_player_default_type');   
@@ -636,10 +649,21 @@ if($type == 'blocked'){
     );
     ?>
 
+    <?php
+    /*
+     * data-jws-live marks a stream with no timeline, and carries the label the
+     * control bar shows where the clock would be. An attribute rather than a
+     * key in data-jws-v10 because the skin's shadow-root stylesheet has to be
+     * able to key off it: jws_player_v10.js mirrors it onto <video-skin>, and a
+     * selector inside a shadow root cannot see an attribute on an ancestor
+     * ( :host-context() is still not in Firefox ).
+     */
+    ?>
     <video-player id="videos_player"
             class="jws_player jws_player_v10"
             data-playerid="<?php echo esc_attr($post_id); ?>"
             data-jws-v10='<?php echo esc_attr( wp_json_encode( $v10_config ) ); ?>'
+            <?php if ( $is_live_stream ) : ?>data-jws-live="<?php echo esc_attr__( 'Live', 'jws_streamvid' ); ?>"<?php endif; ?>
             <?php if ( ! empty( $v10_config['poster'] ) ) : ?>poster="<?php echo esc_url( $v10_config['poster'] ); ?>"<?php endif; ?>
         >
         <video-skin>

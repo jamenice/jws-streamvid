@@ -884,6 +884,53 @@
             ':host([data-jws-loading]) media-container.media-default-skin .jws-v10-big-play' +
             '{display:none}' +
 
+            /*
+             * Live streams: the progress bar reads as the live edge and takes no
+             * input. Scoped to :host([data-jws-live]), so this costs a live
+             * channel nothing on an on-demand player.
+             *
+             * --media-slider-fill is written to the slider's *inline style* on
+             * every timeupdate, so pinning it needs !important — nothing short of
+             * that outranks a style attribute. `pointer-events` is what takes the
+             * click-to-seek and the hover preview away; the slider's own
+             * `disabled` property, set in lockLiveControls(), is what takes the
+             * drag and the arrow keys. Both halves are needed: CSS alone still
+             * leaves the bar focusable and steppable from the keyboard, and
+             * `disabled` alone still draws the preview thumbnail on hover.
+             */
+            ':host([data-jws-live]) media-container.media-default-skin media-time-slider' +
+            '{--media-slider-fill:100%!important;--media-slider-buffer:100%!important;' +
+            'pointer-events:none;cursor:default}' +
+            /* The thumb and the preview both point at a position nobody can
+               choose any more. */
+            ':host([data-jws-live]) media-container.media-default-skin .media-slider__thumb,' +
+            ':host([data-jws-live]) media-container.media-default-skin .media-slider__preview' +
+            '{display:none}' +
+            /* A live stream's "current time" is an offset into a window that
+               keeps sliding, and its remaining time is a duration that never
+               arrives. The label below says the one true thing instead. */
+            ':host([data-jws-live]) media-container.media-default-skin .media-time-controls .media-time' +
+            '{display:none}' +
+            /* Shaped like the theme's own .tv-live badge, in the skin's accent
+               (which jws_player_v10.css maps onto the theme button colour) so
+               the two read as the same badge. */
+            ':host([data-jws-live]) media-container.media-default-skin .jws-v10-live-label' +
+            '{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;' +
+            'padding:4px 7px;border-radius:5px;' +
+            'background:var(--media-internal-accent-color);color:var(--media-accent-contrast-color);' +
+            'font-size:11px;font-weight:700;line-height:1;letter-spacing:.06em;' +
+            'text-transform:uppercase;white-space:nowrap;text-shadow:none;' +
+            'pointer-events:none;user-select:none}' +
+            ':host([data-jws-live]) media-container.media-default-skin .jws-v10-live-label::before' +
+            '{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}' +
+            /*
+             * Playback speed is the other way past the live edge: 2x drains the
+             * buffer towards a future that has not been broadcast yet, and with
+             * seeking gone there is nothing left to get back with.
+             */
+            ':host([data-jws-live]) media-container.media-default-skin ' +
+            'media-menu-item[commandfor="settings-speed-menu"]{display:none}' +
+
             /* Drama short is a vertical, single-episode-at-a-time feed — a
                fullscreen toggle is redundant there and the icon just crowds
                the compact control bar, so the skin's own button is hidden
@@ -902,6 +949,17 @@
      * stylesheet — a shadow-root selector cannot reach an ancestor outside its
      * own tree.
      */
+    /**
+     * Is this player showing a live stream?
+     *
+     * `data-jws-live` is put on <video-player> by public/movies/player.php for a
+     * Live TV channel or a Cloudflare live input, and its value is the label the
+     * control bar shows in place of the clock.
+     */
+    function isLive(playerEl) {
+        return playerEl.hasAttribute('data-jws-live');
+    }
+
     /* Paired with the attribute styleSkin() sets. Kept out here because both the
        ready path and the failure path have to be able to stop the spinner. */
     function clearLoadingFlag(playerEl) {
@@ -926,6 +984,13 @@
                would mean nothing. attachBehaviour() clears it. */
             if (!playerEl.jwsV10Ready) {
                 skin.setAttribute('data-jws-loading', '');
+            }
+
+            /* Mirrored from <video-player> onto the skin because the rules it
+               drives are in the injected stylesheet, which lives inside the
+               skin's shadow root and cannot see an attribute on an ancestor. */
+            if (isLive(playerEl)) {
+                skin.setAttribute('data-jws-live', '');
             }
 
             /* --jws-player-radius comes from jws_player_v10.css, which also uses
@@ -1002,6 +1067,62 @@
     }
 
     /**
+     * Takes seeking away from a live player.
+     *
+     * The stylesheet pins the bar to the live edge and stops the pointer; these
+     * are the parts that cannot be done in CSS — the slider's own drag and
+     * keyboard handling, and the seek controls that ship inside the packaged
+     * markup with no option to turn them off:
+     *
+     *   - <media-hotkey> for the arrow keys, j / l, 0-9 and Home / End,
+     *   - <media-gesture> for the double-tap skip on the left and right thirds.
+     *
+     * Every lookup is optional on purpose: a skin bump that renames its internals
+     * should cost the live treatment, not the player. Idempotent, because
+     * injectControlBarExtras() can run again after a late skin upgrade.
+     */
+    function lockLiveControls(playerEl, root) {
+
+        var slider = root.querySelector('media-time-slider');
+
+        if (slider) {
+            /* The element's own property — it turns off the drag, the
+               click-to-seek and the arrow-key stepping in one go, while leaving
+               the bar drawn. The attribute goes on too: the property is the one
+               the element reads, and the attribute is what a bump to a
+               reflecting implementation would read instead. */
+            slider.disabled = true;
+            slider.setAttribute('disabled', '');
+        }
+
+        var seekControls = root.querySelectorAll(
+            'media-hotkey[action="seekStep"],' +
+            'media-hotkey[action="seekToPercent"],' +
+            'media-gesture[action="seekStep"]'
+        );
+
+        for (var i = 0; i < seekControls.length; i++) {
+            seekControls[i].remove();
+        }
+
+        /* Where the clock was. .media-time-controls is the slider's own row, so
+           the label sits at the head of the bar exactly where the elapsed time
+           used to — see the rules for it in injectSkinStyles(). */
+        var row = root.querySelector('.media-time-controls');
+        var label = playerEl.getAttribute('data-jws-live');
+
+        if (row && label && !row.querySelector('.jws-v10-live-label')) {
+
+            var tag = document.createElement('span');
+
+            tag.className = 'jws-v10-live-label';
+            tag.textContent = label;
+
+            row.insertBefore(tag, row.firstChild);
+        }
+    }
+
+    /**
      * Puts the theme's player logo and the episode-list button into the v10
      * control bar, where the legacy jws skin used to put them.
      *
@@ -1037,6 +1158,12 @@
         /* Above the early return: the centre play button is not conditional on
            the theme having a logo or the post having episodes. */
         injectCenterPlayButton(root);
+
+        /* Same reason — a live channel has no timeline whether or not the theme
+           set a logo. */
+        if (isLive(playerEl)) {
+            lockLiveControls(playerEl, root);
+        }
 
         if (!wantsLogo && !wantsEpisodes) {
             return;
@@ -1907,7 +2034,10 @@
         var $wrap = $(playerEl).closest('.videos_player');
         var hasPlayed = false;
         var lastSavedTime = 0;
-        var resumeAt = resumeTimeFor(config);
+        var live = isLive(playerEl);
+        /* A live channel has no position to come back to — "continue from 3:07"
+           would be a seek into a window that has since slid past. */
+        var resumeAt = live ? 0 : resumeTimeFor(config);
         var continueWatching = (typeof streamvid_script !== 'undefined') && streamvid_script.video_continue_watching === 'yes';
 
         /*
@@ -1980,6 +2110,15 @@
                 return;
             }
 
+            /* A live stream reports an infinite duration, so the isFinite guard
+               below already drops these rows — but a channel pointed at a plain
+               file does not, and a row there would put the channel in "Continue
+               watching" with a resume point the player will never honour. */
+            if (live) {
+                clearInterval(saveTimer);
+                return;
+            }
+
             var currentTime = media.currentTime;
             var duration = media.duration;
 
@@ -1998,7 +2137,7 @@
 
             var duration = media.duration;
 
-            if (isFinite(duration)) {
+            if (!live && isFinite(duration)) {
                 saveVideoProgress({ id: config.postId, time: duration, endtime: duration });
             }
 
