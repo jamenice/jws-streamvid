@@ -902,10 +902,7 @@ if (!function_exists('jws_download_button')) {
 
 function person_register_meta_boxes() {
     
-	add_meta_box( 'person', __( 'Person data', 'textdomain' ), 'jws_person_data', 'person' );
-    
-    
-    
+
     if(function_exists( 'pmpro_page_meta' ) ){
           $cpts = array('movies','tv_shows','videos','episodes');
           if(!empty($cpts)) {
@@ -919,14 +916,6 @@ function person_register_meta_boxes() {
 }
 add_action( 'add_meta_boxes', 'person_register_meta_boxes' );
 
-
-function jws_person_data( $post ) {
-   
-    $live_data = get_post_meta( $post->ID, 'person_data', true );
-    $live_data2 = get_post_meta( $post->ID, 'person_data_crew', true );
-    
-  
-}
 
 
 function jws_custom_video_fields($form_fields, $post) {
