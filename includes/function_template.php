@@ -284,8 +284,132 @@ function jws_get_gender(){
         'male'        =>  esc_html__( 'Male', 'jws_streamvid' ),
         'female'       =>  esc_html__( 'Female', 'jws_streamvid' ),
         'other'       =>  esc_html__( 'Other', 'jws_streamvid' ),
-    ); 
-        
+    );
+
+}
+
+/**
+ * Social profiles a person can link to.
+ *
+ * Each network is stored as a full URL in the `social_{key}` post meta.
+ * `tmdb` is the field of TMDB's /person/{id}/external_ids (or details)
+ * response the TMDB importer fills it from, `pattern` turns that id into
+ * a URL. `icon` is a Font Awesome class or inline SVG markup.
+ */
+function jws_person_social_networks() {
+
+    $svg = '<svg class="jws-svg-icon" viewBox="%s" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="%s"/></svg>';
+
+    $networks = array(
+        'facebook'  => array(
+            'label'   => esc_html__( 'Facebook', 'jws_streamvid' ),
+            'icon'    => 'fab fa-facebook',
+            'tmdb'    => 'facebook_id',
+            'pattern' => 'https://www.facebook.com/%s',
+        ),
+        'instagram' => array(
+            'label'   => esc_html__( 'Instagram', 'jws_streamvid' ),
+            'icon'    => 'fab fa-instagram',
+            'tmdb'    => 'instagram_id',
+            'pattern' => 'https://www.instagram.com/%s/',
+        ),
+        'twitter'   => array(
+            'label'   => esc_html__( 'X (Twitter)', 'jws_streamvid' ),
+            'icon'    => sprintf( $svg, '0 0 512 512', 'M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-40.1L364.4 421.8z' ),
+            'tmdb'    => 'twitter_id',
+            'pattern' => 'https://x.com/%s',
+        ),
+        'tiktok'    => array(
+            'label'   => esc_html__( 'TikTok', 'jws_streamvid' ),
+            'icon'    => sprintf( $svg, '0 0 448 512', 'M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.8A162.6 162.6 0 1 1 185 188.3v89.9a74.6 74.6 0 1 0 52.2 71.2V0h88a121.2 121.2 0 0 0 1.9 22.2A122.2 122.2 0 0 0 381 102.4a121.4 121.4 0 0 0 67 20.1z' ),
+            'tmdb'    => 'tiktok_id',
+            'pattern' => 'https://www.tiktok.com/@%s',
+        ),
+        'youtube'   => array(
+            'label'   => esc_html__( 'YouTube', 'jws_streamvid' ),
+            'icon'    => 'fab fa-youtube',
+            'tmdb'    => 'youtube_id',
+            'pattern' => 'https://www.youtube.com/@%s',
+        ),
+        'imdb'      => array(
+            'label'   => esc_html__( 'IMDb', 'jws_streamvid' ),
+            'icon'    => 'fab fa-imdb',
+            'tmdb'    => 'imdb_id',
+            'pattern' => 'https://www.imdb.com/name/%s/',
+        ),
+        'website'   => array(
+            'label'   => esc_html__( 'Website', 'jws_streamvid' ),
+            'icon'    => 'fas fa-globe',
+            'tmdb'    => 'homepage',
+            'pattern' => '%s',
+        ),
+    );
+
+    return apply_filters( 'jws_person_social_networks', $networks );
+
+}
+
+/**
+ * Build a profile URL from the id TMDB stores for a network.
+ *
+ * TMDB keeps handles without the leading @ and YouTube as either a handle
+ * or a channel id (UC...), so those are normalised here.
+ */
+function jws_person_social_url( $network, $tmdb_value ) {
+
+    $networks   = jws_person_social_networks();
+    $tmdb_value = trim( (string) $tmdb_value );
+
+    if ( '' === $tmdb_value || empty( $networks[ $network ] ) ) {
+        return '';
+    }
+
+    if ( preg_match( '#^https?://#i', $tmdb_value ) ) {
+        return esc_url_raw( $tmdb_value );
+    }
+
+    $tmdb_value = ltrim( $tmdb_value, '@' );
+
+    if ( 'youtube' === $network && preg_match( '/^UC[\w-]{22}$/', $tmdb_value ) ) {
+        return 'https://www.youtube.com/channel/' . rawurlencode( $tmdb_value );
+    }
+
+    return esc_url_raw( sprintf( $networks[ $network ]['pattern'], rawurlencode( $tmdb_value ) ) );
+
+}
+
+/**
+ * Print the social profile links of a person.
+ */
+function jws_person_social_links( $post_id = 0 ) {
+
+    $post_id = $post_id ? $post_id : get_the_ID();
+    $links   = '';
+
+    foreach ( jws_person_social_networks() as $key => $network ) {
+
+        $url = get_post_meta( $post_id, 'social_' . $key, true );
+
+        if ( empty( $url ) ) {
+            continue;
+        }
+
+        $icon = 0 === strpos( $network['icon'], '<' ) ? $network['icon'] : '<i class="' . esc_attr( $network['icon'] ) . '"></i>';
+
+        $links .= sprintf(
+            '<a class="person-social-%1$s" href="%2$s" target="_blank" rel="nofollow noopener" title="%3$s" aria-label="%3$s">%4$s</a>',
+            esc_attr( $key ),
+            esc_url( $url ),
+            esc_attr( $network['label'] ),
+            $icon // phpcs:ignore WordPress.Security.EscapeOutput -- static markup from jws_person_social_networks().
+        );
+
+    }
+
+    if ( '' !== $links ) {
+        echo '<div class="person-social">' . $links . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above.
+    }
+
 }
 
 /*

@@ -28,13 +28,27 @@ function jws_metabox_register_misc() {
 
 function jws_metabox_register_person() {
 	$k = 'field_person_';
+
+	// Plain post meta (social_{network}), not part of the old ACF group.
+	$social = array( jws_mb_tab( __( 'Social', 'jws_streamvid' ), 'dashicons-share' ) );
+	foreach ( jws_person_social_networks() as $network => $args ) {
+		$social[] = array(
+			'type'        => 'url',
+			'name'        => 'social_' . $network,
+			'label'       => $args['label'],
+			'placeholder' => 'website' === $network ? 'https://' : jws_person_social_url( $network, 'username' ),
+			'width'       => 50,
+		);
+	}
+
 	Jws_Metabox::register(
 		'person_main',
 		array(
 			'title'      => __( 'Person Details', 'jws_streamvid' ),
 			'post_types' => array( 'person' ),
 			'acf_groups' => array( 'person_metabox' ),
-			'fields'     => array(
+			'fields'     => array_merge( array(
+				jws_mb_tab( __( 'Details', 'jws_streamvid' ), 'dashicons-id' ),
 				array( 'type' => 'text', 'name' => 'know', 'key' => $k . 'know', 'label' => __( 'Known for', 'jws_streamvid' ), 'placeholder' => __( 'Acting', 'jws_streamvid' ), 'width' => 33 ),
 				array(
 					'type'    => 'select',
@@ -53,7 +67,7 @@ function jws_metabox_register_person() {
 				array( 'type' => 'text', 'name' => 'address', 'key' => $k . 'address', 'label' => __( 'Place of Birth', 'jws_streamvid' ), 'width' => 50 ),
 				array( 'type' => 'text', 'name' => 'know_as', 'key' => $k . 'know_as', 'label' => __( 'Also Known As', 'jws_streamvid' ), 'width' => 50 ),
 				array( 'type' => 'text', 'name' => 'videos_tmdb', 'key' => $k . 'videos_tmdb', 'label' => __( 'TMDB ID', 'jws_streamvid' ), 'width' => 33 ),
-			),
+			), $social ),
 		)
 	);
 }
