@@ -318,7 +318,7 @@ var ArchiveGlobal;
                                 $sel.val(taxVal.indexOf(',') !== -1 ? '' : taxVal);
                             });
 
-                            $('select').select2({
+                            $('select:not(.jws-no-select2)').select2({
                                 dropdownAutoWidth: true,
                                 minimumResultsForSearch: 10
                             });

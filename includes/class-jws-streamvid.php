@@ -743,6 +743,16 @@ class Jws_Streamvid {
 			$this->plugin_action->dashboard, 
 			'save_personal'
 	   );
+       $this->loader->add_action( 
+			'wp_ajax_jws_send_email_change_code', 
+			$this->plugin_action->dashboard, 
+			'send_email_change_code'
+	   );
+       $this->loader->add_action( 
+			'wp_ajax_jws_send_phone_change_code', 
+			$this->plugin_action->dashboard, 
+			'send_phone_change_code'
+	   );
     }
     
     

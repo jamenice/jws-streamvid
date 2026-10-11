@@ -32,7 +32,7 @@
                     			window.location.href = response.data.redirect_url;
                     		}
                         }else {
-                           jwsThemeModule.show_notification(alert(response.data[0].message),'error');
+                           jwsThemeModule.show_notification(response.data[0].message,'error');
                         }
                       
                     },
@@ -292,7 +292,7 @@
                               button.removeClass('checked');
                            }
                         }else {
-                           jwsThemeModule.show_notification(alert(response.data[0].message),'error');
+                           jwsThemeModule.show_notification(response.data[0].message,'error');
                         }
                       
                     },
@@ -378,12 +378,236 @@
         }
 
         
+        /* Calling codes shared by several countries, and the one to pick
+         * when a typed number only says the code; countries whose leading 0
+         * is part of the number. Same as the theme's phone-login.js. */
+        var MAIN_COUNTRY_FOR_CODE = {
+            '1': 'US', '7': 'RU', '39': 'IT', '44': 'GB', '47': 'NO', '61': 'AU',
+            '212': 'MA', '262': 'RE', '290': 'SH', '358': 'FI', '590': 'GP', '599': 'CW'
+        };
+        var KEEP_LEADING_ZERO = { IT: true, SM: true, VA: true };
+
+        /* The number in E.164, or '' when it cannot be one: typed with "+"
+         * or "00" it is already international; otherwise the trunk 0 goes
+         * and the calling code is put in front (phone-login.js toE164). */
+        function phoneToE164(input, iso, dial) {
+            var trimmed = String(input || '').trim();
+            var digits = trimmed.replace(/\D/g, '');
+            var full;
+
+            if (!digits) {
+                return '';
+            }
+            if (trimmed.charAt(0) === '+') {
+                full = digits;
+            } else if (trimmed.indexOf('00') === 0) {
+                full = digits.slice(2);
+            } else {
+                if (!KEEP_LEADING_ZERO[iso]) {
+                    digits = digits.replace(/^0+/, '');
+                }
+                full = String(dial || '') + digits;
+            }
+
+            if (full.length < 7 || full.length > 15 || full.charAt(0) === '0') {
+                return '';
+            }
+            return '+' + full;
+        }
+
+        /* The phone modal's country picker (profile_phone_field() in the
+         * dashboard class), set up like the login form's SMS sign-in:
+         * searchable with select2, started on the browser's country when the
+         * page did not decide it, and moved to match a number typed with its
+         * code. value() is the number to send, or null after telling the
+         * person it is not one. */
+        function profilePhonePicker($form) {
+            var select = $form.find('select.jws-profile-phone-country')[0];
+            var input = $form.find('#user_phone')[0];
+
+            if (!select || !input) {
+                return { value: function (raw) { return String(raw || '').trim(); } };
+            }
+
+            function setCountry(iso) {
+                if (!iso || !select.querySelector('option[value="' + iso + '"]')) {
+                    return false;
+                }
+                if (select.value !== iso) {
+                    select.value = iso;
+                    $(select).trigger('change.select2');
+                }
+                return true;
+            }
+
+            if (select.getAttribute('data-detect') === '1') {
+                var languages = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+                var byLanguage = {};
+                try {
+                    byLanguage = JSON.parse(select.getAttribute('data-lang-country') || '{}') || {};
+                } catch (err) {}
+                var found = false;
+                for (var i = 0; i < languages.length && !found; i++) {
+                    var region = String(languages[i]).split(/[-_]/)[1];
+                    found = !!region && /^[A-Za-z]{2}$/.test(region) && setCountry(region.toUpperCase());
+                }
+                for (var j = 0; j < languages.length && !found; j++) {
+                    found = setCountry(byLanguage[String(languages[j]).split(/[-_]/)[0].toLowerCase()]);
+                }
+            }
+
+            input.addEventListener('input', function () {
+                var value = input.value.trim();
+                if (value.charAt(0) !== '+' && value.indexOf('00') !== 0) {
+                    return;
+                }
+                var digits = value.replace(/\D/g, '');
+                if (value.indexOf('00') === 0) {
+                    digits = digits.slice(2);
+                }
+                var current = select.options[select.selectedIndex];
+                var currentDial = current ? current.getAttribute('data-dial') : '';
+                if (currentDial && digits.indexOf(currentDial) === 0) {
+                    return;
+                }
+                for (var k = 0; k < select.options.length; k++) {
+                    var dial = select.options[k].getAttribute('data-dial');
+                    if (dial && digits.indexOf(dial) === 0) {
+                        if (!setCountry(MAIN_COUNTRY_FOR_CODE[dial])) {
+                            setCountry(select.options[k].value);
+                        }
+                        return;
+                    }
+                }
+            });
+
+            // The list opens inside the popup, under the picker: Magnific
+            // Popup pulls focus back from anything outside it, which would
+            // lock the search box.
+            if ($.fn.select2) {
+                $(select).select2({
+                    dropdownParent: $(select).parent(),
+                    dropdownAutoWidth: true,
+                    width: 'style',
+                    language: { noResults: function () { return '\u2014'; } },
+                    templateSelection: function (state) {
+                        var dial = state.element ? state.element.getAttribute('data-dial') : '';
+                        return state.id ? state.id + ' +' + dial : state.text;
+                    }
+                }).on('select2:open', function () {
+                    var search = select.parentNode.querySelector('.select2-search__field');
+                    if (search) {
+                        search.setAttribute('placeholder', select.getAttribute('data-search') || '');
+                    }
+                }).on('select2:select', function () {
+                    input.focus();
+                });
+            }
+
+            return {
+                value: function (raw) {
+                    var option = select.options[select.selectedIndex];
+                    var phone = phoneToE164(raw, select.value, option ? option.getAttribute('data-dial') : '');
+                    if (!phone) {
+                        jwsThemeModule.show_notification(select.getAttribute('data-invalid'), 'error');
+                        return null;
+                    }
+                    return phone;
+                }
+            };
+        }
+
         function edit_profile() {  
+
+           // The email, phone and password modals (form_profile() in the
+           // dashboard class) all post edit_profile. A new email needs a
+           // code sent to it, and a new phone needs one texted to it while
+           // phone sign-in is on (send_*_change_code).
+           // The phone modal's country picker: the number is sent in E.164,
+           // with the picked country's calling code in front.
+           var phonePicker = profilePhonePicker($('form.form-edit-phone'));
+
+           function codeField($form, inputSel, boxSel, action, field, toValue) {
+               var $input = $form.find(inputSel);
+               var $box = $form.find(boxSel);
+               if (!$input.length || !$box.length) {
+                   return;
+               }
+               var $btn = $box.find('button[type="button"]');
+               var $code = $box.find('input');
+               var $note = $box.find('.fs-small');
+
+               $btn.on('click', function () {
+                   if ($btn.prop('disabled')) {
+                       return;
+                   }
+                   if (!String($input.val() || '').trim()) {
+                       $input.trigger('focus');
+                       return;
+                   }
+                   var value = toValue ? toValue($input.val()) : $input.val();
+                   if (value === null) {
+                       $input.trigger('focus');
+                       return;
+                   }
+                   if (!$btn.data('label')) {
+                       $btn.data('label', $btn.text());
+                   }
+                   $btn.prop('disabled', true);
+
+                   var data = {
+                       action: action,
+                       edit_profile_nonce: $form.find('[name="edit_profile_nonce"]').val()
+                   };
+                   data[field] = value;
+
+                   $.post(jws_script.ajax_url, data).done(function (response) {
+                       if (response && response.success) {
+                           jwsThemeModule.show_notification(response.data.message, 'success');
+                           // Test mode sends no SMS: keep its code in view.
+                           if (response.data.test_code) {
+                               $note.text(response.data.message);
+                           }
+                           $code.val('').trigger('focus');
+                           var left = 60;
+                           var timer = setInterval(function () {
+                               left--;
+                               $btn.text(left > 0 ? left + 's' : $btn.data('label'));
+                               if (left <= 0) {
+                                   clearInterval(timer);
+                                   $btn.prop('disabled', false);
+                               }
+                           }, 1000);
+                           $btn.text(left + 's');
+                       } else {
+                           var message = response && response.data && response.data[0] ? response.data[0].message : '';
+                           jwsThemeModule.show_notification(message || 'The code could not be sent. Please try again.', 'error');
+                           $btn.prop('disabled', false);
+                       }
+                   }).fail(function () {
+                       jwsThemeModule.show_notification('There is a problem with the internet connection, please try again.', 'error');
+                       $btn.prop('disabled', false);
+                   });
+               });
+           }
+
+           codeField($('form.form-edit-email'), '#user_email', '.jws-email-otp', 'jws_send_email_change_code', 'user_email');
+           codeField($('form.form-edit-phone'), '#user_phone', '.jws-phone-otp', 'jws_send_phone_change_code', 'user_phone', phonePicker.value);
             
            $('form.form-edit-profile').on('submit' , function(e) { 
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
+
+                    if (form.hasClass('form-edit-phone')) {
+                        var phone = phonePicker.value(formData.get('user_phone'));
+                        if (phone === null) {
+                            form.find('#user_phone').trigger('focus');
+                            return;
+                        }
+                        formData.set('user_phone', phone);
+                        formData.delete('phone_country');
+                    }
 
                     form.addClass('loading');
                     if(!form.find('.loader').length) {

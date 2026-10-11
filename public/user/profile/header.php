@@ -21,7 +21,9 @@ $is_owner = jws_streamvid_check_owner();
             );
             printf(
                 '<p class="email">%s</p>',
-                esc_html( get_the_author_meta('user_email', $author_id) )
+                jws_streamvid_email_is_placeholder( $author_id )
+                    ? esc_html__( 'Email not set', 'jws_streamvid' )
+                    : esc_html( get_the_author_meta('user_email', $author_id) )
             );
             if(is_user_logged_in() && function_exists('pmpro_getMembershipLevelForUser') && $is_owner) {
                 $level = pmpro_getMembershipLevelForUser() ? pmpro_getMembershipLevelForUser()->name : '';

@@ -1234,11 +1234,14 @@ if(!function_exists('jws_return_data_demo')) {
     function jws_return_data_demo() {
         
         if(jws_theme_get_option('block_user_function')) {
+              // Said to visitors in plain words: this is a demo, nothing they
+              // change is kept. Only an administrator is told where the switch is.
+              $message = esc_html__( 'This is a demo site, so changes cannot be saved. Your information has not been changed.', 'jws_streamvid' );
+              if ( current_user_can( 'manage_options' ) ) {
+                  $message .= ' ' . esc_html__( 'Administrators: turn off "Turn on blocking user upload media" in Theme Options > API And Other Setting.', 'jws_streamvid' );
+              }
               wp_send_json_error(
-                new WP_Error(
-                    'error',
-                    esc_html__( 'Demo version will limit media upload, You can turn this limit off in theme settings.', 'jws_streamvid' )
-                )
+                new WP_Error( 'demo_mode', $message )
              ); 
         }
          
