@@ -50,6 +50,9 @@ class Jws_Payment_Woocommerce {
 	 */
 	const BRIDGE = 'jws_payment_wc_bridge';
 
+	/** The posted list of hidden fields an error has put back on screen. */
+	const SHOWN_VAR = 'jws_wc_shown';
+
 	/* ---------------------------------------------------------------------- */
 	/* Availability                                                            */
 	/* ---------------------------------------------------------------------- */
@@ -153,6 +156,10 @@ class Jws_Payment_Woocommerce {
 		   required — see simplify_fields(). */
 		add_filter( 'woocommerce_checkout_fields', array( $this, 'simplify_fields' ) );
 
+		/* Optional is not enough: WooCommerce still checks the format of a
+		   hidden field that came pre-filled — see drop_invalid_fields(). */
+		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'drop_invalid_fields' ) );
+
 		/*
 		 * Every way a WooCommerce order becomes paid. They overlap by design —
 		 * a gateway firing payment_complete also moves the status — and
@@ -174,6 +181,10 @@ class Jws_Payment_Woocommerce {
 		   site's header and footer around itself while it is. */
 		add_filter( 'wp_headers', array( $this, 'allow_framing' ), 20 );
 		add_action( 'wp_head', array( $this, 'frame_styles' ) );
+
+		/* After WooCommerce's own footer scripts (priority 20), so jQuery and
+		   checkout.js are both on the page when this binds. */
+		add_action( 'wp_footer', array( $this, 'frame_script' ), 100 );
 
 		add_action( 'wp_ajax_' . self::BRIDGE, array( $this, 'bridge' ) );
 		add_action( 'wp_ajax_nopriv_' . self::BRIDGE, array( $this, 'bridge' ) );
@@ -642,10 +653,126 @@ class Jws_Payment_Woocommerce {
 			}
 		}
 
+		/*
+		 * Optional is not enough for a postcode. WC_Checkout::
+		 * validate_posted_data() runs wc_format_postcode() before it checks
+		 * for an empty value, and for Brazil (and Poland) that turns '' into
+		 * '-' — so an empty, optional CEP fails as "não é um CEP válido" on
+		 * every gateway. The format check stays only for a postcode the buyer
+		 * has been shown and has actually filled in.
+		 */
+		$shown = self::shown_fields();
+
+		foreach ( array( 'billing', 'shipping' ) as $set ) {
+
+			$key = $set . '_postcode';
+
+			if ( empty( $fields[ $set ][ $key ]['validate'] ) ) {
+				continue;
+			}
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- read only to decide whether to validate; WooCommerce checks its own nonce.
+			$posted = isset( $_POST[ $key ] ) ? trim( sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) ) : '';
+
+			if ( ! in_array( $key, $shown, true ) || '' === $posted ) {
+				$fields[ $set ][ $key ]['validate'] = array_values( array_diff( (array) $fields[ $set ][ $key ]['validate'], array( 'postcode' ) ) );
+			}
+		}
+
 		/* A note to the shop about an order the shop never sees. */
 		unset( $fields['order']['order_comments'] );
 
 		return $fields;
+	}
+
+	/**
+	 * Blanks hidden address values WooCommerce would refuse.
+	 *
+	 * simplify_fields() makes the billing column optional, but WC_Checkout::
+	 * validate_posted_data() still checks the format of any field that is not
+	 * empty — and the hidden column is not empty when WooCommerce pre-fills it
+	 * from the customer's stored profile. A saved CEP that does not fit the
+	 * country (a Brazilian store, a postcode typed somewhere else years ago)
+	 * then fails the order with "Billing Postcode is not a valid postcode",
+	 * naming a box the buyer cannot see and so cannot correct.
+	 *
+	 * Blanked rather than skipped: an empty value is valid, while a malformed
+	 * one would still be written to the order and passed on to the gateway.
+	 *
+	 * A field the buyer has been shown is left alone. Once an error has put it
+	 * on screen (see frame_script()), whatever is in it is the buyer's own
+	 * answer: blanking a bad CEP they just typed would only swap WooCommerce's
+	 * clear "not a valid CEP" for a vaguer complaint from whichever plugin
+	 * needed it, and they would never learn what was wrong with it.
+	 */
+	public function drop_invalid_fields( $data ) {
+
+		if ( ! is_array( $data ) || ! self::active_ref() ) {
+			return $data;
+		}
+
+		$shown = self::shown_fields();
+
+		foreach ( array( 'billing', 'shipping' ) as $set ) {
+
+			$country = ! empty( $data[ $set . '_country' ] )
+				? $data[ $set . '_country' ]
+				: ( WC()->customer ? WC()->customer->{"get_{$set}_country"}() : '' );
+
+			$postcode = $set . '_postcode';
+
+			if ( ! empty( $data[ $postcode ] ) && ! in_array( $postcode, $shown, true ) ) {
+				$formatted = wc_format_postcode( $data[ $postcode ], $country );
+
+				if ( '' === $formatted || ! WC_Validation::is_postcode( $formatted, $country ) ) {
+					$data[ $postcode ] = '';
+				}
+			}
+
+			$phone = $set . '_phone';
+
+			if ( ! empty( $data[ $phone ] ) && ! in_array( $phone, $shown, true ) && ! WC_Validation::is_phone( wc_remove_non_displayable_chars( $data[ $phone ] ) ) ) {
+				$data[ $phone ] = '';
+			}
+
+			$state = $set . '_state';
+
+			if ( ! empty( $data[ $state ] ) && ! in_array( $state, $shown, true ) ) {
+				$states = WC()->countries->get_states( $country );
+
+				if ( is_array( $states ) && $states ) {
+					$value = wc_strtoupper( $data[ $state ] );
+
+					if ( ! isset( $states[ $value ] ) && ! in_array( $value, array_map( 'wc_strtoupper', $states ), true ) ) {
+						$data[ $state ] = '';
+					}
+				}
+			}
+		}
+
+		/* An unusable email is replaced from the account in stamp_order(). */
+		if ( ! empty( $data['billing_email'] ) && ! in_array( 'billing_email', $shown, true ) && ! is_email( $data['billing_email'] ) ) {
+			$data['billing_email'] = '';
+		}
+
+		return $data;
+	}
+
+	/**
+	 * The checkout fields frame_script() has put on screen for the buyer.
+	 *
+	 * Posted by the checkout form itself, after WooCommerce has already checked
+	 * its own nonce on it. Only ever narrows what drop_invalid_fields() does, so
+	 * a forged list can do no more than let WooCommerce validate normally.
+	 *
+	 * @return string[]
+	 */
+	private static function shown_fields() {
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WC_Checkout::process_checkout() verifies its nonce before posted data is read.
+		$raw = isset( $_POST[ self::SHOWN_VAR ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::SHOWN_VAR ] ) ) : '';
+
+		return array_filter( array_map( 'sanitize_key', explode( ',', $raw ) ) );
 	}
 
 	/**
@@ -822,7 +949,120 @@ class Jws_Payment_Woocommerce {
 				max-width: 100% !important;
 				flex: 0 0 100% !important;
 			}
+
+			/* An error named a hidden field (see frame_script()): bring the
+			   column back, but only the rows the buyer has to answer, above
+			   the payment box. The extra class outranks the rules above. */
+			form.woocommerce-checkout.jws-wc-reveal .col-lg-60,
+			form.woocommerce-checkout.jws-wc-reveal #customer_details { display: block !important; }
+			form.woocommerce-checkout.jws-wc-reveal .col-lg-60 {
+				width: 100% !important;
+				max-width: 100% !important;
+				flex: 0 0 100% !important;
+			}
+			form.woocommerce-checkout.jws-wc-reveal #customer_details h3,
+			form.woocommerce-checkout.jws-wc-reveal #customer_details h5,
+			form.woocommerce-checkout.jws-wc-reveal #customer_details .form-row:not(.jws-wc-needed) { display: none !important; }
 		</style>
+		<?php
+	}
+
+	/**
+	 * Puts a hidden field back on screen when the checkout fails over it.
+	 *
+	 * drop_invalid_fields() clears a bad pre-filled value WooCommerce itself
+	 * would refuse, but not what another plugin asks for — a CPF a Brazilian
+	 * gateway needs, a field some extension made required on its own terms.
+	 * Without this the buyer is told "CEP de cobrança" is wrong and has no box
+	 * to put it right in.
+	 *
+	 * WooCommerce marks each field error with `data-id` naming the input, so
+	 * only those rows come back, plus the country beside a postcode or state
+	 * (whether either is valid depends on it). An error naming no field — a
+	 * declined card — reveals nothing. The revealed keys are posted back as
+	 * SHOWN_VAR so drop_invalid_fields() leaves the buyer's answer alone.
+	 */
+	public function frame_script() {
+
+		if ( ! self::requested_ref() || ! function_exists( 'is_checkout' ) || ! is_checkout() ) {
+			return;
+		}
+
+		?>
+		<script id="jws-payment-wc-reveal">
+			(function ($) {
+				if (!$) {
+					return;
+				}
+
+				$(document.body).on('checkout_error', function (event, html) {
+					var $form = $('form.woocommerce-checkout');
+					var box = document.getElementById('customer_details');
+					var shown = [];
+					var $first = null;
+
+					if (!$form.length || !box) {
+						return;
+					}
+
+					function reveal(id) {
+						var row = document.getElementById(id + '_field');
+
+						if (!row || !box.contains(row)) {
+							return false;
+						}
+
+						$(row).addClass('jws-wc-needed');
+
+						if (shown.indexOf(id) === -1) {
+							shown.push(id);
+						}
+
+						return true;
+					}
+
+					$('<div>').html(html).find('li[data-id]').each(function () {
+						var id = String($(this).attr('data-id') || '');
+						var match = id.match(/^(billing|shipping)_(postcode|state)$/);
+
+						if (reveal(id)) {
+							$first = $first || $(document.getElementById(id));
+
+							if (match) {
+								reveal(match[1] + '_country');
+							}
+						}
+					});
+
+					/* Keep what an earlier error already revealed. */
+					$form.find('#customer_details .jws-wc-needed').each(function () {
+						var id = this.id.replace(/_field$/, '');
+
+						if (shown.indexOf(id) === -1) {
+							shown.push(id);
+						}
+					});
+
+					if (!shown.length) {
+						return;
+					}
+
+					$form.addClass('jws-wc-reveal');
+
+					var $input = $form.find('input[name="<?php echo esc_js( self::SHOWN_VAR ); ?>"]');
+
+					if (!$input.length) {
+						$input = $('<input type="hidden" name="<?php echo esc_js( self::SHOWN_VAR ); ?>">').appendTo($form);
+					}
+
+					$input.val(shown.join(','));
+
+					if ($first && $first.length) {
+						$first.trigger('focus');
+					}
+				});
+			}(window.jQuery));
+		</script>
 		<?php
 	}
 
