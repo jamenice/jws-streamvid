@@ -896,8 +896,10 @@ class Jws_Payment_Woocommerce {
 		<style id="jws-payment-wc-frame">
 			.jws_header, .jws_footer, .backToTop, #svcChatWidget,
 			#jws-rtl-toggle-gear, .jws-toolbar-wap, .jws-title-bar-wrap,
-			.woocommerce-breadcrumb, .woocommerce-form-coupon-toggle,
-			.checkout_coupon { display: none !important; }
+			.woocommerce-breadcrumb{ display: none !important; }
+			.woocommerce-checkout .woocommerce-form-coupon {
+				border: none !important;
+			}
 
 			/* The billing column, and everything that hangs off it: the
 			   "returning customer?" login prompt, the create-an-account box,
