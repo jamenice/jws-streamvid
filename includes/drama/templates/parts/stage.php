@@ -31,6 +31,11 @@ $access   = $episode_id
 
 $poster = get_the_post_thumbnail_url( $drama_id, 'full' ) ?: '';
 $price  = Jws_Drama_Wallet::coin_price( $drama_id );
+$coins  = Jws_Drama_Settings::coins_enabled();
+
+/* Coins off: the buy panel is VIP only, so it is worth opening only when a
+   plan is actually on sale. */
+$has_vip = ! $coins && Jws_Drama_Settings::pmpro_plans();
 
 $index = $episode_id ? array_search( $episode_id, array_map( 'intval', $episodes ), true ) : false;
 $prev  = ( false !== $index && isset( $episodes[ $index - 1 ] ) ) ? (int) $episodes[ $index - 1 ] : 0;
@@ -58,8 +63,12 @@ if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 			<?php elseif ( ! is_user_logged_in() ) : ?>
 				<p>
 					<?php
-					/* translators: %d: coin price */
-					printf( esc_html__( 'Sign in to unlock this episode for %d coins.', 'jws_streamvid' ), (int) $price );
+					if ( $coins ) {
+						/* translators: %d: coin price */
+						printf( esc_html__( 'Sign in to unlock this episode for %d coins.', 'jws_streamvid' ), (int) $price );
+					} else {
+						echo esc_html__( 'Sign in to watch this episode.', 'jws_streamvid' );
+					}
 					?>
 				</p>
 				<?php
@@ -70,12 +79,21 @@ if ( $episode_id && ! empty( $access['can_watch'] ) ) {
 				 */
 				?>
 				<a class="jws-open-login button-default" href="<?php echo esc_url( get_permalink( $episode_id ) ); ?>"><span><?php echo esc_html__( 'Sign In', 'jws_streamvid' ); ?></span></a>
-			<?php else : ?>
+			<?php elseif ( $coins ) : ?>
 				<p><?php echo esc_html__( 'This is a paid episode. Please unlock to watch.', 'jws_streamvid' ); ?></p>
 				<button type="button" class="sv-short-unlock button-default" data-episode="<?php echo (int) $episode_id; ?>">
 					<?php echo Jws_Drama_Settings::coin_icon_html(); ?><span class="sv-short-unlock-price"><?php echo esc_html( number_format_i18n( $price ) ); ?></span>
 					<span><?php echo esc_html__( 'Unlock Now', 'jws_streamvid' ); ?></span>
 				</button>
+			<?php elseif ( $has_vip ) : ?>
+				<p><?php echo esc_html__( 'This episode is for VIP members.', 'jws_streamvid' ); ?></p>
+				<?php /* Opens the same buy panel the coin path does, which shows only the plans with coins off. */ ?>
+				<button type="button" class="sv-short-vip button-default" data-jws-coin-modal data-episode="<?php echo (int) $episode_id; ?>">
+					<i class="jws-icon-crown-simple" aria-hidden="true"></i>
+					<span><?php echo esc_html__( 'Join VIP', 'jws_streamvid' ); ?></span>
+				</button>
+			<?php else : ?>
+				<p><?php echo esc_html__( 'This episode is locked.', 'jws_streamvid' ); ?></p>
 			<?php endif; ?>
 
 			<?php

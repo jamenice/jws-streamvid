@@ -50,6 +50,12 @@ class Jws_Drama_Settings {
 			   stays reachable to turn it back on. */
 			'enabled'       => 1,
 
+			/* Coin switch: off retires coins as a way in — no prices, no
+			   top-up shelf, no Coins tab — while the drama itself, its free
+			   episodes, VIP and the ad unlock carry on. Balances and the
+			   episodes already bought with them are kept. */
+			'coins_enabled' => 1,
+
 			'free_episodes' => 3,
 			'coin_price'    => 10,
 			'currency'      => 'USD',
@@ -189,6 +195,17 @@ class Jws_Drama_Settings {
 		return ! empty( self::get( 'enabled', 1 ) );
 	}
 
+	/**
+	 * Whether coins are a way to open an episode on this site.
+	 *
+	 * Implies the module itself is on: with drama switched off there is
+	 * nothing for a coin to buy.
+	 */
+	public static function coins_enabled() {
+
+		return self::is_enabled() && ! empty( self::get( 'coins_enabled', 1 ) );
+	}
+
 	public static function save( array $settings ) {
 
 		self::$cache = null;
@@ -260,6 +277,16 @@ class Jws_Drama_Settings {
 	public static function packages( $include_inactive = false ) {
 
 		$out = array();
+
+		/*
+		 * Every place that sells a package — the modal, the WooCommerce cart,
+		 * the unified checkout, the app — reads its shelf from here, so an
+		 * empty shelf is what stops coins being sold everywhere at once. The
+		 * admin list asks with $include_inactive and still sees its rows.
+		 */
+		if ( ! $include_inactive && ! self::coins_enabled() ) {
+			return $out;
+		}
 
 		foreach ( (array) self::get( 'packages', array() ) as $index => $row ) {
 
@@ -846,7 +873,8 @@ class Jws_Drama_Settings {
 		$stored_packages = isset( $stored['packages'] ) && is_array( $stored['packages'] ) ? $stored['packages'] : array();
 		$stored_plans    = isset( $stored['plans'] ) && is_array( $stored['plans'] ) ? $stored['plans'] : array();
 
-		$out['enabled'] = empty( $raw['enabled'] ) ? 0 : 1;
+		$out['enabled']       = empty( $raw['enabled'] ) ? 0 : 1;
+		$out['coins_enabled'] = empty( $raw['coins_enabled'] ) ? 0 : 1;
 
 		$out['free_episodes'] = isset( $raw['free_episodes'] ) ? max( 0, (int) $raw['free_episodes'] ) : 0;
 		$out['coin_price']    = isset( $raw['coin_price'] ) ? max( 0, (int) $raw['coin_price'] ) : 0;
@@ -1118,6 +1146,16 @@ class Jws_Drama_Settings {
 							<?php echo esc_html__( 'Enable the drama system', 'jws_streamvid' ); ?>
 						</label>
 						<p class="description"><?php echo esc_html__( 'Turn off to hide drama everywhere on the site — post types, pages, widgets and the app API — without losing any content. This settings screen stays reachable so it can be switched back on.', 'jws_streamvid' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="coins_enabled"><?php echo esc_html__( 'Coin system', 'jws_streamvid' ); ?></label></th>
+					<td>
+						<label>
+							<input type="checkbox" id="coins_enabled" name="coins_enabled" value="1" <?php checked( ! empty( $s['coins_enabled'] ) ); ?> />
+							<?php echo esc_html__( 'Enable coins', 'jws_streamvid' ); ?>
+						</label>
+						<p class="description"><?php echo esc_html__( 'Turn off to stop selling and spending coins: episode prices, the Top up shelf and the Coins tab in the account area disappear, on the website and in the app. Drama stays on. Locked episodes then open only with a ticked VIP plan below or the ad unlock, so set up at least one of them, or raise the free episodes. Balances and episodes already bought with coins are kept.', 'jws_streamvid' ); ?></p>
 					</td>
 				</tr>
 				<tr>

@@ -243,6 +243,7 @@ class Jws_Drama_Ajax {
 
 			$messages = array(
 				'insufficient_coins' => esc_html__( 'Not enough coins.', 'jws_streamvid' ),
+				'coins_disabled'     => esc_html__( 'Coins are not used on this site.', 'jws_streamvid' ),
 				'not_logged_in'      => esc_html__( 'Please sign in first.', 'jws_streamvid' ),
 				'invalid'            => esc_html__( 'This episode cannot be unlocked.', 'jws_streamvid' ),
 			);
@@ -453,7 +454,9 @@ class Jws_Drama_Ajax {
 			'disabled'    => esc_html__( 'This is not available right now.', 'jws_streamvid' ),
 			'invalid'     => esc_html__( 'Unknown episode.', 'jws_streamvid' ),
 			'not_locked'  => esc_html__( 'This episode is already open.', 'jws_streamvid' ),
-			'daily_limit' => esc_html__( "That is all the episodes ads can open today. Come back tomorrow, or unlock this one with coins.", 'jws_streamvid' ),
+			'daily_limit' => Jws_Drama_Settings::coins_enabled()
+				? esc_html__( 'That is all the episodes ads can open today. Come back tomorrow, or unlock this one with coins.', 'jws_streamvid' )
+				: esc_html__( 'That is all the episodes ads can open today. Come back tomorrow, or join VIP to watch them all.', 'jws_streamvid' ),
 			'expired'     => esc_html__( 'That took too long — please try again.', 'jws_streamvid' ),
 			'mismatch'    => esc_html__( 'That took too long — please try again.', 'jws_streamvid' ),
 			'too_soon'    => esc_html__( 'Please give the ad a moment longer.', 'jws_streamvid' ),

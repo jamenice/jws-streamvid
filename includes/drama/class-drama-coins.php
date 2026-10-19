@@ -483,7 +483,11 @@ class Jws_Drama_Coins {
 	/* Account area                                                            */
 	/* ---------------------------------------------------------------------- */
 
-	public function profile_menu( $items ) { 
+	public function profile_menu( $items ) {
+
+		if ( ! Jws_Drama_Settings::coins_enabled() ) {
+			return $items;
+		}
 
 		$items['drama-coins'] = array(
 			'title'    => esc_html__( 'Coins', 'jws_streamvid' ),

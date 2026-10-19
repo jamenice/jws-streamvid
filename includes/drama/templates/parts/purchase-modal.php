@@ -19,6 +19,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 $episode_id = isset( $args['episode_id'] ) ? (int) $args['episode_id'] : 0;
+$coins      = Jws_Drama_Settings::coins_enabled();
 $balance    = Jws_Drama_Wallet::balance();
 $price      = 0;
 
@@ -43,15 +44,20 @@ $more_url = ( class_exists( 'Jws_Streamvid_Profile' ) && ! is_author() )
 	? Jws_Streamvid_Profile::get_url( 'drama-coins' )
 	: '';
 ?>
-<div class="sv-buy" data-episode="<?php echo (int) $episode_id; ?>" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr__( 'Get coins', 'jws_streamvid' ); ?>">
+<div class="sv-buy" data-episode="<?php echo (int) $episode_id; ?>" role="dialog" aria-modal="true" aria-label="<?php echo $coins ? esc_attr__( 'Get coins', 'jws_streamvid' ) : esc_attr__( 'Join VIP', 'jws_streamvid' ); ?>">
 
 	<div class="sv-buy-head">
 		<div class="sv-buy-meta">
-			<?php if ( $price ) : ?>
+			<?php if ( ! $coins ) : ?>
+				<?php /* No price or balance to quote with coins off — the panel is the VIP shelf only. */ ?>
+				<span><strong><?php echo esc_html__( 'Join VIP', 'jws_streamvid' ); ?></strong></span>
+			<?php elseif ( $price ) : ?>
 				<span><?php echo esc_html__( 'Price:', 'jws_streamvid' ); ?> <?php echo Jws_Drama_Settings::coin_icon_html(); ?><strong><?php echo esc_html( number_format_i18n( $price ) ); ?></strong></span>
 				<span class="sv-buy-sep"></span>
 			<?php endif; ?>
-			<span><?php echo esc_html__( 'Balance:', 'jws_streamvid' ); ?> <?php echo Jws_Drama_Settings::coin_icon_html(); ?><strong class="sv-buy-balance"><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></span>
+			<?php if ( $coins ) : ?>
+				<span><?php echo esc_html__( 'Balance:', 'jws_streamvid' ); ?> <?php echo Jws_Drama_Settings::coin_icon_html(); ?><strong class="sv-buy-balance"><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></span>
+			<?php endif; ?>
 		</div>
 		<button type="button" class="sv-buy-close" aria-label="<?php echo esc_attr__( 'Close', 'jws_streamvid' ); ?>"><i class="jws-icon-x"></i></button>
 	</div>
@@ -157,7 +163,13 @@ $more_url = ( class_exists( 'Jws_Streamvid_Profile' ) && ! is_author() )
 			<p class="sv-buy-empty">
 				<?php echo esc_html__( 'Nothing is on sale yet.', 'jws_streamvid' ); ?>
 				<?php if ( current_user_can( 'manage_options' ) ) : ?>
-					<br /><em><?php echo esc_html__( 'Add coin packages in Jws Settings → Drama Coins, and tick the PMPro levels that unlock everything.', 'jws_streamvid' ); ?></em>
+					<br /><em>
+						<?php
+						echo $coins
+							? esc_html__( 'Add coin packages in Jws Settings → Drama Coins, and tick the PMPro levels that unlock everything.', 'jws_streamvid' )
+							: esc_html__( 'Coins are switched off. Tick the PMPro levels that unlock everything in Jws Settings → Drama Coins.', 'jws_streamvid' );
+						?>
+					</em>
 				<?php endif; ?>
 			</p>
 		<?php endif; ?>

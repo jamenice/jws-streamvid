@@ -85,7 +85,8 @@
     content: "";
 }
 
-.sv-short-unlock-price {
+.sv-short-unlock-price,
+.sv-short-vip i {
     margin-inline-end: 0.35em;
 }
 
@@ -131,6 +132,7 @@
 }
 
 /* Inline with the label, unlike the padlock above the panel. */
+.sv-short-vip i,
 .sv-short-ad-unlock i {
     display: inline-block;
     margin-bottom: 0;

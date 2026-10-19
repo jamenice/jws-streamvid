@@ -522,6 +522,12 @@ class Jws_Drama_Wallet {
 
 		$out['reason'] = 'locked';
 
+		/* With coins switched off a locked episode has no coin price to
+		   quote; VIP and the ad unlock are what is left to open it. */
+		if ( ! Jws_Drama_Settings::coins_enabled() ) {
+			$out['price'] = 0;
+		}
+
 		return apply_filters( 'streamvid/drama/access', $out, $episode_id, $user_id );
 	}
 
@@ -558,6 +564,14 @@ class Jws_Drama_Wallet {
 
 		if ( $access['can_watch'] ) {
 			return array( 'success' => true, 'reason' => $access['reason'], 'balance' => $access['balance'] );
+		}
+
+		/* Checked after access(), not before: an episode bought while coins
+		   were on is still answered as unlocked above. Before the price is
+		   read, too — it is 0 with coins off, and a balance is never below
+		   0, so the check under it would open the episode for nothing. */
+		if ( ! Jws_Drama_Settings::coins_enabled() ) {
+			return array( 'success' => false, 'reason' => 'coins_disabled', 'balance' => $access['balance'] );
 		}
 
 		$price = (int) $access['price'];
