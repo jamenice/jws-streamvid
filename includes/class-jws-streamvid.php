@@ -590,11 +590,24 @@ class Jws_Streamvid {
 			'the_content'
 		);
         
-        $this->loader->add_action( 
-			'init', 
-			$this->plugin_action->profile,  
-			'add_endpoints', 
+        $this->loader->add_action(
+			'init',
+			$this->plugin_action->profile,
+			'set_author_base',
+			1
+		);
+
+        $this->loader->add_action(
+			'init',
+			$this->plugin_action->profile,
+			'add_endpoints',
 			100
+		);
+
+        $this->loader->add_action(
+			'wp_loaded',
+			$this->plugin_action->profile,
+			'maybe_flush_author_base'
 		);
         
         $this->loader->add_action( 

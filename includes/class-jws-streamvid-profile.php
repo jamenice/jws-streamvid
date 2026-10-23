@@ -447,11 +447,54 @@ class Jws_Streamvid_Profile {
        
         $menu_items = array_merge($menu_items, $menu_dashboard_items , $menu_membership_items);
  
-		for ( $i=0; $i < count( $menu_items ); $i++) { 
+		for ( $i=0; $i < count( $menu_items ); $i++) {
 			add_rewrite_endpoint( $menu_items[$i], EP_AUTHORS );
 		}
 
 	}
+
+    /**
+     * Theme Options > Slugs > Author Slug replaces "author" in profile links
+     * (/author/admin/favorites/). Set before any link or rule is built.
+     */
+    public function set_author_base(){
+        global $wp_rewrite;
+
+        $slug = sanitize_title( (string) jws_streamvid_options( 'author_slug' ) );
+
+        if ( $slug && $wp_rewrite instanceof WP_Rewrite ) {
+            $wp_rewrite->author_base = $slug;
+        }
+    }
+
+    /**
+     * Rewrite rules are stored in the database, so rebuild them once when the
+     * author slug changes. Runs on wp_loaded, after the post types and the
+     * profile endpoints are registered, so the rebuilt rules include them.
+     */
+    public function maybe_flush_author_base(){
+        global $wp_rewrite;
+
+        if ( ! $wp_rewrite instanceof WP_Rewrite ) {
+            return;
+        }
+
+        $current = $wp_rewrite->author_base;
+        $applied = get_option( 'jws_streamvid_author_base', false );
+
+        if ( $applied === $current ) {
+            return;
+        }
+
+        update_option( 'jws_streamvid_author_base', $current, true );
+
+        // First run on a site that still uses the default: nothing to rebuild.
+        if ( false === $applied && 'author' === $current ) {
+            return;
+        }
+
+        flush_rewrite_rules( false );
+    }
     
     
     public function get_endpoint( $user_id = 0, $parent_endpoint = '' , $endpoint = '' ){
