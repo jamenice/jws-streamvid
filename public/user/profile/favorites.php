@@ -6,11 +6,8 @@ if( ! defined('ABSPATH' ) ){
 $user_id = absint(get_queried_object_id());
 wp_enqueue_script('jws-youtube-api');
 
-$valid_post_types = ['movies', 'tv_shows', 'videos'];
-if ( post_type_exists( 'drama' ) ) {
-    $valid_post_types[] = 'drama';
-}
-$current_filter = isset($_GET['favorites_filter']) ? sanitize_text_field($_GET['favorites_filter']) : 'movies';
+$valid_post_types = jws_profile_tab_post_types();
+$current_filter = jws_profile_tab_current( isset($_GET['favorites_filter']) ? wp_unslash($_GET['favorites_filter']) : '' );
 ?>
 <div class="jws-movies_advanced-element profile-favorites favorites-page">
     <h5 class="profile-title"><?php echo esc_html__('My Favorites','jws_streamvid'); ?></h5>

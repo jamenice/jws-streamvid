@@ -1,10 +1,7 @@
 <?php
 if (!isset($video_progress_data) || !isset($current_filter)) return;
 // Kept in step with the tab list in history.php — 'episodes' dropped.
-$valid_post_types = ['movies', 'tv_shows', 'videos'];
-if ( post_type_exists( 'drama' ) ) {
-    $valid_post_types[] = 'drama';
-}
+$valid_post_types = jws_profile_tab_post_types();
 $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
 $per_page = 12;
 $found = false;

@@ -940,6 +940,58 @@ if(!function_exists('jws_profile_tab_label')) {
     }
 }
 
+if(!function_exists('jws_profile_tab_post_types')) {
+    /**
+     * Post types shown as tabs on the profile's History / Watchlist /
+     * Favorites pages, in display order.
+     *
+     * Driven by Theme Options > Profile > "History / Watchlist / Favorites
+     * Tabs". `drama` is dropped when its post type is not registered, and an
+     * all-unchecked option falls back to every tab so the pages never render
+     * an empty strip.
+     *
+     * @return string[]
+     */
+    function jws_profile_tab_post_types() {
+
+        $all = array('movies', 'tv_shows', 'videos');
+        if (post_type_exists('drama')) {
+            $all[] = 'drama';
+        }
+
+        $option = function_exists('jws_theme_get_option') ? jws_theme_get_option('profile_tab_post_types') : false;
+        if (!is_array($option)) {
+            return $all;
+        }
+
+        $enabled = array();
+        foreach ($all as $type) {
+            if (!empty($option[$type])) {
+                $enabled[] = $type;
+            }
+        }
+
+        return !empty($enabled) ? $enabled : $all;
+    }
+}
+
+if(!function_exists('jws_profile_tab_current')) {
+    /**
+     * Resolve the active profile tab: the requested type when it is enabled,
+     * otherwise the first enabled tab.
+     *
+     * @param string $requested Raw type from the request.
+     * @return string
+     */
+    function jws_profile_tab_current($requested) {
+
+        $types = jws_profile_tab_post_types();
+        $requested = sanitize_key($requested);
+
+        return in_array($requested, $types, true) ? $requested : reset($types);
+    }
+}
+
 if(!function_exists('jws_watchlist_check')) {
     
      function jws_watchlist_check($post_id) {
@@ -1206,10 +1258,35 @@ function jws_check_episodes_membership_access($pmpro_id) {
   
 }
 
+/**
+ * pmpro_has_membership_access() runs a query on every call and lists show the
+ * same title several times (sliders, related rows), so keep the answer for the
+ * rest of the request.
+ *
+ * @param int      $post_id Post ID.
+ * @param int|null $user_id User ID, the current user when null.
+ * @return bool True when the user can watch it (or PMPro is not active).
+ */
+function jws_streamvid_has_access( $post_id, $user_id = null ) {
+    static $cache = array();
+
+    if ( ! function_exists( 'pmpro_has_membership_access' ) ) {
+        return true;
+    }
+    $user_id = null === $user_id ? get_current_user_id() : (int) $user_id;
+    $key     = (int) $post_id . ':' . $user_id;
+
+    if ( ! isset( $cache[ $key ] ) ) {
+        $cache[ $key ] = (bool) pmpro_has_membership_access( $post_id, $user_id );
+    }
+
+    return $cache[ $key ];
+}
+
 function jws_premium_videos($post_id) {
     $output = '';
 
-    $has_membership = function_exists('pmpro_has_membership_access') && !pmpro_has_membership_access($post_id, get_current_user_id());
+    $has_membership = function_exists('pmpro_has_membership_access') && !jws_streamvid_has_access($post_id, get_current_user_id());
     $buy_enabled  = get_post_meta($post_id, 'buy_enable', true );
     $rent_enabled = get_post_meta($post_id, 'rent_enable', true );
     $age = get_post_meta($post_id, 'videos_age', true );

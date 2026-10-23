@@ -6,7 +6,7 @@ if (!$user_id) {
 }
 
 $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-$current_filter = isset($_POST['favorites_filter']) ? sanitize_text_field($_POST['favorites_filter']) : (isset($current_filter) ? $current_filter : 'movies');
+$current_filter = jws_profile_tab_current( isset($_POST['favorites_filter']) ? wp_unslash($_POST['favorites_filter']) : (isset($current_filter) ? $current_filter : '') );
 
 $favorites_list = Jws_Favorites::get_ids($user_id, $current_filter);
 

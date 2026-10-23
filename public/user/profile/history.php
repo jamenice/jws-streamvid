@@ -6,13 +6,10 @@ if( ! defined('ABSPATH' ) ){
 $user_id = get_current_user_id();
 $video_progress_data = Jws_History::get_all($user_id);
 // No separate "episodes" tab: watched episodes show under Tv Shows with their season and episode.
-$valid_post_types = ['movies', 'tv_shows', 'videos'];
-if ( post_type_exists( 'drama' ) ) {
-    $valid_post_types[] = 'drama';
-}
+$valid_post_types = jws_profile_tab_post_types();
 
 
-$current_filter = isset($_GET['history_filter']) ? sanitize_text_field($_GET['history_filter']) : 'movies';
+$current_filter = jws_profile_tab_current( isset($_GET['history_filter']) ? wp_unslash($_GET['history_filter']) : '' );
 ?>
 <div class="profile-history">
     <h5 class="profile-title"><?php echo esc_html__('My History','jws_streamvid'); ?></h5>

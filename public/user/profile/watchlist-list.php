@@ -6,12 +6,9 @@ if (!$user_id) {
 }
 $post_watchlisted = Jws_Watchlist::get_ids($user_id);
 $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-$current_filter = isset($_POST['watchlist_filter']) ? sanitize_text_field($_POST['watchlist_filter']) : (isset($current_filter) ? $current_filter : 'movies');
+$current_filter = jws_profile_tab_current( isset($_POST['watchlist_filter']) ? wp_unslash($_POST['watchlist_filter']) : (isset($current_filter) ? $current_filter : '') );
 // Kept in step with the tab list in watchlist.php — 'episodes' dropped.
-$valid_post_types = ['movies', 'tv_shows', 'videos'];
-if ( post_type_exists( 'drama' ) ) {
-    $valid_post_types[] = 'drama';
-}
+$valid_post_types = jws_profile_tab_post_types();
 $found = false;
 $items = array();
 if(!empty($post_watchlisted)) {

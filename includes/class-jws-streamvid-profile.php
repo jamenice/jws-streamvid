@@ -120,7 +120,28 @@ class Jws_Streamvid_Profile {
     			'priority'		=>	30
     	   );
        }
-       
+
+       // Only link the wallet when its profile tab is registered, otherwise the endpoint does not exist.
+       $profile_items = $this->get_menu_items();
+       if(isset($profile_items['drama-coins'])) {
+            $items[ 'drama-coins' ] 	= array(
+    			'title'			=>	esc_html__( 'Coins', 'jws_streamvid' ),
+    			'icon'			=>	'jws-icon-coins',
+    			'callback'		=>	'',
+    			'priority'		=>	35
+    	   );
+       }
+
+       if(function_exists( 'wc_get_page_permalink' )) {
+            $items[ 'shop' ] 	= array(
+    			'title'			=>	esc_html__( 'Shop', 'jws_streamvid' ),
+    			'icon'			=>	'jws-icon-handbag',
+    			'callback'		=>	'',
+                'url'       =>  wc_get_page_permalink( 'shop' ),
+    			'priority'		=>	38
+    	   );
+       }
+
        $items[ 'author' ] 	= array(
 			'title'			=>	esc_html__( 'My Profile', 'jws_streamvid' ),
 			'icon'			=>	'jws-icon-user-circle',
@@ -142,6 +163,38 @@ class Jws_Streamvid_Profile {
             'url'       =>  esc_url( wp_logout_url( home_url( '/' ) ) ),
 			'priority'		=>	60
 	   );
+
+       $this->uasort( $items );
+
+       /*
+        * Theme Options > Profile > Account Dropdown Menu sets the order and hides
+        * items. Items missing from both lists (added after the last save) still show.
+        */
+       $header_menu_list = function_exists('jws_theme_get_option') ? jws_theme_get_option('profile_header_menu_list', []) : [];
+       $header_menu_list = is_array($header_menu_list) ? $header_menu_list : json_decode( $header_menu_list, true );
+
+       $enabled  = ( isset($header_menu_list['enabled'])  && is_array($header_menu_list['enabled'])  ) ? $header_menu_list['enabled']  : array();
+       $disabled = ( isset($header_menu_list['disabled']) && is_array($header_menu_list['disabled']) ) ? $header_menu_list['disabled'] : array();
+       unset( $enabled['placebo'], $disabled['placebo'] );
+
+       // Not saved yet: match the sorter default, which hides Upload, Go live and Shop.
+       if ( empty( $enabled ) && empty( $disabled ) ) {
+            $disabled = array( 'upload' => 1, 'live' => 1, 'shop' => 1 );
+       }
+
+       $sorted = array();
+       foreach ($enabled as $key => $label) {
+            if (isset($items[$key])) {
+                $sorted[$key] = $items[$key];
+            }
+       }
+       foreach ($items as $key => $item) {
+            if ( ! isset($sorted[$key]) && ! isset($disabled[$key]) ) {
+                $sorted[$key] = $item;
+            }
+       }
+       $items = $sorted;
+
        return apply_filters( 'streamvid_profire_menu_header_items', $items );
         
     }
@@ -638,11 +691,12 @@ class Jws_Streamvid_Profile {
 
     $profile_menu_list = jws_theme_get_option('profile_menu_list', []);
     $profile_menu_list = is_array($profile_menu_list) ? $profile_menu_list : json_decode( $profile_menu_list, true );
-    if (
+    // The header items come already ordered by the Account Dropdown Menu sorter.
+    if ( ! $header && (
         !isset($profile_menu_list['enabled']) ||
         !is_array($profile_menu_list['enabled']) ||
         count($profile_menu_list['enabled']) === 0
-    ) {
+    ) ) {
         $this->uasort( $menu_items );
     }
     ?>
