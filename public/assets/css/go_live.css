@@ -1,0 +1,781 @@
+/**
+ * Go Live form (#upload-videos-live).
+ *
+ * One markup for both the "Go live" popup and the Go Live page template
+ * (Theme Options > Videos Upload > Go Live Mode). The popup stacks into one
+ * column; the page lays the form out in two, with the thumbnail beside it.
+ * Field basics (labels, inputs, select2, loading state) still come from the
+ * theme's .user-popup rules.
+ */
+
+.jws-golive {
+    --golive-surface: var(--background-item, #15151c);
+    --golive-line: rgba(255, 255, 255, 0.08);
+    --golive-muted: var(--body, #a1a1aa);
+    --golive-radius: 12px;
+    --golive-error: #ff5a5f;
+    --golive-input: rgba(0, 0, 0, 0.35);
+    --golive-input-focus: rgba(0, 0, 0, 0.5);
+    --golive-input-line: rgba(255, 255, 255, 0.12);
+}
+
+.jws-golive [hidden] {
+    display: none !important;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Box
+ * -------------------------------------------------------------------------- */
+
+.user-popup .mfp-content>.jws-golive {
+    max-width: 760px;
+    padding: 40px 48px;
+    border: 1px solid var(--golive-line);
+    border-radius: 16px;
+}
+
+.jws-live-page .jws-golive,
+.jws-upload-page .jws-golive {
+    max-width: 1120px;
+    margin: 50px auto 80px;
+    padding: 48px;
+    border: 1px solid var(--golive-line);
+    border-radius: 16px;
+    /* Over the theme's body colour (Theme Options, #00031c by default), not a fixed black. */
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.jws-live-page-message {
+    max-width: 740px;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 12px;
+    background: var(--background-item, #191c33);
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Head
+ * -------------------------------------------------------------------------- */
+
+.jws-golive .golive-head {
+    margin-bottom: 32px;
+}
+
+.jws-golive .golive-head p {
+    max-width: 620px;
+    color: var(--golive-muted);
+}
+
+.golive-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 14px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: rgba(255, 59, 48, 0.14);
+    color: #ff5b52;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 18px;
+    text-transform: uppercase;
+}
+
+.golive-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: golive-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes golive-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 91, 82, 0.6);
+    }
+
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 0 5px rgba(255, 91, 82, 0);
+    }
+}
+
+.golive-steps {
+    display: flex;
+    gap: 24px;
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--font-size-sm, 14px);
+    color: var(--golive-muted);
+}
+
+.golive-steps li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.golive-steps li+li:before {
+    width: 28px;
+    height: 1px;
+    margin-inline-end: 6px;
+    background: var(--golive-line);
+    content: "";
+}
+
+.golive-steps span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--golive-line);
+    border-radius: 50%;
+    font-size: 12px;
+}
+
+.golive-steps .is-active {
+    color: var(--heading);
+}
+
+.golive-steps .is-active span {
+    border-color: var(--main);
+    background: var(--main);
+    color: var(--btn-color, #fff);
+}
+
+/* -------------------------------------------------------------------------- *
+ * Layout
+ * -------------------------------------------------------------------------- */
+
+.golive-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+@media (min-width: 992px) {
+    .jws-live-page .golive-grid,
+.jws-upload-page .golive-grid {
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 28px;
+        align-items: start;
+    }
+
+    .jws-live-page .golive-side,
+.jws-upload-page .golive-side {
+        position: sticky;
+        top: 100px;
+    }
+}
+
+.golive-main,
+.golive-side {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* In the popup the thumbnail comes right after the title block. */
+.mfp-content .golive-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.mfp-content .golive-side {
+    order: -1;
+}
+
+.mfp-content .golive-tips {
+    display: none;
+}
+
+.golive-section {
+    padding: 24px;
+    border: 1px solid var(--golive-line);
+    border-radius: var(--golive-radius);
+    background: var(--golive-surface);
+}
+
+.golive-section__title {
+    margin: 0 0 18px;
+    font-size: 16px;
+}
+
+.jws-golive .golive-field {
+    margin-bottom: 20px;
+}
+
+.jws-golive .golive-section>.golive-field:last-child,
+.jws-golive .golive-section>.golive-reveal {
+    margin-bottom: 0;
+}
+
+.golive-reveal {
+    margin-top: 18px;
+    animation: golive-in 0.2s ease;
+}
+
+@keyframes golive-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.golive-required {
+    color: var(--golive-error);
+}
+
+/* -------------------------------------------------------------------------- *
+ * Inputs
+ * -------------------------------------------------------------------------- */
+
+/*
+ * The theme gives inputs the same --input-background as the cards and a
+ * border in that same colour, so on a card the field has no visible edge.
+ * Inside the form they get their own well and a hairline border.
+ */
+.jws-golive .golive-field input[type="text"],
+.jws-golive .golive-field input[type="number"],
+.jws-golive .golive-field input[type="datetime-local"],
+.jws-golive .golive-field textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 1px solid var(--golive-input-line);
+    border-radius: 10px;
+    background-color: var(--golive-input);
+    color: var(--heading);
+    line-height: 22px;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.jws-golive .golive-field textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.jws-golive .golive-field input:hover,
+.jws-golive .golive-field textarea:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.jws-golive .golive-field input:focus,
+.jws-golive .golive-field textarea:focus {
+    border-color: var(--main);
+    background-color: var(--golive-input-focus);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+    outline: none;
+}
+
+.jws-golive .golive-field input::placeholder,
+.jws-golive .golive-field textarea::placeholder {
+    color: var(--golive-muted);
+    opacity: 0.7;
+}
+
+.jws-golive .select2-container--default .select2-selection--multiple {
+    min-height: 48px;
+    border: 1px solid var(--golive-input-line);
+    border-radius: 10px;
+    background-color: var(--golive-input);
+}
+
+.jws-golive .select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: var(--main);
+}
+
+.jws-golive .golive-field input[type="datetime-local"] {
+    max-width: 320px;
+    color-scheme: dark;
+}
+
+.golive-field__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 18px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.golive-count {
+    flex-shrink: 0;
+    color: var(--golive-muted);
+}
+
+.golive-error {
+    color: var(--golive-error);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.golive-error--form {
+    display: none;
+}
+
+.jws-golive .has-error input,
+.jws-golive .has-error textarea {
+    border-color: var(--golive-error) !important;
+}
+
+.golive-input-prefix {
+    position: relative;
+    max-width: 220px;
+}
+
+.golive-input-prefix span {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 16px;
+    transform: translateY(-50%);
+    color: var(--golive-muted);
+    pointer-events: none;
+}
+
+.jws-golive .golive-input-prefix input[type="number"] {
+    padding-inline-start: 32px;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Option cards (Schedule / Access)
+ * -------------------------------------------------------------------------- */
+
+.golive-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.jws-golive .golive-option {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.golive-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.golive-option__box {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 12px;
+    row-gap: 2px;
+    align-items: center;
+    height: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--golive-line);
+    border-radius: 10px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.golive-option__box i {
+    grid-row: span 2;
+    font-size: 22px;
+    color: var(--golive-muted);
+}
+
+.golive-option__box strong {
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.golive-option__box small {
+    color: var(--golive-muted);
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.golive-option:hover .golive-option__box {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.golive-option input:checked+.golive-option__box {
+    border-color: var(--main);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 0 0 1px var(--main);
+}
+
+.golive-option input:checked+.golive-option__box i {
+    color: var(--main);
+}
+
+.golive-option input:focus-visible+.golive-option__box {
+    outline: 2px solid var(--main);
+    outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Category chips
+ * -------------------------------------------------------------------------- */
+
+.golive-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jws-golive .golive-chip {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.golive-chip input {
+    position: absolute !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.golive-chip span {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--golive-line);
+    border-radius: 999px;
+    color: var(--light, #d4d4d8);
+    font-size: 13px;
+    line-height: 20px;
+    transition: all 0.2s;
+}
+
+.golive-chip:hover span {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.golive-chip input:checked+span {
+    border-color: var(--main);
+    background: var(--main);
+    color: var(--btn-color, #fff);
+}
+
+.golive-chip input:focus-visible+span {
+    outline: 2px solid var(--main);
+    outline-offset: 2px;
+}
+
+.jws-golive .select2-container {
+    width: 100% !important;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Thumbnail drop zone
+ * -------------------------------------------------------------------------- */
+
+.golive-drop {
+    position: relative;
+}
+
+.golive-drop__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.jws-golive .golive-drop__zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    aspect-ratio: 16 / 9;
+    margin: 0;
+    padding: 20px;
+    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    color: var(--golive-muted);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.golive-drop__zone i {
+    margin-bottom: 4px;
+    font-size: 32px;
+}
+
+.golive-drop__zone strong {
+    color: var(--heading);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.golive-drop__zone small {
+    font-size: 12px;
+    line-height: 17px;
+}
+
+.golive-drop__zone:hover,
+.golive-drop.is-dragging .golive-drop__zone {
+    border-color: var(--main);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.golive-drop__input:focus-visible+.golive-drop__zone {
+    outline: 2px solid var(--main);
+    outline-offset: 2px;
+}
+
+.golive-drop.has-error .golive-drop__zone {
+    border-color: var(--golive-error);
+}
+
+.golive-drop__preview {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    background: #000;
+}
+
+.golive-drop__preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.golive-drop__actions {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.jws-golive .golive-drop__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 12px;
+    line-height: 18px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.golive-drop__btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.golive-drop .golive-error {
+    display: block;
+    margin-top: 8px;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Tips
+ * -------------------------------------------------------------------------- */
+
+.golive-tips {
+    padding: 20px 24px;
+    border-radius: var(--golive-radius);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--golive-muted);
+}
+
+.golive-tips h6 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+.golive-tips ul {
+    margin: 0;
+    padding-inline-start: 18px;
+}
+
+.golive-tips li+li {
+    margin-top: 6px;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Actions
+ * -------------------------------------------------------------------------- */
+
+.jws-golive .golive-actions {
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--golive-line);
+}
+
+.jws-golive .golive-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jws-golive .golive-cancel {
+    border: 1px solid var(--golive-line);
+    background: transparent;
+    color: var(--light, #d4d4d8);
+}
+
+.jws-golive .golive-cancel:hover {
+    border-color: var(--light, #d4d4d8);
+}
+
+/* -------------------------------------------------------------------------- *
+ * Small screens
+ * -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+
+    .user-popup .mfp-content>.jws-golive,
+    .jws-live-page .jws-golive,
+.jws-upload-page .jws-golive {
+        margin: 20px auto;
+        padding: 28px 18px;
+    }
+
+    .golive-section {
+        padding: 18px;
+    }
+
+    .golive-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jws-golive .golive-actions {
+        flex-direction: column-reverse;
+    }
+
+    .jws-golive .golive-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .jws-golive .golive-cancel {
+        margin-right: 0;
+    }
+}
+/* -------------------------------------------------------------------------- *
+ * Upload / edit video form — the same components, plus the video drop zone
+ * -------------------------------------------------------------------------- */
+
+.jws-upload .golive-section + .golive-section,
+.jws-upload .golive-options + .upload-panel {
+    margin-top: 16px;
+}
+
+.jws-upload .upload-drop--video .golive-drop__zone {
+    aspect-ratio: auto;
+    min-height: 170px;
+}
+
+.jws-upload .upload-drop--video.has-file .golive-drop__zone {
+    border-style: solid;
+    border-color: var(--main);
+}
+
+.jws-upload .upload-drop--video .upload-drop__title {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Progress bar and file name come from the existing upload handler. */
+.jws-upload .upload-progress {
+    height: 6px;
+    margin: 0 0 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.jws-upload .upload-progress span {
+    position: relative;
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--main);
+    transition: width 0.2s;
+}
+
+.jws-upload .upload-filename {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--golive-muted);
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.jws-upload .golive-field.has-error .golive-input-prefix input,
+.jws-upload .golive-field.has-error textarea {
+    border-color: var(--golive-error) !important;
+}
+
+.jws-upload .golive-actions .delete-videos {
+    margin-inline-end: auto;
+    color: #ff5a5f;
+}
+
+.jws-upload .golive-actions .delete-videos:hover {
+    border-color: #ff5a5f;
+}
+
+/*
+ * Calendar icon in date fields. color-scheme: dark already draws it light;
+ * live.css's .acf-live-date filter (invert…) was written for a dark icon and
+ * turned it back to near-black on the dark field.
+ */
+.jws-golive .golive-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: none;
+    opacity: 0.75;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.jws-golive .golive-field input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* The calendar icon is an inline SVG: the icon font has no calendar. */
+.golive-option__box svg {
+    grid-row: span 2;
+    color: var(--golive-muted);
+}
+
+.golive-option input:checked+.golive-option__box svg {
+    color: var(--main);
+}

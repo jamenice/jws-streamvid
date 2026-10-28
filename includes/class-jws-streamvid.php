@@ -785,21 +785,6 @@ class Jws_Streamvid {
 			$this->plugin_action->live_videos, 
 			'start_stream'
 	   );
-       $this->loader->add_action( 
-			'wp_ajax_check_live_stream_status', 
-			$this->plugin_action->live_videos, 
-			'ajax_check_live_status'
-	   );
-       $this->loader->add_action( 
-			'wp_ajax_delete_live_data', 
-			$this->plugin_action->live_videos, 
-			'delete_live_data'
-	   );
-       $this->loader->add_action( 
-			'wp_ajax_start_live_data_admin', 
-			$this->plugin_action->live_videos, 
-			'start_live_in_admin'
-	   );
 
     }
     

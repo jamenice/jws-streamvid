@@ -164,28 +164,16 @@ if($videos_type == 'url') {
 
 }
 
-if(isset($live_data['uid'])) {
-    
-    $attr_player .= 'data-live-uid='.$live_data['uid'].'';
-
-    $live_stream_url =  jws_streamvid()->get()->live_videos->get_live_stream_url($live_data['uid']);
- 
-    $video_url = $live_stream_url;
-    
-    $type = 'application/x-mpegURL';
-    
-}
-
 /*
- * A live stream has no timeline to scrub. A Live TV channel and a Cloudflare
- * live input both play a sliding window with no past and no end, so the player
+ * A live stream has no timeline to scrub. A Live TV channel plays a sliding
+ * window with no past and no end, so the player
  * pins its progress bar to the live edge and drops every seek control instead
  * of offering a scrub that cannot land anywhere — see lockLiveControls() in
  * assets/js/player/jws_player_v10.js.
  *
  * Filterable so a site that streams live from somewhere else can say so.
  */
-$is_live_stream = ( 'tv_channel' === get_post_type( $post_id ) ) || isset( $live_data['uid'] );
+$is_live_stream = ( 'tv_channel' === get_post_type( $post_id ) );
 
 $is_live_stream = (bool) apply_filters( 'streamvid/player/is_live', $is_live_stream, $post_id );
 
@@ -379,35 +367,6 @@ $class_player .= ' '.$type;
 <div class="<?php echo esc_attr($class_player); ?> vjs-waiting" <?php echo esc_attr($attr_player); ?> data-playerid="<?php echo esc_attr($post_id); ?>">
 
 <?php  
-
-if(isset($live_data['uid'])) { 
-    
-    ?>
-        <div class="player-overlay">
-        
-            <div class="overlay-inner">
-                  <div class="spinner">
-                        <?php 
-                            for ($i = 1; $i <= 8; $i++) {
-                                echo '<div class="spinner-blade"></div>';
-                            }
-                        ?>
-                 </div> 
-                 <div class="message">
-                    <?php 
-
-                       echo esc_html__('Stream is starting soon.','jws_streamvid'); 
-
-                    ?>
-                </div>
-                
-            </div>
-           
-        </div>
-        
-    <?php    
-    
-}
 
 $subtitles = get_field( "sub_titles", $post_id );
 

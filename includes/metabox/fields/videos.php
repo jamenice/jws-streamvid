@@ -5,8 +5,8 @@
  * `videos_metabox` (themes/streamvid/inc/admin/acf_metabox/post_type/videos.php).
  *
  * Names and field keys are copied from that file so both write identical meta.
- * The live stream panel keeps the buttons admin/js/jws-streamvid-admin.js
- * already drives (.start-live-stream / .remove-live-stream).
+ * The Live Stream tab only reports: LiveKit streams are created with the Go
+ * live button and run from the video page (includes/livestream/).
  *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes/metabox
@@ -64,50 +64,32 @@ function jws_metabox_register_videos() {
 }
 
 /**
- * Cloudflare live input details. Read-only: the data is written by the
- * start/remove live stream ajax actions, never by the form.
+ * The Live Stream tab: whether this video is a LiveKit live stream. Members
+ * create streams with the Go live button; nothing here starts one.
  */
 function jws_metabox_render_live_data( $post ) {
-	$live = get_post_meta( $post->ID, 'live_data', true );
 
 	echo '<div class="admin-livestream jws-mb__live">';
-	if ( 'auto-draft' === $post->post_status ) {
-		echo '<p class="jws-mb__desc">' . esc_html__( 'Save the video once before starting a live stream.', 'jws_streamvid' ) . '</p></div>';
-		return;
-	}
 
-	if ( empty( $live ) || ! is_array( $live ) ) {
-		echo '<div class="jws-mb__live-empty"><span class="dashicons dashicons-video-alt2"></span>';
-		echo '<p>' . esc_html__( 'No live input yet. Starting one creates a Cloudflare Stream live input for this video.', 'jws_streamvid' ) . '</p>';
-		printf( '<a href="#" class="start-live-stream button button-primary button-large" data-id="%d">%s</a>', (int) $post->ID, esc_html__( 'Start Live Stream', 'jws_streamvid' ) );
-		echo '</div></div>';
-		return;
-	}
+	if ( class_exists( 'Jws_Livestream' ) && Jws_Livestream::is_stream_post( $post->ID ) ) {
 
-	$rows = array(
-		__( 'Uid', 'jws_streamvid' )        => isset( $live['uid'] ) ? $live['uid'] : '',
-		__( 'Server Url', 'jws_streamvid' ) => isset( $live['rtmps']['url'] ) ? $live['rtmps']['url'] : '',
-		__( 'Stream Key', 'jws_streamvid' ) => isset( $live['rtmps']['streamKey'] ) ? $live['rtmps']['streamKey'] : '',
-	);
-	echo '<div class="jws-mb__grid">';
-	foreach ( $rows as $label => $value ) {
-		if ( '' === (string) $value ) {
-			continue;
+		$message = Jws_Livestream::has_ended( $post->ID )
+			? __( 'This live stream has ended.', 'jws_streamvid' )
+			: __( 'This is a live stream. Its author goes live from the video page, in Live Studio.', 'jws_streamvid' );
+
+		echo '<p class="jws-mb__desc">' . esc_html( $message ) . '</p>';
+
+		if ( 'auto-draft' !== $post->post_status ) {
+			printf( '<p><a href="%s" class="button" target="_blank" rel="noopener">%s</a></p>', esc_url( get_permalink( $post ) ), esc_html__( 'View video page', 'jws_streamvid' ) );
 		}
-		echo '<div class="jws-mb__field field-item" style="--jws-mb-w:100%">';
-		printf( '<label class="jws-mb__label">%s</label>', esc_html( $label ) );
-		printf(
-			'<div class="jws-mb__copy"><input type="text" class="jws-mb__input" readonly value="%s"><button type="button" class="button jws-mb__copy-btn" title="%s"><span class="dashicons dashicons-admin-page"></span></button></div>',
-			esc_attr( $value ),
-			esc_attr__( 'Copy', 'jws_streamvid' )
-		);
+
+	} else {
+
+		echo '<div class="jws-mb__live-empty"><span class="dashicons dashicons-video-alt2"></span>';
+		echo '<p>' . esc_html__( 'This video is not a live stream. Members create live streams on the front end with the Go live button.', 'jws_streamvid' ) . '</p>';
 		echo '</div>';
+
 	}
-	echo '</div>';
-	printf(
-		'<p class="field-item"><a href="#" class="remove-live-stream button button-link-delete" data-id="%d">%s</a></p>',
-		(int) $post->ID,
-		esc_html__( 'Remove Live Stream Data', 'jws_streamvid' )
-	);
+
 	echo '</div>';
 }

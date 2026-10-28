@@ -80,6 +80,12 @@ class Jws_Streamvid_Public {
 
         wp_enqueue_style( $this->plugin_name, JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/jws-streamvid-public.css', array(), $this->version, 'all' );
 
+        /* Upload, edit and Go Live forms: the popups are printed on every page
+           for a logged-in user, and the page templates show them inline. */
+        if( is_user_logged_in() ) {
+            wp_enqueue_style( 'jws-go-live', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/go_live.css', array(), filemtime( JWS_STREAMVID_PATH_PUBLIC . '/assets/css/go_live.css' ), 'all' );
+        }
+
         if($is_drama || $is_live_tv || $is_playlist_tax || is_singular( array( 'movies') ) || is_singular( array( 'episodes') ) || is_singular( array( 'videos') )) {
 
         if ( class_exists( 'Jws_Streamvid_Player_Engine' ) && Jws_Streamvid_Player_Engine::is_v10() ) {
@@ -288,9 +294,23 @@ class Jws_Streamvid_Public {
         
         if( is_user_logged_in() ){
             
-            wp_enqueue_script( 'jws-upload-videos', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/upload_videos.js', array( 'jquery' ), $this->version, true );
-       
-        } 
+            wp_enqueue_script( 'jws-upload-videos', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/upload_videos.js', array( 'jquery' ), filemtime( JWS_STREAMVID_PATH_PUBLIC . '/assets/js/pages/upload_videos.js' ), true );
+
+            wp_localize_script( 'jws-upload-videos', 'jwsUpload', array(
+                'nonce' => wp_create_nonce( 'jws_upload_video' ),
+                'i18n'  => array(
+                    'uploading'      => __( 'Uploading:', 'jws_streamvid' ),
+                    'uploaded'       => __( 'Uploaded:', 'jws_streamvid' ),
+                    'upload_failed'  => __( 'Upload failed:', 'jws_streamvid' ),
+                    'no_file'        => __( 'Upload the video file first, or wait for the upload to finish.', 'jws_streamvid' ),
+                    'delete_confirm' => __( 'Delete this video? This cannot be undone.', 'jws_streamvid' ),
+                    'error'          => __( 'There is a problem with the network connection. Try again.', 'jws_streamvid' ),
+                ),
+            ) );
+
+            wp_enqueue_script( 'jws-go-live', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/go_live.js', array( 'jquery' ), filemtime( JWS_STREAMVID_PATH_PUBLIC . '/assets/js/pages/go_live.js' ), true );
+
+        }
         $max_size = jws_get_max_upload_image_size();
        
         $fr_varjs = array( 

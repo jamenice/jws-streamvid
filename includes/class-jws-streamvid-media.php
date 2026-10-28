@@ -469,7 +469,7 @@ class Jws_Streamvid_Media {
         $explicit_image = ! empty( $attach_id );
 
         $background_banner = get_post_meta( $post_id , 'featured_image_two', true );
-        $live = get_post_meta($post_id , 'live_data' , true);
+        $live = class_exists( 'Jws_Livestream' ) && Jws_Livestream::is_live_post( $post_id );
         $pre = jws_premium_videos($post_id);
         $attach_id = $explicit_image ? (int) $attach_id : get_post_thumbnail_id($post_id);
 

@@ -110,8 +110,16 @@ class Jws_Streamvid_Profile {
                 'popup'         =>  '#upload-videos',
     			'priority'		=>	20
     	   );
+
+            // Upload Video Mode "Page" (Theme Options > Videos Upload): link to the page instead.
+            $upload_page_url = jws_streamvid()->get()->videos->get_upload_page_url();
+
+            if($upload_page_url) {
+                $items[ 'upload' ]['popup'] = '';
+                $items[ 'upload' ]['url']   = $upload_page_url;
+            }
        }
-       if(jws_theme_get_option('video_live')) { 
+       if(jws_theme_get_option('video_live')) {
             $items[ 'live' ] 	= array(
     			'title'			=>	esc_html__( 'Go live', 'jws_streamvid' ),
     			'icon'			=>	'jws-icon-video-camera',
@@ -119,6 +127,14 @@ class Jws_Streamvid_Profile {
                 'popup'         =>  '#upload-videos-live',
     			'priority'		=>	30
     	   );
+
+            // Go Live Mode "Page" (Theme Options > Videos Upload): link to the page instead.
+            $live_page_url = jws_streamvid()->get()->live_videos->get_create_page_url();
+
+            if($live_page_url) {
+                $items[ 'live' ]['popup'] = '';
+                $items[ 'live' ]['url']   = $live_page_url;
+            }
        }
 
        // Only link the wallet when its profile tab is registered, otherwise the endpoint does not exist.

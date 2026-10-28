@@ -99,6 +99,14 @@ Jws_Tv_Channel::boot();
 require_once plugin_dir_path( __FILE__ ) . 'includes/landing/class-landing.php';
 Jws_Landing::boot();
 
+/**
+ * Live streaming with LiveKit: Live Studio, viewer and chat.
+ * LiveKit keys: Theme Options > Videos > Livestream.
+ * Everything it needs lives in includes/livestream/.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'includes/livestream/class-livestream.php';
+Jws_Livestream::boot();
+
 
 include_once( 'check_update.php' );
 

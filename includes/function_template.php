@@ -1395,11 +1395,6 @@ function jws_video_check() {
                 $poster_id  = $featured_image_two;
             }
             
-            if($post_type == 'videos') {
-              
-              $live_data = get_post_meta( $post_id , 'live_data', true ); 
-              
-            }
             
             
             $image = jws_image_advanced(array('attach_id' => $poster_id, 'thumb_size' => 'full' , 'return_url' => true));
@@ -1472,18 +1467,6 @@ function jws_video_check() {
                     $type = 'application/x-mpegURL';
                 } 
             
-            }
-            
-            if(isset($live_data['uid'])) {
-                
-                $attr_player .= 'data-live-uid='.$live_data['uid'].'';
-            
-                $live_stream_url =  jws_streamvid()->get()->live_videos->get_live_stream_url($live_data['uid']);
-             
-                $video_url = $live_stream_url;
-                
-                $type = 'application/x-mpegURL';
-                
             }
             
             if(empty($video_url)) {

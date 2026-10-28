@@ -67,7 +67,7 @@ $querys = new WP_Query($args);
           else: 
           
           if($is_owner) {
-             $upload_here = jws_theme_get_option('video_upload') ? __('Start upload your own video ','jws_streamvid').'<a href="#" data-modal-jws="#upload-videos">'.esc_html__('here.','jws_streamvid').'</a>' : '';
+             $upload_here = jws_theme_get_option('video_upload') ? __('Start upload your own video ','jws_streamvid').'<a '.jws_streamvid()->get()->videos->upload_trigger_attrs().'>'.esc_html__('here.','jws_streamvid').'</a>' : '';
           }else {
             $upload_here = '';
           }

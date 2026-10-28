@@ -70,7 +70,7 @@ $is_owner = jws_streamvid_check_owner();
         }
         elseif(isset( $GLOBALS['wp_query']->query_vars['video'] ) && jws_theme_get_option('video_upload')){
             echo '<div class="videos-button header-button">';    
-            echo '<button class="button-custom" data-modal-jws="#upload-videos"><i class="jws-icon-upload"></i>'.esc_html__('Upload Video','jws_streamvid').'</button>';
+            echo '<a class="button-custom" '.jws_streamvid()->get()->videos->upload_trigger_attrs().'><i class="jws-icon-upload"></i>'.esc_html__('Upload Video','jws_streamvid').'</a>';
             echo '</div>';
         }
     }    
