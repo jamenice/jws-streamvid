@@ -661,7 +661,14 @@ class Jws_Drama_Wallet {
 		}
 
 		$back     = $back ? $back : home_url( '/' );
-		$checkout = esc_url_raw( home_url( add_query_arg( array(), wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) );
+		/*
+		 * REQUEST_URI already carries the install's sub-directory, and so does
+		 * home_url(). Joining the two doubled it on a sub-folder install
+		 * (/streamvid/streamvid/...), so only the scheme and host are taken
+		 * from home_url().
+		 */
+		$origin   = preg_replace( '#^(https?://[^/]+).*$#i', '$1', home_url() );
+		$checkout = esc_url_raw( $origin . wp_unslash( $_SERVER['REQUEST_URI'] ) );
 
 		wp_safe_redirect( add_query_arg( 'jws_login_redirect', rawurlencode( $checkout ), $back ) );
 		exit;
@@ -685,22 +692,28 @@ class Jws_Drama_Wallet {
 		<script>
 		document.addEventListener( 'DOMContentLoaded', function () {
 
-			var form = document.querySelector( '.jws-form-login-popup form' );
+			/* Every form in the popup, not just the first: the register form
+			   posts its own serialized fields, and without a `redirect` there
+			   a new account lands on the author page instead of the checkout. */
+			var forms = document.querySelectorAll( '.jws-form-login-popup form' );
 
-			if ( ! form ) {
+			if ( ! forms.length ) {
 				return;
 			}
 
-			var field = form.querySelector( 'input[name="redirect"]' );
+			forms.forEach( function ( form ) {
 
-			if ( ! field ) {
-				field = document.createElement( 'input' );
-				field.type = 'hidden';
-				field.name = 'redirect';
-				form.appendChild( field );
-			}
+				var field = form.querySelector( 'input[name="redirect"]' );
 
-			field.value = <?php echo wp_json_encode( $redirect ); ?>;
+				if ( ! field ) {
+					field = document.createElement( 'input' );
+					field.type = 'hidden';
+					field.name = 'redirect';
+					form.appendChild( field );
+				}
+
+				field.value = <?php echo wp_json_encode( $redirect ); ?>;
+			} );
 
 			if ( window.jwsThemeModule && jwsThemeModule.login_popup ) {
 				jwsThemeModule.login_popup();

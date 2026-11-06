@@ -305,4 +305,44 @@ class Jws_Drama_Templates {
 			update_user_meta( $user_id, 'jws_drama_last_ep_' . (int) $drama_id, (int) $episode_id );
 		}
 	}
+
+	/* ---------------------------------------------------------------------- */
+	/* Views                                                                   */
+	/* ---------------------------------------------------------------------- */
+
+	/**
+	 * Counts one view of an episode, and of the drama it belongs to.
+	 *
+	 * Same `views` meta every other title on the site uses, so "Most Viewed"
+	 * sorting and widgets pick dramas up as they are. The theme's counter also
+	 * writes the daily log behind the "trending today / this week" queries;
+	 * without the theme the meta alone is still kept.
+	 */
+	public static function count_view( $drama_id, $episode_id ) {
+
+		foreach ( array_filter( array( (int) $episode_id, (int) $drama_id ) ) as $post_id ) {
+
+			if ( function_exists( 'jws_gt_set_videos_view' ) ) {
+				jws_gt_set_videos_view( $post_id );
+				continue;
+			}
+
+			update_post_meta( $post_id, 'views', (int) get_post_meta( $post_id, 'views', true ) + 1 );
+		}
+	}
+
+	/** Total views of a drama or an episode. */
+	public static function views( $post_id ) {
+
+		return (int) get_post_meta( (int) $post_id, 'views', true );
+	}
+
+	/** "1,234 views", ready to print. */
+	public static function views_label( $post_id ) {
+
+		$views = self::views( $post_id );
+
+		/* translators: %s: number of views */
+		return sprintf( _n( '%s view', '%s views', $views, 'jws_streamvid' ), number_format_i18n( $views ) );
+	}
 }

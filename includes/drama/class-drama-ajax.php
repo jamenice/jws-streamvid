@@ -21,6 +21,7 @@ class Jws_Drama_Ajax {
 
 		foreach ( array( 'wp_ajax_', 'wp_ajax_nopriv_' ) as $prefix ) {
 			add_action( $prefix . 'jws_drama_episode', array( $this, 'episode' ) );
+			add_action( $prefix . 'jws_drama_view', array( $this, 'view' ) );
 
 			/* Both halves have a nopriv twin: an ad is watched by whoever is in
 			   front of the screen, and this one is open to viewers who have not
@@ -316,6 +317,39 @@ class Jws_Drama_Ajax {
 		$prefetch = ! empty( $_POST['prefetch'] );
 
 		wp_send_json_success( $this->episode_payload( $episode_id, $drama_id, $prefetch ) );
+	}
+
+	/**
+	 * Counts a view for an episode the viewer switched to without a reload.
+	 *
+	 * Kept apart from episode() because that one also answers prefetches, and a
+	 * neighbour warmed in the background has not been watched. No nonce, like
+	 * episode(): it is a public counter on a page that may be cached, the same
+	 * as the theme's own per-page-load count.
+	 */
+	public function view() {
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$episode_id = isset( $_POST['episode_id'] ) ? absint( $_POST['episode_id'] ) : 0;
+
+		if ( ! $episode_id || Jws_Drama_Post_Types::EPISODE !== get_post_type( $episode_id ) || 'publish' !== get_post_status( $episode_id ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unknown episode.', 'jws_streamvid' ) ), 400 );
+		}
+
+		$drama_id = Jws_Drama_Wallet::drama_id_of( $episode_id );
+
+		if ( ! $drama_id ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Episode is not linked to a drama.', 'jws_streamvid' ) ), 400 );
+		}
+
+		Jws_Drama_Templates::count_view( $drama_id, $episode_id );
+
+		wp_send_json_success(
+			array(
+				'views' => Jws_Drama_Templates::views( $drama_id ),
+				'label' => Jws_Drama_Templates::views_label( $drama_id ),
+			)
+		);
 	}
 
 	/**

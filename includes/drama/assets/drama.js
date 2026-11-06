@@ -97,6 +97,35 @@
            of the wall the viewer already got past. */
         var adOpened = {};
 
+        /* The episode a view was last counted for. The page load counted the
+           one it opened on; an ad unlock re-applies the same episode, and that
+           is not a second view. */
+        var viewedEpisode = String($page.find('.sv-short-episode.active').data('episode') || '');
+
+        /** Counts a view for an episode switched to without a reload. */
+        function countView(episodeId) {
+
+            var id = String(episodeId || '');
+
+            if (!id || id === viewedEpisode) {
+                return;
+            }
+
+            viewedEpisode = id;
+
+            $.ajax({
+                url: jwsDrama.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: { action: 'jws_drama_view', episode_id: id }
+            }).done(function (response) {
+
+                if (response && response.success && response.data.label) {
+                    $page.find('.sv-short-views-count').text(response.data.label);
+                }
+            });
+        }
+
         /* Long enough that the episode on screen has the connection to itself
            while it fills its own buffer. */
         var PREFETCH_DELAY = 800;
@@ -399,6 +428,8 @@
             }
 
             document.title = data.title;
+
+            countView(data.episodeId);
 
             $(document.body).trigger('jws_drama_episode_changed', [data]);
 

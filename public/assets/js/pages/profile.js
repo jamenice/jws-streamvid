@@ -5,8 +5,44 @@
 
          var movies = $('.favorites-page .owl-carousel');
          jwsThemeModule.owl_caousel_init(movies);
-      
-        
+
+
+        /**
+         * Profile v2 menu scrolls sideways on small screens: the active item scrolls
+         * into view, and edge classes fade the side that has more items.
+         */
+        function profile_nav_scroller() {
+
+            var $box = $('.profile-nav-vertical .nav');
+            if (!$box.length) return;
+
+            var box = $box[0];
+            var rtl = $box.css('direction') === 'rtl';
+
+            function edges() {
+                // In RTL, scrollLeft starts at 0 and goes negative.
+                var start = Math.abs(box.scrollLeft) > 2;
+                var end = Math.abs(box.scrollLeft) + box.clientWidth < box.scrollWidth - 2;
+                $box.toggleClass('has-more-l', rtl ? end : start);
+                $box.toggleClass('has-more-r', rtl ? start : end);
+            }
+
+            var active = $box.find('a.active')[0];
+            if (active && box.scrollWidth > box.clientWidth + 1) {
+                var b = box.getBoundingClientRect();
+                var r = active.getBoundingClientRect();
+                if (r.left < b.left || r.right > b.right) {
+                    box.scrollLeft += r.left - b.left - (b.width - r.width) / 2;
+                }
+            }
+
+            edges();
+            $box.on('scroll', edges);
+            $(window).on('resize', edges);
+        }
+        profile_nav_scroller();
+
+
         function delete_playlist() { 
             
             $('form.form-delete-playlist').on('submit' , function(e) { 

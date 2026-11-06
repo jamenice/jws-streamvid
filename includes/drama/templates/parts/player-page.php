@@ -36,6 +36,10 @@ $unlocked  = Jws_Drama_Wallet::unlocked_episodes( get_current_user_id(), $drama_
 $free_to   = Jws_Drama_Wallet::free_episodes( $drama_id );
 $price     = Jws_Drama_Wallet::coin_price( $drama_id );
 $bypass    = Jws_Drama_Wallet::membership_unlocks_all( get_current_user_id() );
+
+/* The episode opened with the page. Later switches swap the stage over AJAX
+   and are counted from drama.js instead. */
+Jws_Drama_Templates::count_view( $drama_id, $episode_id );
 ?>
 <div class="sv-short-page">
 
@@ -87,6 +91,13 @@ $bypass    = Jws_Drama_Wallet::membership_unlocks_all( get_current_user_id() );
 			}
 			?>
 		</h1>
+
+		<div class="sv-short-meta">
+			<span class="sv-short-views">
+				<i class="jws-icon-eye" aria-hidden="true"></i>
+				<span class="sv-short-views-count"><?php echo esc_html( Jws_Drama_Templates::views_label( $drama_id ) ); ?></span>
+			</span>
+		</div>
 
 		<?php $genre_terms = Jws_Drama_Templates::genre_terms( $drama_id, 5 ); ?>
 		<?php if ( $genre_terms ) : ?>
