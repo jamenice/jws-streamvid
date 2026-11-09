@@ -2008,6 +2008,145 @@
 	color: var(--body);
 }
 
+/* Subscription (user/profile/v3/subscription.php) */
+
+.jws-sub {
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+}
+
+.jws-sub__plan {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding: 24px;
+	border: 1px solid var(--border-color2);
+	border-radius: 16px;
+	background: var(--input-background2);
+}
+
+.jws-sub__plan-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 18px;
+}
+
+.jws-sub__plan-text {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-width: 560px;
+}
+
+.jws-sub__eyebrow {
+	color: var(--body2);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+}
+
+.jws-sub__name {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	color: var(--heading);
+	font-size: 26px;
+	font-weight: 800;
+}
+
+.jws-sub__cost {
+	color: var(--body);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.jws-sub__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.jws-sub__usage {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 14px;
+}
+
+.jws-sub__meter {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px 16px;
+	border-radius: 12px;
+	background: var(--background-item);
+}
+
+.jws-sub__meter-row {
+	display: flex;
+	justify-content: space-between;
+	color: var(--body);
+	font-size: 14px;
+}
+
+.jws-sub__meter-row strong {
+	color: var(--heading);
+}
+
+.jws-sub__meter .jws-pf-meter {
+	width: 100%;
+}
+
+.jws-sub__billing {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 14px 20px;
+	padding: 18px 22px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+}
+
+.jws-sub__billing > [class^="jws-icon-"] {
+	color: var(--main);
+	font-size: 26px;
+	line-height: 1;
+}
+
+.jws-sub__billing-text {
+	display: flex;
+	flex: 1 1 220px;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.jws-sub__billing-title {
+	color: var(--heading);
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.jws-sub__billing-link {
+	font-weight: 600;
+}
+
+.jws-sub__invoices {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.jws-pf-btn.jws-sub__pdf {
+	min-height: 40px;
+	padding: 0 12px;
+	font-size: 13px;
+}
+
 /* Tablet: account card on top, sections in a scrolling bar. */
 @media (min-width: 768px) and (max-width: 1024px) {
 
@@ -2246,8 +2385,17 @@
 		width: 100%;
 	}
 
-	.jws-coin__balance .jws-pf-btn {
+	.jws-coin__balance .jws-pf-btn,
+	.jws-sub__actions .jws-pf-btn {
 		width: 100%;
+	}
+
+	.jws-sub__plan {
+		padding: 18px;
+	}
+
+	.jws-sub__name {
+		font-size: 22px;
 	}
 
 	.jws-coin__value {
