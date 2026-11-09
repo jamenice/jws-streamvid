@@ -82,7 +82,12 @@ function jws_check_buy_rent($video_id) {
 }
 
 
-function jws_buy_rent_display($video_id) { 
+function jws_buy_rent_display($video_id) {
+    // Kids profiles cannot buy or rent (see Jws_Kids_Mode).
+    if ( class_exists( 'Jws_Kids_Mode' ) && Jws_Kids_Mode::is_active() ) {
+        return;
+    }
+
     $user_id = get_current_user_id();
     $buy_enabled  = get_post_meta($video_id, 'buy_enable', true);
     $rent_enabled = get_post_meta($video_id, 'rent_enable', true);

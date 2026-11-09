@@ -836,6 +836,116 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Kids mode
+ * ------------------------------------------------------------------ */
+
+.jws-kids-bar {
+	position: relative;
+	z-index: 99;
+	background: var(--background-item);
+	border-bottom: 2px solid var(--jws-pf-kids);
+	color: var(--heading);
+	font-size: 14px;
+}
+
+.jws-kids-bar--notice-only {
+	border-bottom-color: var(--border-color);
+}
+
+.jws-kids-bar__in,
+.jws-kids-bar__notice {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 8px 16px;
+}
+
+.jws-kids-bar__who {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.jws-kids-bar__avatar {
+	display: block;
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	object-fit: cover;
+}
+
+.jws-kids-bar__rating {
+	color: var(--body2);
+}
+
+.jws-kids-bar__exit {
+	display: inline-flex;
+	align-items: center;
+	min-height: 36px;
+	margin-inline-start: auto;
+	padding: 0 16px;
+	border: 2px solid var(--jws-pf-kids);
+	border-radius: 999px;
+	color: var(--heading);
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.jws-kids-bar__exit:hover,
+.jws-kids-bar__exit:focus-visible {
+	background: var(--jws-pf-kids);
+	color: var(--dark);
+}
+
+.jws-kids-bar__notice {
+	border-top: 1px solid var(--border-color);
+}
+
+.jws-kids-bar--notice-only .jws-kids-bar__notice {
+	border-top: 0;
+}
+
+.jws-kids-bar__notice span {
+	flex: 1;
+}
+
+.jws-kids-bar__dismiss {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	color: var(--body2);
+}
+
+.jws-kids-bar__dismiss:hover {
+	color: var(--heading);
+}
+
+/*
+ * Buying, reviews and creating are refused on the server for Kids profiles
+ * (Jws_Kids_Mode, Jws_Profile_Filter); these rules only remove the controls
+ * that would lead there.
+ */
+.jws-kids-mode .pay-buttons,
+.jws-kids-mode [data-tab="tab-payperview"],
+.jws-kids-mode .tab-payperview,
+.jws-kids-mode #reviews,
+.jws-kids-mode #comments,
+.jws-kids-mode .comment-respond,
+.jws-kids-mode .jws-comments,
+.jws-kids-mode li:has(> a[href="#reviews"]),
+.jws-kids-mode [data-modal-jws="#upload-videos"],
+.jws-kids-mode [data-modal-jws="#upload-videos-live"],
+.jws-kids-mode [data-modal-jws="#create-playlist"] {
+	display: none !important;
+}
+
+/* ------------------------------------------------------------------ *
  * Phones (theme breakpoint 767px)
  * ------------------------------------------------------------------ */
 
@@ -871,6 +981,10 @@
 
 	.jws-pf-row .jws-pf-btn {
 		flex: 1 1 100%;
+	}
+
+	.jws-kids-bar__rating {
+		display: none;
 	}
 
 	.jws_account .dropdown-menu.jws-am-dropdown {
