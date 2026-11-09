@@ -686,7 +686,7 @@
 	flex: 0 0 auto;
 	width: 44px;
 	height: 44px;
-	border-radius: 10px;
+	border-radius: 100% !important;
 	object-fit: cover;
 }
 
@@ -986,7 +986,7 @@
 	display: block;
 	width: 32px;
 	height: 32px;
-	border-radius: 7px;
+	border-radius: 100%;
 	object-fit: cover;
 }
 
@@ -1756,7 +1756,7 @@
 }
 
 .jws-buy__chip {
-	padding: 3px 9px;
+	padding: 1px 9px;
 	border-radius: 999px;
 	font-size: var(--jws-pf-fs-xs);
 	font-weight: 700;
@@ -1811,9 +1811,9 @@
 	align-items: center;
 	gap: 16px 18px;
 	padding: 22px 24px;
-	border: 1px solid var(--border-color2);
+	border: 1px solid var(--border-color);
 	border-radius: 16px;
-	background: var(--input-background2);
+	background: var(--input-background);
 }
 
 .jws-coin__icon {
@@ -1955,9 +1955,9 @@
 	flex-direction: column;
 	gap: 20px;
 	padding: 24px;
-	border: 1px solid var(--border-color2);
+	border: 1px solid var(--border-color);
 	border-radius: 16px;
-	background: var(--input-background2);
+	background: var(--input-background);
 }
 
 .jws-sub__plan-head {
@@ -2004,14 +2004,13 @@
 .jws-sub__usage {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 14px;
+	gap: 20px 40px;
 }
 
 .jws-sub__meter {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	padding: 14px 16px;
 	border-radius: 12px;
 	background: var(--background-item);
 }
@@ -2315,6 +2314,10 @@
 	margin: 0;
 	color: var(--body);
 	font-size: var(--font-size-sm);
+}
+
+.jws-vid__sort label {
+	margin: 0;
 }
 
 .jws-pf-input.jws-vid__select {

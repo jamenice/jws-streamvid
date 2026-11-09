@@ -165,7 +165,7 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 					: esc_html__( 'Titles you buy stay on this account for good and show up here.', 'jws_streamvid' );
 				?>
 			</p>
-			<a class="button-default" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
+
 		</div>
 	<?php endif; ?>
 </div>

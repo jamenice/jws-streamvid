@@ -163,10 +163,10 @@ $jws_vid_status = array(
 								<img src="<?php echo esc_url( $jws_vid_thumb ); ?>" alt="" loading="lazy" decoding="async">
 							<?php endif; ?>
 							<?php if ( in_array( $jws_vid_livest, array( 'yes', '1' ), true ) ) : ?>
-								<span class="jws-vid__live fs-small"><?php esc_html_e( 'Live', 'jws_streamvid' ); ?></span>
+								<span class="jws-vid__live"><?php esc_html_e( 'Live', 'jws_streamvid' ); ?></span>
 							<?php endif; ?>
 							<?php if ( $jws_vid_length ) : ?>
-								<span class="jws-vid__length fs-small"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php echo esc_html( $jws_vid_length ); ?></span>
+								<span class="jws-vid__length"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php echo esc_html( $jws_vid_length ); ?></span>
 							<?php endif; ?>
 						</span>
 						<h6 class="jws-lib__title fs-small"><?php the_title(); ?></h6>
