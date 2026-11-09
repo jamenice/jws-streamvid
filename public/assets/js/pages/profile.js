@@ -318,7 +318,8 @@
 
                         if(response.success) {
                            if(term_id == term_current_id || typeof term_current_id === "undefined")  {
-                            $('.profile-main .videos-advanced-content').html(response.data.output);
+                            // The playlist's list: in .profile-main on V1/V2, .jws-pv3__content on V3. The add-item popup has a list of its own outside both.
+                            $('.profile-main .videos-advanced-content, .jws-pv3__content .videos-advanced-content').html(response.data.output);
                            }
                            jwsThemeModule.show_notification(response.data.message,'success');
                        

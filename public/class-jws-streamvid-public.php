@@ -287,7 +287,7 @@ class Jws_Streamvid_Public {
         
         if(is_author()) {
           
-            wp_enqueue_script( 'jws-profile', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/profile.js', array( 'jquery' ), $this->version, true );
+            wp_enqueue_script( 'jws-profile', JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/pages/profile.js', array( 'jquery' ), filemtime( JWS_STREAMVID_PATH_PUBLIC . '/assets/js/pages/profile.js' ), true );
            
           
         }
