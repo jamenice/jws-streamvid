@@ -2,6 +2,11 @@
 if( ! defined('ABSPATH' ) ){
     exit;
 }
+
+// Profile Version 3 has its own History / Watchlist / Favorites (Jws_Profile_Library).
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::maybe_render( 'watchlist' ) ) {
+    return;
+}
 $user_id = absint(get_queried_object_id()); 
 wp_enqueue_script('jws-youtube-api');
 $post_watchlisted = Jws_Watchlist::get_ids($user_id);

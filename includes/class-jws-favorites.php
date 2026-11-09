@@ -39,6 +39,29 @@ class Jws_Favorites {
 		return array_map( 'intval', $ids );
 	}
 
+	/**
+	 * Favorites of several post types together, newest first.
+	 *
+	 * @param string[] $post_types
+	 * @return array[] Each array( 'post_id' => int, 'post_type' => string, 'created_at' => string ).
+	 */
+	public static function get_items( $user_id, array $post_types, $profile_id = null ) {
+		global $wpdb;
+		if ( empty( $post_types ) ) {
+			return array();
+		}
+		$table        = Jws_Streamvid_Tables::table_favorites();
+		$placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
+		$rows         = $wpdb->get_results( $wpdb->prepare(
+			"SELECT post_id, post_type, created_at FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_type IN ({$placeholders}) ORDER BY created_at DESC, id DESC",
+			array_merge( array( $user_id, Jws_Profiles::resolve( $user_id, $profile_id ) ), array_values( $post_types ) )
+		), ARRAY_A );
+		foreach ( $rows as $i => $row ) {
+			$rows[ $i ]['post_id'] = (int) $row['post_id'];
+		}
+		return $rows;
+	}
+
 	public static function add( $user_id, $post_id, $post_type, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_favorites();

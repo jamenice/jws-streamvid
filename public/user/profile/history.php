@@ -3,6 +3,11 @@ if( ! defined('ABSPATH' ) ){
     exit;
 }
 
+
+// Profile Version 3 has its own History / Watchlist / Favorites (Jws_Profile_Library).
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::maybe_render( 'history' ) ) {
+    return;
+}
 $user_id = get_current_user_id();
 $video_progress_data = Jws_History::get_all($user_id);
 // No separate "episodes" tab: watched episodes show under Tv Shows with their season and episode.

@@ -1283,6 +1283,362 @@
 	line-height: 1.55;
 }
 
+/* History / Watchlist / Favorites (user/profile/v3/library.php) */
+
+.jws-lib__form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	counter-reset: jws-lib-picked;
+}
+
+/* Select: a real checkbox, visually hidden; its label is the button. */
+.jws-lib__toggle {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+.jws-lib__toggle:focus-visible ~ .jws-lib__head .jws-lib__select {
+	outline: 3px solid var(--main);
+	outline-offset: 2px;
+}
+
+.jws-lib__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 16px;
+}
+
+.jws-lib__sub {
+	margin: 0;
+	color: var(--body2);
+	font-size: 15px;
+}
+
+.jws-lib__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.jws-lib__select {
+	min-height: 42px;
+	padding: 0 16px;
+	font-size: 14px;
+}
+
+.jws-lib__clear {
+	position: relative;
+}
+
+.jws-lib__clear summary {
+	min-height: 42px;
+	padding: 0 16px;
+	font-size: 14px;
+	list-style: none;
+}
+
+.jws-lib__clear summary::-webkit-details-marker {
+	display: none;
+}
+
+.jws-lib__clear-box {
+	position: absolute;
+	inset-inline-end: 0;
+	top: calc(100% + 8px);
+	z-index: 5;
+	width: 300px;
+	max-width: calc(100vw - 32px);
+	padding: 16px;
+	border: 1px solid color-mix(in srgb, var(--jws-pf-danger) 45%, transparent);
+	border-radius: 12px;
+	background: var(--background-item);
+}
+
+.jws-lib__clear-box p {
+	margin: 0 0 12px;
+	color: var(--heading);
+	font-size: 14px;
+}
+
+.jws-lib__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.jws-lib__chip {
+	display: inline-flex;
+	align-items: center;
+	min-height: 38px;
+	padding: 0 16px;
+	border: 1px solid var(--border-color2);
+	border-radius: 999px;
+	color: var(--body);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.jws-lib__chip:hover {
+	border-color: var(--heading);
+	color: var(--heading);
+}
+
+.jws-lib__chip.is-active {
+	border-color: var(--heading);
+	background: var(--heading);
+	color: var(--background-body);
+}
+
+.jws-lib__groups {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.jws-lib__group-title {
+	margin: 0 0 14px;
+	color: var(--body);
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.jws-pv3 ul.jws-lib__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+	gap: 20px 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-lib__item {
+	position: relative;
+	min-width: 0;
+}
+
+.jws-lib__card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	color: var(--heading);
+	text-decoration: none;
+}
+
+.jws-lib__art {
+	position: relative;
+	display: block;
+	aspect-ratio: 16 / 9;
+	border-radius: 10px;
+	background: var(--background-item);
+	overflow: hidden;
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+}
+
+.jws-lib__art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.jws-lib__card:hover .jws-lib__art,
+.jws-lib__card:focus-visible .jws-lib__art {
+	outline-color: var(--heading);
+}
+
+.jws-lib__card:focus-visible {
+	outline: none;
+}
+
+.jws-lib__type {
+	position: absolute;
+	top: 8px;
+	inset-inline-start: 8px;
+	padding: 3px 7px;
+	border-radius: 5px;
+	background: color-mix(in srgb, var(--background-body) 80%, transparent);
+	color: var(--heading);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.jws-lib__progress {
+	position: absolute;
+	inset: auto 0 0;
+	height: 4px;
+	background: color-mix(in srgb, var(--light) 25%, transparent);
+}
+
+.jws-lib__progress span {
+	display: block;
+	height: 4px;
+	background: var(--main);
+}
+
+.jws-lib__title {
+	overflow: hidden;
+	font-size: 15px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.jws-lib__meta {
+	color: var(--body2);
+	font-size: 13px;
+}
+
+.jws-lib__x {
+	position: absolute;
+	top: 8px;
+	inset-inline-end: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--background-body) 85%, transparent);
+	color: var(--heading);
+	opacity: 0;
+	cursor: pointer;
+}
+
+.jws-lib__item:hover .jws-lib__x,
+.jws-lib__x:focus-visible {
+	opacity: 1;
+}
+
+/* Touch screens have no hover: removing goes through Select there. */
+@media (hover: none) {
+	.jws-lib__x {
+		display: none;
+	}
+}
+
+.jws-lib__tick,
+.jws-lib__bar {
+	display: none;
+}
+
+/* Select mode */
+.jws-lib__toggle:checked ~ .jws-lib__head .jws-lib__actions {
+	visibility: hidden;
+}
+
+.jws-lib__toggle:checked ~ .jws-lib__groups .jws-lib__x {
+	display: none;
+}
+
+.jws-lib__toggle:checked ~ .jws-lib__groups .jws-lib__tick {
+	position: absolute;
+	inset: 0 0 auto;
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	aspect-ratio: 16 / 9;
+	box-sizing: border-box;
+	padding: 8px;
+	border: 2px solid transparent;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--background-body) 35%, transparent);
+	cursor: pointer;
+}
+
+.jws-lib__tick input {
+	width: 22px;
+	height: 22px;
+	margin: 0;
+	accent-color: var(--main);
+}
+
+.jws-lib__tick:has(input:checked) {
+	border-color: var(--main);
+	background: color-mix(in srgb, var(--main) 30%, transparent);
+}
+
+.jws-lib__tick input:checked {
+	counter-increment: jws-lib-picked;
+}
+
+.jws-lib__toggle:checked ~ .jws-lib__bar {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 16px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+	box-shadow: 0 -8px 24px color-mix(in srgb, var(--dark) 35%, transparent);
+}
+
+.jws-lib__count {
+	flex: 1;
+	color: var(--heading);
+	font-weight: 600;
+}
+
+.jws-lib__num::after {
+	content: counter(jws-lib-picked);
+}
+
+.jws-lib__more {
+	display: flex;
+	justify-content: center;
+}
+
+.jws-lib__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 64px 24px;
+	border: 1px dashed var(--border-color2);
+	border-radius: 18px;
+	text-align: center;
+}
+
+.jws-lib__empty-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	background: var(--background-item);
+	color: var(--main);
+}
+
+.jws-lib__empty h2 {
+	margin: 0;
+	color: var(--heading);
+	font-size: 20px;
+}
+
+.jws-lib__empty p {
+	max-width: 380px;
+	margin: 0;
+	color: var(--body2);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
 /* Tablet: account card on top, sections in a scrolling bar. */
 @media (min-width: 768px) and (max-width: 1024px) {
 
@@ -1507,6 +1863,43 @@
 
 	.jws-pf-tab__head .jws-pf-btn {
 		width: 100%;
+	}
+
+	.jws-pv3 ul.jws-lib__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px 12px;
+	}
+
+	.jws-lib__chips {
+		flex-wrap: nowrap;
+		margin: 0 -16px;
+		padding: 0 16px;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.jws-lib__chips::-webkit-scrollbar {
+		display: none;
+	}
+
+	.jws-lib__title {
+		font-size: 14px;
+	}
+
+	.jws-lib__meta {
+		font-size: 12px;
+	}
+
+	.jws-lib__toggle:checked ~ .jws-lib__bar {
+		position: fixed;
+		inset: auto 0 0;
+		z-index: 100;
+		padding: 12px 16px 20px;
+		border-radius: 0;
+	}
+
+	.jws-lib__toggle:checked ~ .jws-lib__more {
+		padding-bottom: 80px;
 	}
 
 	.jws-pf-list__rating,
