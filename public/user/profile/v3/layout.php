@@ -141,72 +141,75 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 		</button>
 	</div>
 
-	<aside id="jws-pv3-side" class="jws-pv3__side" aria-label="<?php esc_attr_e( 'Account', 'jws_streamvid' ); ?>">
-		<div class="jws-pv3__sheet-head">
-			<span class="jws-pv3__sheet-title h5"><?php esc_html_e( 'My account', 'jws_streamvid' ); ?></span>
-			<button type="button" class="jws-pv3__close">
-				<i class="jws-icon-x" aria-hidden="true"></i>
-				<span class="screen-reader-text"><?php esc_html_e( 'Close', 'jws_streamvid' ); ?></span>
-			</button>
-		</div>
-
-		<div class="jws-pv3__card">
-			<div class="jws-pv3__me">
-				<?php echo get_avatar( $jws_v3_user->ID, 52, '', '', array( 'class' => 'jws-pv3__me-avatar' ) ); ?>
-				<span class="jws-pv3__me-text">
-					<span class="jws-pv3__me-name h6"><?php echo esc_html( $jws_v3_user->display_name ); ?></span>
-					<span class="jws-pv3__me-email"><?php echo esc_html( $jws_v3_email ); ?></span>
-				</span>
+	<?php // The wrapper is the sticky parent: it spans the grid row, and the theme's Sticky-kit spacer stays inside it. ?>
+	<div class="jws-pv3__side-wrap">
+		<aside id="jws-pv3-side" class="jws-pv3__side jws_sticky_move" aria-label="<?php esc_attr_e( 'Account', 'jws_streamvid' ); ?>">
+			<div class="jws-pv3__sheet-head">
+				<span class="jws-pv3__sheet-title h5"><?php esc_html_e( 'My account', 'jws_streamvid' ); ?></span>
+				<button type="button" class="jws-pv3__close">
+					<i class="jws-icon-x" aria-hidden="true"></i>
+					<span class="screen-reader-text"><?php esc_html_e( 'Close', 'jws_streamvid' ); ?></span>
+				</button>
 			</div>
 
+			<div class="jws-pv3__card">
+				<div class="jws-pv3__me">
+					<?php echo get_avatar( $jws_v3_user->ID, 52, '', '', array( 'class' => 'jws-pv3__me-avatar' ) ); ?>
+					<span class="jws-pv3__me-text">
+						<span class="jws-pv3__me-name h6"><?php echo esc_html( $jws_v3_user->display_name ); ?></span>
+						<span class="jws-pv3__me-email"><?php echo esc_html( $jws_v3_email ); ?></span>
+					</span>
+				</div>
+
+				<?php if ( ! $jws_v3_kids ) : ?>
+					<div class="jws-pv3__plan">
+						<span class="jws-pv3__plan-text">
+							<span class="jws-pv3__plan-label"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
+							<span class="jws-pv3__plan-name h6"><?php echo esc_html( $jws_v3_level ? $jws_v3_level->name : __( 'Free Plan', 'jws_streamvid' ) ); ?></span>
+						</span>
+						<?php if ( $jws_v3_upgrade ) : ?>
+							<a class="button-default jws-btn-sm jws-pv3__upgrade" href="<?php echo esc_url( get_permalink( $jws_v3_upgrade ) ); ?>"><?php esc_html_e( 'Upgrade', 'jws_streamvid' ); ?></a>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( $jws_v3_viewing && Jws_Profiles::enabled() ) : ?>
+					<div class="jws-pv3__viewing">
+						<?php echo Jws_Profiles_Front::avatar_img( $jws_v3_viewing, 32, 'jws-pv3__viewing-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
+						<span>
+							<?php
+							/* translators: %s: profile name */
+							printf( esc_html__( 'Watching as %s', 'jws_streamvid' ), '<strong>' . esc_html( $jws_v3_viewing->name ) . '</strong>' );
+							?>
+						</span>
+						<a href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_v3_here ) ) ); ?>"><?php esc_html_e( 'Switch', 'jws_streamvid' ); ?></a>
+					</div>
+				<?php endif; ?>
+			</div>
+
+			<nav class="jws-pv3__nav" aria-label="<?php esc_attr_e( 'Account sections', 'jws_streamvid' ); ?>">
+				<?php foreach ( $jws_v3_groups as $jws_v3_group ) : ?>
+					<?php if ( ! $jws_v3_group['items'] ) { continue; } ?>
+					<div class="jws-pv3__group">
+						<span class="jws-pv3__group-label"><?php echo esc_html( $jws_v3_group['label'] ); ?></span>
+						<?php foreach ( $jws_v3_group['items'] as $jws_v3_id => $jws_v3_item ) : ?>
+							<a class="jws-pv3__link<?php echo $jws_v3_item['on'] ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_v3_item['href'] ); ?>"<?php echo $jws_v3_item['on'] ? ' aria-current="page"' : ''; ?>>
+								<i class="<?php echo esc_attr( $jws_v3_item['icon'] ); ?>" aria-hidden="true"></i>
+								<span><?php echo esc_html( $jws_v3_item['label'] ); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				<?php endforeach; ?>
+			</nav>
+
 			<?php if ( ! $jws_v3_kids ) : ?>
-				<div class="jws-pv3__plan">
-					<span class="jws-pv3__plan-text">
-						<span class="jws-pv3__plan-label"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-						<span class="jws-pv3__plan-name h6"><?php echo esc_html( $jws_v3_level ? $jws_v3_level->name : __( 'Free Plan', 'jws_streamvid' ) ); ?></span>
-					</span>
-					<?php if ( $jws_v3_upgrade ) : ?>
-						<a class="button-default jws-btn-sm jws-pv3__upgrade" href="<?php echo esc_url( get_permalink( $jws_v3_upgrade ) ); ?>"><?php esc_html_e( 'Upgrade', 'jws_streamvid' ); ?></a>
-					<?php endif; ?>
-				</div>
+				<a class="jws-pv3__link jws-pv3__logout" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">
+					<i class="jws-icon-sign-out" aria-hidden="true"></i>
+					<span><?php esc_html_e( 'Log out', 'jws_streamvid' ); ?></span>
+				</a>
 			<?php endif; ?>
-
-			<?php if ( $jws_v3_viewing && Jws_Profiles::enabled() ) : ?>
-				<div class="jws-pv3__viewing">
-					<?php echo Jws_Profiles_Front::avatar_img( $jws_v3_viewing, 32, 'jws-pv3__viewing-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
-					<span>
-						<?php
-						/* translators: %s: profile name */
-						printf( esc_html__( 'Watching as %s', 'jws_streamvid' ), '<strong>' . esc_html( $jws_v3_viewing->name ) . '</strong>' );
-						?>
-					</span>
-					<a href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_v3_here ) ) ); ?>"><?php esc_html_e( 'Switch', 'jws_streamvid' ); ?></a>
-				</div>
-			<?php endif; ?>
-		</div>
-
-		<nav class="jws-pv3__nav" aria-label="<?php esc_attr_e( 'Account sections', 'jws_streamvid' ); ?>">
-			<?php foreach ( $jws_v3_groups as $jws_v3_group ) : ?>
-				<?php if ( ! $jws_v3_group['items'] ) { continue; } ?>
-				<div class="jws-pv3__group">
-					<span class="jws-pv3__group-label"><?php echo esc_html( $jws_v3_group['label'] ); ?></span>
-					<?php foreach ( $jws_v3_group['items'] as $jws_v3_id => $jws_v3_item ) : ?>
-						<a class="jws-pv3__link<?php echo $jws_v3_item['on'] ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_v3_item['href'] ); ?>"<?php echo $jws_v3_item['on'] ? ' aria-current="page"' : ''; ?>>
-							<i class="<?php echo esc_attr( $jws_v3_item['icon'] ); ?>" aria-hidden="true"></i>
-							<span><?php echo esc_html( $jws_v3_item['label'] ); ?></span>
-						</a>
-					<?php endforeach; ?>
-				</div>
-			<?php endforeach; ?>
-		</nav>
-
-		<?php if ( ! $jws_v3_kids ) : ?>
-			<a class="jws-pv3__link jws-pv3__logout" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">
-				<i class="jws-icon-sign-out" aria-hidden="true"></i>
-				<span><?php esc_html_e( 'Log out', 'jws_streamvid' ); ?></span>
-			</a>
-		<?php endif; ?>
-	</aside>
+		</aside>
+	</div>
 	<div class="jws-pv3__backdrop" hidden></div>
 
 	<div class="jws-pv3__content">

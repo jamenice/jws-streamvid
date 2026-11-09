@@ -84,8 +84,9 @@
 
 .jws-pf .button-custom,
 .jws-pv3 .button-custom {
-	background: var(--input-background2);
+	background: var(--background-item);
 	color: var(--heading);
+	margin: 0;
 }
 
 .jws-pf .button-custom:hover,
@@ -102,18 +103,7 @@
 	width: 100%;
 }
 
-/* Scoped so the theme's .button-default colour, loaded later, does not win. */
-:is(.jws-pf, .jws-pv3) .jws-btn-danger.button-custom {
-	background: color-mix(in srgb, var(--jws-pf-danger) 14%, transparent);
-	color: var(--jws-pf-danger);
-}
 
-:is(.jws-pf, .jws-pv3) .jws-btn-danger.button-default,
-:is(.jws-pf, .jws-pv3) .jws-btn-danger:is(.button-default, .button-custom):hover {
-	background: var(--jws-pf-danger) !important;
-	color: var(--dark);
-	box-shadow: none;
-}
 
 .jws-pf a:focus-visible,
 .jws-pf button:focus-visible,
@@ -819,7 +809,7 @@
 
 .jws-pv3 {
 	display: grid;
-	grid-template-columns: 290px minmax(0, 1fr);
+	grid-template-columns: 330px minmax(0, 1fr);
 	/* The sidebar spans both rows; without this a short tab stretches the title row. */
 	grid-template-rows: auto 1fr;
 	grid-template-areas:
@@ -836,6 +826,7 @@
 	display: flex;
 	align-items: center;
 	gap: 12px;
+	margin-bottom: 10px;
 }
 
 /* An h5: size, weight and line height come from the theme's heading typography. */
@@ -861,8 +852,14 @@
 	cursor: pointer;
 }
 
-.jws-pv3__side {
+/* Spans the grid rows so the theme's Sticky-kit (.jws_sticky_move) has room to move the sidebar in. */
+.jws-pv3__side-wrap {
 	grid-area: side;
+	align-self: stretch;
+	min-width: 0;
+}
+
+.jws-pv3__side {
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
@@ -990,7 +987,7 @@
 
 .jws-pv3__group-label {
 	padding: 0 12px 6px;
-	color: var(--body2);
+	color: var(--heading);
 	font-size: var(--jws-pf-fs-xs);
 	font-weight: 700;
 	letter-spacing: 1.2px;
@@ -1059,12 +1056,13 @@
 	display: flex;
 	flex: 0 0 auto;
 	align-items: center;
-	min-height: 46px;
+	min-height: 40px;
 	padding: 0 16px;
 	border-bottom: 3px solid transparent;
-	color: var(--body2);
 	text-decoration: none;
 	white-space: nowrap;
+	font-weight: 500;
+	font-size: var(--font-size-sm);
 }
 
 .jws-pv3__tab:hover {
@@ -1421,10 +1419,13 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	padding: 2px 8px;
 	border-radius: 20px;
 	background: color-mix(in srgb, var(--background-body) 60%, transparent);
 	color: var(--heading);
+	font-size: 12px;
+	line-height: 12px;
+	font-weight: bold;
+	padding: 5px 8px;
 }
 
 .jws-lib__type {
@@ -2474,6 +2475,13 @@
 		transform: none;
 		visibility: visible;
 		transition: transform 0.25s ease;
+	}
+
+	/* Up to 1024px the theme sets .jws_sticky_move to position: unset, top: 0 with !important; the sheet stays at the bottom. */
+	.jws-pv3-js .jws-pv3__side.jws_sticky_move {
+		position: fixed !important;
+		top: auto !important;
+		bottom: 0 !important;
 	}
 
 	.jws-pv3-js .jws-pv3__sheet-head {

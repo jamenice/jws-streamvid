@@ -531,6 +531,13 @@ class Jws_Profiles_Front {
 					'strategy'  => 'defer',
 				)
 			);
+
+			// The sidebar is a .jws_sticky_move like the theme's own sidebars; the theme loads its Sticky-kit on shop pages only.
+			$sticky = get_template_directory() . '/assets/js/sticky_content.js';
+
+			if ( file_exists( $sticky ) ) {
+				wp_enqueue_script( 'stick-content', get_template_directory_uri() . '/assets/js/sticky_content.js', array( 'jquery' ), (string) filemtime( $sticky ), true );
+			}
 		}
 	}
 
