@@ -2365,6 +2365,87 @@
 	font-size: 14px;
 }
 
+/* My Videos (user/profile/v3/videos.php) */
+
+.jws-vid {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.jws-vid__stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 14px;
+}
+
+.jws-vid__tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.jws-vid__sort {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	color: var(--body);
+	font-size: 14px;
+}
+
+.jws-pf-input.jws-vid__select {
+	width: auto;
+	min-height: 40px;
+	padding: 0 12px;
+	font-size: 14px;
+}
+
+.jws-vid__live,
+.jws-vid__length {
+	position: absolute;
+	padding: 3px 7px;
+	border-radius: 5px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.jws-vid__live {
+	top: 8px;
+	inset-inline-end: 8px;
+	background: var(--jws-pf-danger);
+	color: var(--dark);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.jws-vid__length {
+	inset-inline-start: 8px;
+	bottom: 8px;
+	background: color-mix(in srgb, var(--background-body) 85%, transparent);
+	color: var(--heading);
+}
+
+.jws-vid__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+	margin-top: 6px;
+}
+
+.jws-vid__edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	min-height: 32px;
+	margin-inline-start: auto;
+	font-size: 13px;
+	font-weight: 600;
+}
+
 /* Tablet: account card on top, sections in a scrolling bar. */
 @media (min-width: 768px) and (max-width: 1024px) {
 
@@ -2614,6 +2695,25 @@
 
 	.jws-dev__all {
 		width: 100%;
+	}
+
+	.jws-vid .jws-lib__actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		width: 100%;
+	}
+
+	.jws-vid__stats {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	.jws-vid__stats .jws-coin__stat {
+		padding: 12px;
+	}
+
+	.jws-vid__stats .jws-coin__stat-value {
+		font-size: 20px;
 	}
 
 	.jws-dev__row {

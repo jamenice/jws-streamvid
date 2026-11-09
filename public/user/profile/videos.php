@@ -2,6 +2,13 @@
 if( ! defined('ABSPATH' ) ){
     exit;
 }
+
+// Profile Version 3: figures, filter, sort and cards with the existing Edit modal.
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::is_v3() ) {
+    jws_streamvid_load_template( 'user/profile/v3/videos.php', false );
+    return;
+}
+
 $user_id = absint(get_queried_object_id());
 $is_owner = jws_streamvid_check_owner();
 $setting =  array(
