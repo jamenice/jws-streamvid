@@ -3,6 +3,12 @@ if( ! defined('ABSPATH' ) ){
     exit;
 }
 
+
+// Profile Version 3 lists purchases as cards (user/profile/v3/purchases.php).
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::is_v3() ) {
+    jws_streamvid_load_template( 'user/profile/v3/purchases.php', false, array( 'type' => 'rent' ) );
+    return;
+}
 $current_user_id = absint(get_queried_object_id());
 
 $videos_with_time = array();
@@ -194,71 +200,4 @@ jQuery(function($) {
 });
 </script>
 
-<div id="hidden-invoice-wrapper" style="display:none;padding:20px;position:fixed; top:-100%;left:-100%;background:white;"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-<script>
-jQuery(document).ready(function($) {
- $(".download-invoice-woo").on("click", function (e) {
-            e.preventDefault();
-
-            var postId = $(this).data("invoice");
-
-            $.ajax({
-                url: jws_script.ajax_url,
-                type: "POST",
-                data: {
-                    action: "get_invoice_html_woo",
-                    order_id: postId
-                },
-                success: function (response) {
-
-                    if (response.success) {
-
-                        $("#hidden-invoice-wrapper").html(response.data.html).show();
-
-
-                        html2canvas(document.querySelector("#hidden-invoice-wrapper"), { scale: 2 }).then(async function (canvas) {
-                            const imgData = canvas.toDataURL("image/png", 1.0);
-
-                            const { PDFDocument } = PDFLib;
-                            const pdfDoc = await PDFDocument.create();
-
-
-                            const pageWidth = 595.28;
-                            const pageHeight = 841.89;
-
-                            const page = pdfDoc.addPage([pageWidth, pageHeight]);
-                            const pngImage = await pdfDoc.embedPng(imgData);
-
-
-                            const imgWidth = pageWidth;
-                            const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-                            page.drawImage(pngImage, {
-                                x: 0,
-                                y: pageHeight - imgHeight,
-                                width: imgWidth,
-                                height: imgHeight
-                            });
-
-                            const pdfBytes = await pdfDoc.save();
-                            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-                            const link = document.createElement("a");
-                            link.href = URL.createObjectURL(blob);
-                            link.download = "invoice-" + postId + ".pdf";
-                            link.click();
-
-                            $("#hidden-invoice-wrapper").hide();
-                        });
-                    } else {
-                        alert(response.data.message);
-                    }
-                },
-                error: function () {
-                    alert("Error loading invoice");
-                }
-            });
-        });
-});
-</script>
+<?php jws_streamvid_load_template( 'user/profile/parts/invoice-download.php', false ); ?>
