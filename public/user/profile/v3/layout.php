@@ -27,7 +27,7 @@ $jws_v3_kids    = class_exists( 'Jws_Kids_Mode' ) && Jws_Kids_Mode::is_active();
 // Visitors see the creator's public videos only.
 if ( ! $jws_v3_owner ) :
 	?>
-	<div class="jws-pv3 jws-pv3--public">
+	<div class="jws-pv3 jws-pv3--public" data-jws-base="<?php echo esc_url( Jws_Streamvid_Profile::get_url() ); ?>">
 		<div class="jws-pv3__creator">
 			<?php echo get_avatar( $jws_v3_author, 72, '', '', array( 'class' => 'jws-pv3__creator-avatar' ) ); ?>
 			<h5 class="jws-pv3__title"><?php echo esc_html( get_the_author_meta( 'display_name', $jws_v3_author ) ); ?></h5>
@@ -131,7 +131,7 @@ $jws_v3_host     = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unsl
 $jws_v3_path     = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v3_path;
 ?>
-<div class="jws-pv3">
+<div class="jws-pv3" data-jws-base="<?php echo esc_url( Jws_Streamvid_Profile::get_url() ); ?>">
 
 	<div class="jws-pv3__bar">
 		<h5 class="jws-pv3__title"><?php echo esc_html( $jws_v3_title ); ?></h5>

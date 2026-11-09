@@ -541,6 +541,58 @@ class Jws_Profiles_Front {
 		}
 	}
 
+	/**
+	 * Profile V3 tabs that profiles.js loads in place send "X-Jws-Pv3: 1".
+	 * Such a request gets only the profile block, the page title and any file
+	 * a tab enqueued while it rendered; no theme header, footer or page-wide
+	 * assets. Runs just before the profile page itself (the_main, priority
+	 * 20), so every guard and form handler before it has already run.
+	 */
+	public static function fragment() {
+
+		$asked = isset( $_SERVER['HTTP_X_JWS_PV3'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_JWS_PV3'] ) ) : '';
+
+		if ( '1' !== $asked || ! is_author() || ! class_exists( 'Jws_Profile_Library' ) || ! Jws_Profile_Library::is_v3() ) {
+			return;
+		}
+
+		// The same URL also serves the full page, so a page cache must never keep this answer.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		nocache_headers();
+		header( 'Vary: X-Jws-Pv3', false );
+		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
+
+		// Register what a normal page registers (dropping anything a callback echoes), then keep only what the tab adds while it renders.
+		ob_start();
+		do_action( 'wp_enqueue_scripts' );
+		ob_end_clean();
+
+		$styles  = wp_styles()->queue;
+		$scripts = wp_scripts()->queue;
+
+		ob_start();
+		jws_streamvid_load_template( 'user/profile/v3/layout.php', false );
+		$block = ob_get_clean();
+
+		echo '<title>' . esc_html( wp_get_document_title() ) . "</title>\n";
+
+		$late_styles = array_diff( wp_styles()->queue, $styles );
+		if ( $late_styles ) {
+			wp_print_styles( $late_styles );
+		}
+
+		echo $block; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template output, escaped in the templates.
+
+		$late_scripts = array_diff( wp_scripts()->queue, $scripts );
+		if ( $late_scripts ) {
+			wp_print_scripts( $late_scripts );
+		}
+
+		exit;
+	}
+
 	/** Adds the Profiles tab to the profile page menu; the Profile Menu sorter can move or hide it. */
 	public static function profile_tab( $items ) {
 
@@ -577,6 +629,7 @@ add_filter( 'query_vars', array( 'Jws_Profiles_Front', 'query_vars' ) );
 add_action( 'wp_loaded', array( 'Jws_Profiles_Front', 'maybe_flush' ) );
 add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'route' ), 1 );
 add_filter( 'template_include', array( 'Jws_Profiles_Front', 'template' ), 99 );
+add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'fragment' ), 19 );
 add_filter( 'pre_get_document_title', array( 'Jws_Profiles_Front', 'document_title' ), 20 );
 add_filter( 'body_class', array( 'Jws_Profiles_Front', 'body_class' ) );
 add_action( 'wp_enqueue_scripts', array( 'Jws_Profiles_Front', 'enqueue' ), 20 );

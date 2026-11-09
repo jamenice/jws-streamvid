@@ -647,7 +647,10 @@ class Jws_Streamvid_Public {
             do_action( 'streamvid/videos/form', array('type'=>'create') );
             do_action( 'streamvid/videos/form', array('type'=>'edit') );
             
-            if(isset($wp_query->query_vars['dashboard'])) {
+            // Profile V3 loads its tabs in place (profiles.js), so the Settings popups are on every tab of the owner's page.
+            $jws_v3_owner = is_author() && class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::is_v3() && jws_streamvid_check_owner();
+
+            if(isset($wp_query->query_vars['dashboard']) || $jws_v3_owner) {
                 jws_streamvid()->get()->dashboard->form_profile();
                 jws_streamvid()->get()->dashboard->form_personal();     
             }

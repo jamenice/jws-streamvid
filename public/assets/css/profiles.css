@@ -874,6 +874,23 @@
 	min-width: 0;
 }
 
+/* A tab loading in place (profiles.js): the old one dims only if the wait is noticeable. */
+.jws-pv3.is-loading {
+	cursor: progress;
+}
+
+.jws-pv3.is-loading .jws-pv3__content {
+	opacity: 0.5;
+	pointer-events: none;
+	transition: opacity 0.2s 0.15s;
+}
+
+/* Focus moves to the new title or notice for screen readers; they are not controls. */
+.jws-pv3__title:focus,
+.jws-pv3 .jws-pf-msg:focus {
+	outline: none;
+}
+
 .jws-pv3__sheet-head,
 .jws-pv3__backdrop {
 	display: none;

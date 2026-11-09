@@ -134,7 +134,7 @@ $jws_vid_status = array(
 				<input type="hidden" name="vtype" value="<?php echo esc_attr( $jws_vid_filter ); ?>">
 			<?php endif; ?>
 			<label for="jws-vid-sort"><?php esc_html_e( 'Sort by', 'jws_streamvid' ); ?></label>
-			<select id="jws-vid-sort" name="sortby" class="jws-pf-input jws-vid__select" onchange="this.form.submit()">
+			<select id="jws-vid-sort" name="sortby" class="jws-pf-input jws-vid__select" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
 				<option value="date" <?php selected( $jws_vid_sort, 'date' ); ?>><?php esc_html_e( 'Newest', 'jws_streamvid' ); ?></option>
 				<option value="views" <?php selected( $jws_vid_sort, 'views' ); ?>><?php esc_html_e( 'Most viewed', 'jws_streamvid' ); ?></option>
 				<option value="likes" <?php selected( $jws_vid_sort, 'likes' ); ?>><?php esc_html_e( 'Most liked', 'jws_streamvid' ); ?></option>
