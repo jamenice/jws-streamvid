@@ -144,6 +144,12 @@ add_action('wp_ajax_get_invoice_html_pmpro', function() {
         wp_send_json_error('Order not found');
     }
 
+    // Only the member who placed the order (or an admin) may read its invoice;
+    // same answer as a missing order so codes cannot be probed.
+    if ( (int) $order->user_id !== get_current_user_id() && ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error('Order not found');
+    }
+
     // Get the level
     $order->getMembershipLevel();
     
