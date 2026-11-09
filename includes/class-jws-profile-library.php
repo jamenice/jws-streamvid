@@ -313,6 +313,14 @@ class Jws_Profile_Library {
 		return '';
 	}
 
+	/** @return string 'error' for an expired form, 'success' for the other ?jws_lib= notices. */
+	public static function notice_type() {
+
+		$code = isset( $_GET['jws_lib'] ) ? sanitize_key( wp_unslash( $_GET['jws_lib'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		return 'expired' === $code ? 'error' : 'success';
+	}
+
 	/** Prints the V3 tab when the site uses Version 3; returns whether it did. */
 	public static function maybe_render( $tab ) {
 

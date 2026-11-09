@@ -112,6 +112,78 @@
 	}
 
 	/* ------------------------------------------------------------------ *
+	 * One-time notices as the theme's toast
+	 * ------------------------------------------------------------------ */
+
+	// Query arguments of a one-time notice (removed, cleared, signed out): shown once, kept out of the address bar.
+	var NOTICE_ARGS = [ 'jws_lib', 'n' ];
+	var live = null;
+
+	function escapeHtml( text ) {
+		var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' };
+
+		return text.replace( /[&<>"']/g, function ( c ) {
+			return map[ c ];
+		} );
+	}
+
+	// Screen readers do not read the toast, so its text also goes to a polite live region.
+	function announce( text ) {
+		if ( ! live ) {
+			live = document.createElement( 'div' );
+			live.className = 'screen-reader-text';
+			live.setAttribute( 'role', 'status' );
+			live.setAttribute( 'aria-live', 'polite' );
+			root.appendChild( live );
+		}
+		live.textContent = '';
+		window.setTimeout( function () {
+			live.textContent = text;
+		}, 100 );
+	}
+
+	/*
+	 * Notices marked data-jws-toast (titles removed, history cleared, device
+	 * signed out, form expired) show as the theme's toast
+	 * (jwsThemeModule.show_notification, Toastify) and leave the page.
+	 * Without the theme's toast they stay where they are.
+	 */
+	function toastNotices( scope ) {
+		var theme = window.jwsThemeModule;
+
+		if ( ! theme || 'function' !== typeof theme.show_notification || 'function' !== typeof window.Toastify ) {
+			return;
+		}
+
+		Array.prototype.forEach.call( scope.querySelectorAll( '[data-jws-toast]' ), function ( notice ) {
+			var text = notice.textContent.trim();
+
+			if ( text ) {
+				theme.show_notification( escapeHtml( text ), 'error' === notice.getAttribute( 'data-jws-toast' ) ? 'error' : 'success' );
+				announce( text );
+			}
+			notice.parentNode.removeChild( notice );
+		} );
+	}
+
+	toastNotices( root );
+
+	// A normal page load with a notice (a form sent without in-place loading): keep the notice out of the address bar too.
+	if ( window.URL && window.history.replaceState ) {
+		var here = new URL( window.location.href );
+		var hadNotice = NOTICE_ARGS.some( function ( key ) {
+			return here.searchParams.has( key );
+		} );
+
+		if ( hadNotice ) {
+			NOTICE_ARGS.forEach( function ( key ) {
+				here.searchParams.delete( key );
+			} );
+			window.history.replaceState( window.history.state, '', here.href );
+		}
+	}
+
+	/* ------------------------------------------------------------------ *
 	 * Tabs in place
 	 * ------------------------------------------------------------------ */
 
@@ -122,9 +194,6 @@
 	var base = new URL( root.getAttribute( 'data-jws-base' ), window.location.href );
 	var controller = null;
 	var lastSubmitter = null;
-
-	// Query arguments of a one-time notice (removed, cleared, signed out): shown once, kept out of the address bar.
-	var NOTICE_ARGS = [ 'jws_lib', 'n' ];
 
 	function inProfile( url ) {
 		if ( url.origin !== base.origin || 0 !== url.pathname.indexOf( base.pathname ) ) {
@@ -381,8 +450,10 @@
 			}
 		}
 
-		// Screen readers hear the notice after a form, the tab title after a link.
-		var target = ( opts.form && fresh.querySelector( '[role="status"]' ) ) || root.querySelector( '.jws-pv3__title' );
+		toastNotices( fresh );
+
+		// Focus goes to the tab title, or to a notice left in the page when the toast is not there.
+		var target = ( opts.form && fresh.querySelector( '[data-jws-toast]' ) ) || root.querySelector( '.jws-pv3__title' );
 
 		if ( target && opts.focus !== false ) {
 			target.setAttribute( 'tabindex', '-1' );

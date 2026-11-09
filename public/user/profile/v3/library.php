@@ -45,7 +45,8 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 <div class="jws-lib jws-lib--<?php echo esc_attr( $jws_lib_tab ); ?>">
 
 	<?php if ( $jws_lib_notice ) : ?>
-		<p class="jws-pf-msg" role="status"><?php echo esc_html( $jws_lib_notice ); ?></p>
+		<?php $jws_toast = Jws_Profile_Library::notice_type(); // profiles.js shows it as the theme's toast. ?>
+		<p class="jws-pf-msg<?php echo 'error' === $jws_toast ? ' jws-pf-msg--error' : ''; ?>" role="status" data-jws-toast="<?php echo esc_attr( $jws_toast ); ?>"><?php echo esc_html( $jws_lib_notice ); ?></p>
 	<?php endif; ?>
 
 	<form method="post" class="jws-lib__form">

@@ -67,7 +67,8 @@ $jws_dev_icon = function ( $device ) {
 	<p class="jws-lib__sub"><?php esc_html_e( 'Devices signed in to this account. Sign out any device you don\'t recognise, then change your password.', 'jws_streamvid' ); ?></p>
 
 	<?php if ( $jws_dev_notice ) : ?>
-		<p class="jws-pf-msg" role="status"><?php echo esc_html( $jws_dev_notice ); ?></p>
+		<?php $jws_toast = Jws_Profile_Library::notice_type(); // profiles.js shows it as the theme's toast. ?>
+		<p class="jws-pf-msg<?php echo 'error' === $jws_toast ? ' jws-pf-msg--error' : ''; ?>" role="status" data-jws-toast="<?php echo esc_attr( $jws_toast ); ?>"><?php echo esc_html( $jws_dev_notice ); ?></p>
 	<?php endif; ?>
 
 	<?php if ( $jws_dev_limit ) : ?>
