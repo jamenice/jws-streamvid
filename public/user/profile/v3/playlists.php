@@ -134,7 +134,7 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 	<?php else : ?>
 		<div class="jws-lib__empty">
 			<span class="jws-lib__empty-icon" aria-hidden="true"><i class="jws-icon-queue"></i></span>
-			<h2><?php esc_html_e( 'No playlists yet', 'jws_streamvid' ); ?></h2>
+			<h5><?php esc_html_e( 'No playlists yet', 'jws_streamvid' ); ?></h5>
 			<p><?php esc_html_e( 'Create a playlist, then add titles to it from any title page.', 'jws_streamvid' ); ?></p>
 			<a href="#" class="button-default" data-modal-jws="#create-playlist"><?php esc_html_e( 'Create Playlist', 'jws_streamvid' ); ?></a>
 		</div>

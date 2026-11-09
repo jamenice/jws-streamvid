@@ -104,7 +104,7 @@ if ( $jws_am_kid ) {
 	<a class="jws-am__me" href="<?php echo esc_url( $jws_am_kid ? $jws_am_profile->get_endpoint( $jws_am_user, 'history', '' ) : get_author_posts_url( $jws_am_user ) ); ?>">
 		<?php echo $jws_am_on ? Jws_Profiles_Front::avatar_img( $jws_am_current, 44, 'jws-am__avatar' ) : get_avatar( $jws_am_user, 44, '', '', array( 'class' => 'jws-am__avatar' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img() / get_avatar(). ?>
 		<span class="jws-am__me-text">
-			<span class="jws-am__me-name">
+			<span class="jws-am__me-name h6">
 				<?php echo esc_html( $jws_am_on && $jws_am_current ? $jws_am_current->name : wp_get_current_user()->display_name ); ?>
 				<?php if ( $jws_am_kid ) : ?>
 					<span class="jws-pf-kids-badge"><?php esc_html_e( 'Kids', 'jws_streamvid' ); ?></span>

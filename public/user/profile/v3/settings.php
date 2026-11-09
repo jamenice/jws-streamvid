@@ -67,11 +67,11 @@ $jws_set_rows = array(
 <div class="jws-set">
 
 	<section class="jws-set__card" aria-labelledby="jws-set-personal">
-		<h2 id="jws-set-personal" class="jws-pf-section__title"><?php esc_html_e( 'Personal information', 'jws_streamvid' ); ?></h2>
+		<h5 id="jws-set-personal" class="jws-pf-section__title"><?php esc_html_e( 'Personal information', 'jws_streamvid' ); ?></h5>
 		<div class="jws-set__me">
 			<?php echo get_avatar( $jws_set_id, 80, '', '', array( 'class' => 'jws-set__avatar' ) ); ?>
 			<span class="jws-set__me-text">
-				<span class="jws-set__name"><?php echo esc_html( $jws_set_user->display_name ); ?></span>
+				<span class="jws-set__name h5"><?php echo esc_html( $jws_set_user->display_name ); ?></span>
 				<?php if ( $jws_set_meta ) : ?>
 					<span class="jws-set__meta"><?php echo esc_html( implode( ' · ', $jws_set_meta ) ); ?></span>
 				<?php else : ?>
@@ -86,13 +86,13 @@ $jws_set_rows = array(
 	</section>
 
 	<section class="jws-set__card" aria-labelledby="jws-set-security">
-		<h2 id="jws-set-security" class="jws-pf-section__title"><?php esc_html_e( 'Account and security', 'jws_streamvid' ); ?></h2>
+		<h5 id="jws-set-security" class="jws-pf-section__title"><?php esc_html_e( 'Account and security', 'jws_streamvid' ); ?></h5>
 		<ul class="jws-set__rows">
 			<?php foreach ( $jws_set_rows as $jws_set_row ) : ?>
 				<li class="jws-set__row">
 					<span class="jws-set__field">
 						<span class="jws-set__label"><?php echo esc_html( $jws_set_row['label'] ); ?></span>
-						<span class="jws-set__value"><?php echo esc_html( $jws_set_row['value'] ); ?></span>
+						<span class="jws-set__value h6"><?php echo esc_html( $jws_set_row['value'] ); ?></span>
 					</span>
 					<button type="button" class="button-custom jws-btn-sm jws-set__change" data-modal-jws="<?php echo esc_attr( $jws_set_row['modal'] ); ?>">
 						<?php echo esc_html( $jws_set_row['action'] ); ?>
@@ -109,7 +109,7 @@ $jws_set_rows = array(
 		if ( ! empty( $jws_set_social ) ) {
 			?>
 			<section class="jws-set__card login-width-social">
-				<h2 class="jws-pf-section__title"><?php esc_html_e( 'Social Login Accounts', 'jws_streamvid' ); ?></h2>
+				<h5 class="jws-pf-section__title"><?php esc_html_e( 'Social Login Accounts', 'jws_streamvid' ); ?></h5>
 				<?php echo $jws_set_social; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from Nextend Social Login. ?>
 			</section>
 			<?php

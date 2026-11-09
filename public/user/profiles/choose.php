@@ -23,9 +23,9 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 ?>
 <section class="jws-pf-choose" aria-labelledby="jws-pf-title">
 
-	<h1 id="jws-pf-title" class="jws-pf__title">
+	<h3 id="jws-pf-title" class="jws-pf__title">
 		<?php echo $jws_pf_manage ? esc_html__( 'Manage Profiles', 'jws_streamvid' ) : esc_html__( "Who's watching?", 'jws_streamvid' ); ?>
-	</h1>
+	</h3>
 
 	<?php if ( $jws_pf_notice ) : ?>
 		<p class="jws-pf-msg" role="status"><?php echo esc_html( $jws_pf_notice ); ?></p>
@@ -110,7 +110,7 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 	<?php if ( $jws_pf_manage && $jws_pf_over ) : ?>
 		<form method="post" class="jws-pf-keep">
 			<?php Jws_Profiles_Front::form_fields( 'keep' ); ?>
-			<h2 class="jws-pf-keep__title">
+			<h5 class="jws-pf-keep__title">
 				<?php
 				printf(
 					/* translators: %d: number of profiles the plan allows */
@@ -118,7 +118,7 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 					(int) $jws_pf_limit
 				);
 				?>
-			</h2>
+			</h5>
 			<p><?php esc_html_e( 'Choose which profiles to keep using. The others keep their history and lists, and come back when you change your plan.', 'jws_streamvid' ); ?></p>
 			<ul class="jws-pf-keep__list">
 				<?php foreach ( $jws_pf_profiles as $jws_pf_p ) : ?>

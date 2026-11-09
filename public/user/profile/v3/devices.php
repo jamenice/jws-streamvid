@@ -89,11 +89,11 @@ $jws_dev_icon = function ( $device ) {
 
 	<?php if ( $jws_dev_this ) : ?>
 		<section class="jws-dev__section">
-			<h2 class="jws-pf-section__title"><?php esc_html_e( 'This device', 'jws_streamvid' ); ?></h2>
+			<h5 class="jws-pf-section__title"><?php esc_html_e( 'This device', 'jws_streamvid' ); ?></h5>
 			<div class="jws-dev__row jws-dev__row--this">
 				<span class="jws-dev__icon"><i class="<?php echo esc_attr( $jws_dev_icon( $jws_dev_this ) ); ?>" aria-hidden="true"></i></span>
 				<span class="jws-dev__text">
-					<span class="jws-dev__name"><?php echo esc_html( $jws_dev_name( $jws_dev_this ) ); ?></span>
+					<span class="jws-dev__name h6"><?php echo esc_html( $jws_dev_name( $jws_dev_this ) ); ?></span>
 					<span class="jws-dev__seen"><?php echo esc_html( $jws_dev_seen( $jws_dev_this ) ); ?></span>
 				</span>
 				<span class="jws-dev__badge"><?php esc_html_e( 'This device', 'jws_streamvid' ); ?></span>
@@ -102,7 +102,7 @@ $jws_dev_icon = function ( $device ) {
 	<?php endif; ?>
 
 	<section class="jws-dev__section">
-		<h2 class="jws-pf-section__title"><?php esc_html_e( 'Other devices', 'jws_streamvid' ); ?></h2>
+		<h5 class="jws-pf-section__title"><?php esc_html_e( 'Other devices', 'jws_streamvid' ); ?></h5>
 		<?php if ( $jws_dev_others ) : ?>
 			<form method="post" class="jws-dev__form">
 				<?php wp_nonce_field( 'jws_devices', '_jws_devices_nonce' ); ?>
@@ -111,7 +111,7 @@ $jws_dev_icon = function ( $device ) {
 						<li class="jws-dev__row">
 							<span class="jws-dev__icon"><i class="<?php echo esc_attr( $jws_dev_icon( $jws_dev_item ) ); ?>" aria-hidden="true"></i></span>
 							<span class="jws-dev__text">
-								<span class="jws-dev__name"><?php echo esc_html( $jws_dev_name( $jws_dev_item ) ); ?></span>
+								<span class="jws-dev__name h6"><?php echo esc_html( $jws_dev_name( $jws_dev_item ) ); ?></span>
 								<span class="jws-dev__seen"><?php echo esc_html( $jws_dev_seen( $jws_dev_item ) ); ?></span>
 							</span>
 							<button type="submit" name="sign_out" value="<?php echo esc_attr( $jws_dev_item['device_id'] ); ?>" class="button-custom jws-btn-sm jws-dev__out">

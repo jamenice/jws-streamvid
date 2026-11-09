@@ -88,7 +88,7 @@ $jws_sub_status = array(
 			<div class="jws-sub__plan-head">
 				<div class="jws-sub__plan-text">
 					<span class="jws-sub__eyebrow"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-					<span class="jws-sub__name">
+					<span class="jws-sub__name h4">
 						<?php echo esc_html( $jws_sub_level->name ); ?>
 						<span class="jws-buy__chip jws-buy__chip--active"><?php esc_html_e( 'Active', 'jws_streamvid' ); ?></span>
 					</span>
@@ -115,7 +115,7 @@ $jws_sub_status = array(
 			<div class="jws-sub__plan-head">
 				<div class="jws-sub__plan-text">
 					<span class="jws-sub__eyebrow"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-					<span class="jws-sub__name"><?php echo $jws_sub_level ? esc_html( $jws_sub_level->name ) : esc_html__( 'Free Plan', 'jws_streamvid' ); ?></span>
+					<span class="jws-sub__name h4"><?php echo $jws_sub_level ? esc_html( $jws_sub_level->name ) : esc_html__( 'Free Plan', 'jws_streamvid' ); ?></span>
 					<span class="jws-sub__cost"><?php esc_html_e( 'Upgrade to watch premium titles, add more profiles and sign in on more devices.', 'jws_streamvid' ); ?></span>
 				</div>
 				<div class="jws-sub__actions">
@@ -149,7 +149,7 @@ $jws_sub_status = array(
 	<section class="jws-sub__billing">
 		<i class="jws-icon-wallet" aria-hidden="true"></i>
 		<span class="jws-sub__billing-text">
-			<span class="jws-sub__billing-title"><?php esc_html_e( 'Billing', 'jws_streamvid' ); ?></span>
+			<span class="jws-sub__billing-title h6"><?php esc_html_e( 'Billing', 'jws_streamvid' ); ?></span>
 			<span class="jws-lib__sub"><?php echo esc_html( $jws_sub_card ? $jws_sub_card : __( 'No payment method on file', 'jws_streamvid' ) ); ?></span>
 		</span>
 		<?php if ( $jws_sub_level && pmpro_isLevelRecurring( $jws_sub_level ) ) : ?>
@@ -158,7 +158,7 @@ $jws_sub_status = array(
 	</section>
 
 	<section class="jws-sub__invoices">
-		<h2 class="jws-pf-section__title"><?php esc_html_e( 'Invoices', 'jws_streamvid' ); ?></h2>
+		<h5 class="jws-pf-section__title"><?php esc_html_e( 'Invoices', 'jws_streamvid' ); ?></h5>
 		<?php if ( $jws_sub_orders ) : ?>
 			<ul class="jws-coin__list">
 				<?php foreach ( $jws_sub_orders as $jws_sub_order ) : ?>
@@ -168,7 +168,7 @@ $jws_sub_status = array(
 					?>
 					<li class="jws-coin__row">
 						<span class="jws-coin__what">
-							<span class="jws-coin__detail"><?php echo esc_html( $jws_sub_order_level ? $jws_sub_order_level->name : $jws_sub_order->code ); ?></span>
+							<span class="jws-coin__detail h6"><?php echo esc_html( $jws_sub_order_level ? $jws_sub_order_level->name : $jws_sub_order->code ); ?></span>
 							<span class="jws-coin__when">
 								<?php echo esc_html( date_i18n( $jws_sub_date, strtotime( $jws_sub_order->timestamp ) ) ); ?>
 								· <?php echo esc_html( wp_strip_all_tags( pmpro_formatPrice( $jws_sub_order->total ) ) ); ?>

@@ -77,7 +77,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 				<?php echo Jws_Profiles_Front::avatar_img( $jws_pt_p, 48, 'jws-pf-list__avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
 
 				<span class="jws-pf-list__who">
-					<span class="jws-pf-list__name">
+					<span class="jws-pf-list__name h6">
 						<?php echo esc_html( $jws_pt_p->name ); ?>
 						<span class="jws-pf-chip jws-pf-chip--<?php echo esc_attr( $jws_pt_type[0] ); ?>"><?php echo esc_html( $jws_pt_type[1] ); ?></span>
 					</span>

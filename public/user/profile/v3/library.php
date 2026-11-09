@@ -91,7 +91,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 				<?php foreach ( $jws_lib_groups as $jws_lib_group ) : ?>
 					<section class="jws-lib__group">
 						<?php if ( $jws_lib_group['title'] ) : ?>
-							<h2 class="jws-lib__group-title"><?php echo esc_html( $jws_lib_group['title'] ); ?></h2>
+							<h6 class="jws-lib__group-title"><?php echo esc_html( $jws_lib_group['title'] ); ?></h6>
 						<?php endif; ?>
 						<ul class="jws-lib__grid">
 							<?php foreach ( $jws_lib_group['items'] as $jws_lib_item ) : ?>
@@ -163,7 +163,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 				<span class="jws-lib__empty-icon" aria-hidden="true">
 					<i class="jws-icon-play-circle" aria-hidden="true"></i>
 				</span>
-				<h2><?php echo esc_html( $jws_lib_copy[1] ); ?></h2>
+				<h5><?php echo esc_html( $jws_lib_copy[1] ); ?></h5>
 				<p><?php echo esc_html( $jws_lib_copy[2] ); ?></p>
 				<a class="button-default" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
 			</div>

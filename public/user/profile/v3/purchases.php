@@ -125,7 +125,7 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 					</a>
 					<div class="jws-buy__info">
 						<div class="jws-buy__title-row">
-							<a class="jws-buy__title" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php echo esc_html( $jws_buy_item['title'] ); ?></a>
+							<a class="jws-buy__title h6" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php echo esc_html( $jws_buy_item['title'] ); ?></a>
 							<span class="jws-buy__chip jws-buy__chip--<?php echo esc_attr( $jws_buy_item['chip'][0] ); ?>"><?php echo esc_html( $jws_buy_item['chip'][1] ); ?></span>
 						</div>
 						<p class="jws-buy__note"><?php echo esc_html( $jws_buy_item['note'] ); ?></p>
@@ -136,12 +136,12 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 					</div>
 					<div class="jws-buy__actions">
 						<?php if ( $jws_buy_item['watch'] ) : ?>
-							<a class="button-default" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>">
+							<a class="button-default jws-btn-sm" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>">
 								<i class="jws-icon-play-fill" aria-hidden="true"></i>
 								<?php echo esc_html( $jws_buy_item['watch'] ); ?>
 							</a>
 						<?php elseif ( $jws_buy_item['again'] && ! $jws_buy_item['blocked'] ) : ?>
-							<a class="button-default" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php esc_html_e( 'Rent again', 'jws_streamvid' ); ?></a>
+							<a class="button-default jws-btn-sm" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php esc_html_e( 'Rent again', 'jws_streamvid' ); ?></a>
 						<?php endif; ?>
 						<?php if ( $jws_buy_item['order'] ) : ?>
 							<button type="button" class="button-custom jws-btn-sm download-invoice-woo" data-invoice="<?php echo esc_attr( $jws_buy_item['order'] ); ?>">
@@ -157,7 +157,7 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 	<?php else : ?>
 		<div class="jws-lib__empty">
 			<span class="jws-lib__empty-icon" aria-hidden="true"><i class="jws-icon-handbag"></i></span>
-			<h2><?php echo Jws_PPV_Access::TYPE_RENT === $jws_buy_type ? esc_html__( 'No rentals yet', 'jws_streamvid' ) : esc_html__( 'No purchases yet', 'jws_streamvid' ); ?></h2>
+			<h5><?php echo Jws_PPV_Access::TYPE_RENT === $jws_buy_type ? esc_html__( 'No rentals yet', 'jws_streamvid' ) : esc_html__( 'No purchases yet', 'jws_streamvid' ); ?></h5>
 			<p>
 				<?php
 				echo Jws_PPV_Access::TYPE_RENT === $jws_buy_type

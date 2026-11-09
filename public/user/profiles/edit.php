@@ -45,9 +45,9 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 ?>
 <section class="jws-pf-edit" aria-labelledby="jws-pf-title">
 
-	<h1 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm">
+	<h4 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm">
 		<?php echo $jws_pf_is_add ? esc_html__( 'Add Profile', 'jws_streamvid' ) : esc_html__( 'Edit Profile', 'jws_streamvid' ); ?>
-	</h1>
+	</h4>
 	<?php if ( $jws_pf_is_add ) : ?>
 		<p class="jws-pf__lead"><?php esc_html_e( 'Add a profile for another person watching on this account. Each profile has its own history, Watchlist and Favorites.', 'jws_streamvid' ); ?></p>
 	<?php endif; ?>
@@ -63,7 +63,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		<?php Jws_Profiles_Front::form_fields( 'save', $jws_pf_profile ? $jws_pf_profile->id : 0 ); ?>
 
 		<div class="jws-pf-field">
-			<label for="jws-pf-name"><?php esc_html_e( 'Profile name', 'jws_streamvid' ); ?></label>
+			<label for="jws-pf-name" class="h6"><?php esc_html_e( 'Profile name', 'jws_streamvid' ); ?></label>
 			<input id="jws-pf-name" class="jws-pf-input" type="text" name="name" value="<?php echo esc_attr( $jws_pf_name ); ?>" maxlength="<?php echo (int) Jws_Profiles::NAME_MAX; ?>" required autocomplete="off"<?php echo $jws_pf_err_name ? ' aria-invalid="true" aria-describedby="jws-pf-name-error"' : ''; ?>>
 			<?php if ( $jws_pf_err_name ) : ?>
 				<p id="jws-pf-name-error" class="jws-pf-msg jws-pf-msg--error"><?php echo esc_html( $jws_pf_err_name ); ?></p>
@@ -71,7 +71,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		</div>
 
 		<fieldset class="jws-pf-field jws-pf-avatars">
-			<legend><?php esc_html_e( 'Avatar', 'jws_streamvid' ); ?></legend>
+			<legend class="h6"><?php esc_html_e( 'Avatar', 'jws_streamvid' ); ?></legend>
 			<?php if ( $jws_pf_err_av ) : ?>
 				<p class="jws-pf-msg jws-pf-msg--error"><?php echo esc_html( $jws_pf_err_av ); ?></p>
 			<?php endif; ?>
@@ -94,7 +94,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 			<div class="jws-pf-field jws-pf-toggle">
 				<input id="jws-pf-kid" type="checkbox" name="is_kid" value="1" <?php checked( $jws_pf_kid ); ?>>
 				<label for="jws-pf-kid">
-					<span class="jws-pf-toggle__title"><?php esc_html_e( 'Kids profile', 'jws_streamvid' ); ?></span>
+					<span class="jws-pf-toggle__title h6"><?php esc_html_e( 'Kids profile', 'jws_streamvid' ); ?></span>
 					<span class="jws-pf-help">
 						<?php
 						printf(
@@ -109,7 +109,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		<?php endif; ?>
 
 		<fieldset class="jws-pf-field jws-pf-maturity">
-			<legend><?php esc_html_e( 'Maturity rating', 'jws_streamvid' ); ?></legend>
+			<legend class="h6"><?php esc_html_e( 'Maturity rating', 'jws_streamvid' ); ?></legend>
 			<p class="jws-pf-help"><?php esc_html_e( 'This profile only shows titles at or below this rating.', 'jws_streamvid' ); ?></p>
 			<?php foreach ( Jws_Profiles::MATURITY_LEVELS as $jws_pf_age ) : ?>
 				<label class="jws-pf-radio<?php echo $jws_pf_age > $jws_pf_kids_max ? ' is-adult-only' : ''; ?>">
@@ -125,7 +125,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		<div class="jws-pf-field jws-pf-toggle">
 			<input id="jws-pf-autoplay" type="checkbox" name="autoplay_next" value="1" <?php checked( $jws_pf_autoplay ); ?>>
 			<label for="jws-pf-autoplay">
-				<span class="jws-pf-toggle__title"><?php esc_html_e( 'Autoplay next episode', 'jws_streamvid' ); ?></span>
+				<span class="jws-pf-toggle__title h6"><?php esc_html_e( 'Autoplay next episode', 'jws_streamvid' ); ?></span>
 			</label>
 		</div>
 
@@ -138,7 +138,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 	<?php if ( $jws_pf_profile ) : ?>
 
 		<section id="pin" class="jws-pf-section" aria-labelledby="jws-pf-pin-title">
-			<h2 id="jws-pf-pin-title" class="jws-pf-section__title"><?php esc_html_e( 'Profile Lock', 'jws_streamvid' ); ?></h2>
+			<h5 id="jws-pf-pin-title" class="jws-pf-section__title"><?php esc_html_e( 'Profile Lock', 'jws_streamvid' ); ?></h5>
 			<p class="jws-pf-help">
 				<?php
 				echo $jws_pf_profile->has_pin
@@ -155,11 +155,11 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 				<form method="post" class="jws-pf-form jws-pf-form--tight">
 					<?php Jws_Profiles_Front::form_fields( 'pin', $jws_pf_profile->id ); ?>
 					<div class="jws-pf-field">
-						<label for="jws-pf-new-pin"><?php echo $jws_pf_profile->has_pin ? esc_html__( 'New PIN', 'jws_streamvid' ) : esc_html__( 'PIN', 'jws_streamvid' ); ?></label>
+						<label for="jws-pf-new-pin" class="h6"><?php echo $jws_pf_profile->has_pin ? esc_html__( 'New PIN', 'jws_streamvid' ) : esc_html__( 'PIN', 'jws_streamvid' ); ?></label>
 						<input id="jws-pf-new-pin" class="jws-pf-input jws-pf-input--pin" name="new_pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
 					</div>
 					<div class="jws-pf-field">
-						<label for="jws-pf-pass"><?php esc_html_e( 'Account password', 'jws_streamvid' ); ?></label>
+						<label for="jws-pf-pass" class="h6"><?php esc_html_e( 'Account password', 'jws_streamvid' ); ?></label>
 						<input id="jws-pf-pass" class="jws-pf-input" name="account_password" type="password" autocomplete="current-password" required>
 					</div>
 					<?php if ( $jws_pf_err_pin ) : ?>
@@ -177,7 +177,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 
 		<?php if ( ! $jws_pf_main ) : ?>
 			<section class="jws-pf-section jws-pf-section--danger" aria-labelledby="jws-pf-del-title">
-				<h2 id="jws-pf-del-title" class="jws-pf-section__title"><?php esc_html_e( 'Delete profile', 'jws_streamvid' ); ?></h2>
+				<h5 id="jws-pf-del-title" class="jws-pf-section__title"><?php esc_html_e( 'Delete profile', 'jws_streamvid' ); ?></h5>
 				<p class="jws-pf-help"><?php esc_html_e( 'Deleting a profile also removes its history, Watchlist and Favorites. Purchases stay on the account.', 'jws_streamvid' ); ?></p>
 				<details class="jws-pf-confirm">
 					<summary class="button-custom jws-btn-danger"><?php esc_html_e( 'Delete Profile', 'jws_streamvid' ); ?></summary>

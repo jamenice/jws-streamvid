@@ -27,12 +27,12 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 
 	<div class="jws-pf-pin__who">
 		<?php echo Jws_Profiles_Front::avatar_img( $jws_pf_profile, 56, 'jws-pf-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
-		<span><?php echo esc_html( $jws_pf_profile->name ); ?></span>
+		<span class="h5"><?php echo esc_html( $jws_pf_profile->name ); ?></span>
 	</div>
 
 	<?php if ( $jws_pf_profile->has_pin ) : ?>
 
-		<h1 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm"><?php esc_html_e( 'Profile Lock is on', 'jws_streamvid' ); ?></h1>
+		<h4 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm"><?php esc_html_e( 'Profile Lock is on', 'jws_streamvid' ); ?></h4>
 		<p class="jws-pf__lead"><?php esc_html_e( 'Enter your PIN to access this profile.', 'jws_streamvid' ); ?></p>
 
 		<?php if ( $jws_pf_notice ) : ?>
@@ -43,7 +43,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 			<?php Jws_Profiles_Front::form_fields( 'switch', $jws_pf_profile->id ); ?>
 			<input type="hidden" name="back" value="<?php echo esc_url( $jws_pf_back ); ?>">
 			<label class="screen-reader-text" for="jws-pf-pin"><?php esc_html_e( 'PIN', 'jws_streamvid' ); ?></label>
-			<input id="jws-pf-pin" class="jws-pf-pin__input<?php echo $jws_pf_error ? ' has-error' : ''; ?>" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required autofocus<?php echo $jws_pf_error ? ' aria-invalid="true" aria-describedby="jws-pf-pin-error"' : ''; ?>>
+			<input id="jws-pf-pin" class="jws-pf-pin__input h4<?php echo $jws_pf_error ? ' has-error' : ''; ?>" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required autofocus<?php echo $jws_pf_error ? ' aria-invalid="true" aria-describedby="jws-pf-pin-error"' : ''; ?>>
 			<?php if ( $jws_pf_error ) : ?>
 				<p id="jws-pf-pin-error" class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_error ); ?></p>
 			<?php endif; ?>
@@ -52,7 +52,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 
 	<?php else : ?>
 
-		<h1 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm"><?php esc_html_e( 'This profile has no PIN', 'jws_streamvid' ); ?></h1>
+		<h4 id="jws-pf-title" class="jws-pf__title jws-pf__title--sm"><?php esc_html_e( 'This profile has no PIN', 'jws_streamvid' ); ?></h4>
 		<form method="post">
 			<?php Jws_Profiles_Front::form_fields( 'switch', $jws_pf_profile->id ); ?>
 			<input type="hidden" name="back" value="<?php echo esc_url( $jws_pf_back ); ?>">
@@ -79,11 +79,11 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 					<?php Jws_Profiles_Front::form_fields( 'pin', $jws_pf_profile->id ); ?>
 					<input type="hidden" name="back" value="<?php echo esc_url( $jws_pf_back ); ?>">
 					<div class="jws-pf-field">
-						<label for="jws-pf-new-pin"><?php esc_html_e( 'New 4-digit PIN', 'jws_streamvid' ); ?></label>
+						<label for="jws-pf-new-pin" class="h6"><?php esc_html_e( 'New 4-digit PIN', 'jws_streamvid' ); ?></label>
 						<input id="jws-pf-new-pin" class="jws-pf-input" name="new_pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
 					</div>
 					<div class="jws-pf-field">
-						<label for="jws-pf-pass"><?php esc_html_e( 'Account password', 'jws_streamvid' ); ?></label>
+						<label for="jws-pf-pass" class="h6"><?php esc_html_e( 'Account password', 'jws_streamvid' ); ?></label>
 						<input id="jws-pf-pass" class="jws-pf-input" name="account_password" type="password" autocomplete="current-password" required>
 					</div>
 					<?php if ( $jws_pf_pin_err ) : ?>

@@ -30,7 +30,7 @@ if ( ! $jws_v3_owner ) :
 	<div class="jws-pv3 jws-pv3--public">
 		<div class="jws-pv3__creator">
 			<?php echo get_avatar( $jws_v3_author, 72, '', '', array( 'class' => 'jws-pv3__creator-avatar' ) ); ?>
-			<h1 class="jws-pv3__title"><?php echo esc_html( get_the_author_meta( 'display_name', $jws_v3_author ) ); ?></h1>
+			<h5 class="jws-pv3__title"><?php echo esc_html( get_the_author_meta( 'display_name', $jws_v3_author ) ); ?></h5>
 		</div>
 		<div class="jws-pv3__content">
 			<?php do_action( 'streamvid/profile/main' ); ?>
@@ -134,7 +134,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 <div class="jws-pv3">
 
 	<div class="jws-pv3__bar">
-		<h1 class="jws-pv3__title"><?php echo esc_html( $jws_v3_title ); ?></h1>
+		<h5 class="jws-pv3__title"><?php echo esc_html( $jws_v3_title ); ?></h5>
 		<button type="button" class="jws-pv3__sections" aria-controls="jws-pv3-side" aria-expanded="false" hidden>
 			<i class="jws-icon-squares-four" aria-hidden="true"></i>
 			<?php esc_html_e( 'Sections', 'jws_streamvid' ); ?>
@@ -143,7 +143,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 
 	<aside id="jws-pv3-side" class="jws-pv3__side" aria-label="<?php esc_attr_e( 'Account', 'jws_streamvid' ); ?>">
 		<div class="jws-pv3__sheet-head">
-			<span class="jws-pv3__sheet-title"><?php esc_html_e( 'My account', 'jws_streamvid' ); ?></span>
+			<span class="jws-pv3__sheet-title h5"><?php esc_html_e( 'My account', 'jws_streamvid' ); ?></span>
 			<button type="button" class="jws-pv3__close">
 				<i class="jws-icon-x" aria-hidden="true"></i>
 				<span class="screen-reader-text"><?php esc_html_e( 'Close', 'jws_streamvid' ); ?></span>
@@ -154,7 +154,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 			<div class="jws-pv3__me">
 				<?php echo get_avatar( $jws_v3_user->ID, 52, '', '', array( 'class' => 'jws-pv3__me-avatar' ) ); ?>
 				<span class="jws-pv3__me-text">
-					<span class="jws-pv3__me-name"><?php echo esc_html( $jws_v3_user->display_name ); ?></span>
+					<span class="jws-pv3__me-name h6"><?php echo esc_html( $jws_v3_user->display_name ); ?></span>
 					<span class="jws-pv3__me-email"><?php echo esc_html( $jws_v3_email ); ?></span>
 				</span>
 			</div>
@@ -163,7 +163,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 				<div class="jws-pv3__plan">
 					<span class="jws-pv3__plan-text">
 						<span class="jws-pv3__plan-label"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-						<span class="jws-pv3__plan-name"><?php echo esc_html( $jws_v3_level ? $jws_v3_level->name : __( 'Free Plan', 'jws_streamvid' ) ); ?></span>
+						<span class="jws-pv3__plan-name h6"><?php echo esc_html( $jws_v3_level ? $jws_v3_level->name : __( 'Free Plan', 'jws_streamvid' ) ); ?></span>
 					</span>
 					<?php if ( $jws_v3_upgrade ) : ?>
 						<a class="button-default jws-btn-sm jws-pv3__upgrade" href="<?php echo esc_url( get_permalink( $jws_v3_upgrade ) ); ?>"><?php esc_html_e( 'Upgrade', 'jws_streamvid' ); ?></a>

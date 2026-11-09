@@ -108,7 +108,7 @@ $jws_vid_status = array(
 			<?php foreach ( $jws_vid_stats as $jws_vid_stat ) : ?>
 				<div class="jws-coin__stat">
 					<span class="jws-coin__label"><?php echo esc_html( $jws_vid_stat[0] ); ?></span>
-					<span class="jws-coin__stat-value"><?php echo esc_html( number_format_i18n( $jws_vid_stat[1] ) ); ?></span>
+					<span class="jws-coin__stat-value h5"><?php echo esc_html( number_format_i18n( $jws_vid_stat[1] ) ); ?></span>
 				</div>
 			<?php endforeach; ?>
 		</div>
@@ -194,7 +194,7 @@ $jws_vid_status = array(
 	<?php else : ?>
 		<div class="jws-lib__empty">
 			<span class="jws-lib__empty-icon" aria-hidden="true"><i class="jws-icon-monitor-play"></i></span>
-			<h2><?php esc_html_e( 'No videos yet', 'jws_streamvid' ); ?></h2>
+			<h5><?php esc_html_e( 'No videos yet', 'jws_streamvid' ); ?></h5>
 			<?php if ( $jws_vid_owner && jws_theme_get_option( 'video_upload' ) ) : ?>
 				<p><?php esc_html_e( 'Videos you upload and live streams you run show up here.', 'jws_streamvid' ); ?></p>
 				<a class="button-default" <?php echo jws_streamvid()->get()->videos->upload_trigger_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in upload_trigger_attrs(). ?>><?php esc_html_e( 'Upload Video', 'jws_streamvid' ); ?></a>

@@ -40,7 +40,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 			<span class="jws-coin__icon" aria-hidden="true"><?php echo Jws_Drama_Settings::coin_icon_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from the drama settings, escaped there. ?></span>
 			<span class="jws-coin__balance-text">
 				<span class="jws-coin__label"><?php esc_html_e( 'Your balance', 'jws_streamvid' ); ?></span>
-				<span class="jws-coin__value sv-coin-balance-number"><?php echo esc_html( number_format_i18n( Jws_Drama_Wallet::balance( $jws_coin_user ) ) ); ?></span>
+				<span class="jws-coin__value h3 sv-coin-balance-number"><?php echo esc_html( number_format_i18n( Jws_Drama_Wallet::balance( $jws_coin_user ) ) ); ?></span>
 			</span>
 			<button type="button" class="button-default" data-jws-coin-modal>
 				<i class="jws-icon-plus" aria-hidden="true"></i>
@@ -49,7 +49,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 		</section>
 		<section class="jws-coin__stat">
 			<span class="jws-coin__label"><?php esc_html_e( 'Spent this month', 'jws_streamvid' ); ?></span>
-			<span class="jws-coin__stat-value">
+			<span class="jws-coin__stat-value h5">
 				<?php
 				/* translators: %s: number of coins */
 				echo esc_html( sprintf( _n( '%s coin', '%s coins', $jws_coin_spent, 'jws_streamvid' ), number_format_i18n( $jws_coin_spent ) ) );
@@ -58,7 +58,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 		</section>
 		<section class="jws-coin__stat">
 			<span class="jws-coin__label"><?php esc_html_e( 'Episodes unlocked', 'jws_streamvid' ); ?></span>
-			<span class="jws-coin__stat-value"><?php echo esc_html( number_format_i18n( $jws_coin_count ) ); ?></span>
+			<span class="jws-coin__stat-value h5"><?php echo esc_html( number_format_i18n( $jws_coin_count ) ); ?></span>
 		</section>
 	</div>
 
@@ -75,7 +75,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 					<?php $jws_coin_ref = 'spend' === $jws_coin_row->type && $jws_coin_row->ref_id && get_post( $jws_coin_row->ref_id ) ? (int) $jws_coin_row->ref_id : 0; ?>
 					<li class="jws-coin__row">
 						<span class="jws-coin__what">
-							<span class="jws-coin__detail">
+							<span class="jws-coin__detail h6">
 								<?php if ( $jws_coin_ref ) : ?>
 									<a href="<?php echo esc_url( get_permalink( $jws_coin_ref ) ); ?>"><?php echo esc_html( get_the_title( $jws_coin_ref ) ); ?></a>
 								<?php else : ?>
@@ -85,7 +85,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 							<span class="jws-coin__when"><?php echo esc_html( date_i18n( $jws_coin_format, strtotime( $jws_coin_row->created_at ) ) ); ?></span>
 						</span>
 						<span class="jws-coin__amount">
-							<span class="jws-coin__delta<?php echo $jws_coin_row->delta < 0 ? ' is-out' : ' is-in'; ?>"><?php echo esc_html( ( $jws_coin_row->delta > 0 ? '+' : '' ) . number_format_i18n( $jws_coin_row->delta ) ); ?></span>
+							<span class="h6 jws-coin__delta<?php echo $jws_coin_row->delta < 0 ? ' is-out' : ' is-in'; ?>"><?php echo esc_html( ( $jws_coin_row->delta > 0 ? '+' : '' ) . number_format_i18n( $jws_coin_row->delta ) ); ?></span>
 							<span class="jws-coin__after">
 								<?php
 								/* translators: %s: coin balance after this line */
