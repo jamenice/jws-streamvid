@@ -843,7 +843,7 @@
 	gap: 8px;
 	min-height: 44px;
 	padding: 0 16px;
-	border: 1px solid var(--border-color2);
+	border: 0;
 	border-radius: 999px;
 	background: var(--background-item);
 	color: var(--heading);
