@@ -148,6 +148,11 @@ class Jws_Profiles_Front {
 
 		nocache_headers();
 
+		if ( ! Jws_Profiles::enabled() ) {
+			wp_safe_redirect( home_url( '/' ) );
+			exit;
+		}
+
 		if ( ! is_user_logged_in() ) {
 			wp_safe_redirect( wp_login_url( self::url() ) );
 			exit;
@@ -185,7 +190,7 @@ class Jws_Profiles_Front {
 	 */
 	private static function maybe_gate() {
 
-		if ( ! is_user_logged_in() || ! isset( $_SERVER['REQUEST_METHOD'] ) || 'GET' !== $_SERVER['REQUEST_METHOD'] ) {
+		if ( ! Jws_Profiles::enabled() || ! is_user_logged_in() || ! isset( $_SERVER['REQUEST_METHOD'] ) || 'GET' !== $_SERVER['REQUEST_METHOD'] ) {
 			return;
 		}
 		if ( wp_doing_ajax() || is_feed() || is_embed() || is_robots() || is_preview() || isset( $_GET['elementor-preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -197,7 +202,8 @@ class Jws_Profiles_Front {
 
 		$user_id = get_current_user_id();
 
-		if ( Jws_Profiles::count( $user_id ) < 2 || Jws_Profiles::has_chosen( $user_id ) ) {
+		// Theme Options can ask after every sign-in; by default only accounts with 2+ profiles are asked.
+		if ( Jws_Profiles::has_chosen( $user_id ) || ( Jws_Profiles::count( $user_id ) < 2 && ! Jws_Profiles_Settings::gate_always() ) ) {
 			return;
 		}
 
@@ -275,7 +281,8 @@ class Jws_Profiles_Front {
 					return;
 				}
 
-				wp_safe_redirect( self::back_url() );
+				// A Kids profile starts on the Kids Home Page (Theme Options), not where the adult was.
+				wp_safe_redirect( $result->is_kid ? Jws_Profiles_Settings::kids_home_url() : self::back_url() );
 				exit;
 
 			case 'save':
@@ -530,6 +537,10 @@ class Jws_Profiles_Front {
 	/** Adds the Profiles tab to the profile page menu; the Profile Menu sorter can move or hide it. */
 	public static function profile_tab( $items ) {
 
+		if ( ! Jws_Profiles::enabled() ) {
+			return $items;
+		}
+
 		$items['profiles'] = array(
 			'title'    => esc_html__( 'Profiles', 'jws_streamvid' ),
 			'icon'     => '',
@@ -579,6 +590,9 @@ if ( ! function_exists( 'jws_streamvid_account_menu' ) ) {
 if ( ! function_exists( 'jws_streamvid_profile_avatar' ) ) {
 	/** <img> of the profile in use, for the header account button. */
 	function jws_streamvid_profile_avatar( $size = 36 ) {
+		if ( ! Jws_Profiles::enabled() ) {
+			return get_avatar( get_current_user_id(), $size, '', '', array( 'class' => 'img-thumbnail avatar' ) );
+		}
 		return Jws_Profiles_Front::avatar_img( Jws_Profiles::current_profile(), $size, 'avatar jws-pf-avatar' );
 	}
 }

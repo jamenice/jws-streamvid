@@ -189,6 +189,7 @@ class Jws_Streamvid {
          */
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-streamvid-tables.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-profiles.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-profiles-settings.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-profile-filter.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-profiles-front.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-jws-kids-mode.php';

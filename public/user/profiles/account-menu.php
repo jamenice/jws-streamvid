@@ -25,8 +25,9 @@ $jws_am_host     = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unsl
 $jws_am_path     = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 $jws_am_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_am_host . $jws_am_path;
 $jws_am_others   = array();
+$jws_am_on       = Jws_Profiles::enabled();
 
-foreach ( Jws_Profiles::get_all( $jws_am_user ) as $jws_am_p ) {
+foreach ( $jws_am_on ? Jws_Profiles::get_all( $jws_am_user ) : array() as $jws_am_p ) {
 	if ( ( ! $jws_am_current || $jws_am_p->id !== $jws_am_current->id ) && in_array( $jws_am_p->id, $jws_am_active, true ) ) {
 		$jws_am_others[] = $jws_am_p;
 	}
@@ -101,10 +102,10 @@ if ( $jws_am_kid ) {
 <div class="jws-am<?php echo $jws_am_kid ? ' jws-am--kids' : ''; ?>">
 
 	<a class="jws-am__me" href="<?php echo esc_url( $jws_am_kid ? $jws_am_profile->get_endpoint( $jws_am_user, 'history', '' ) : get_author_posts_url( $jws_am_user ) ); ?>">
-		<?php echo Jws_Profiles_Front::avatar_img( $jws_am_current, 44, 'jws-am__avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
+		<?php echo $jws_am_on ? Jws_Profiles_Front::avatar_img( $jws_am_current, 44, 'jws-am__avatar' ) : get_avatar( $jws_am_user, 44, '', '', array( 'class' => 'jws-am__avatar' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img() / get_avatar(). ?>
 		<span class="jws-am__me-text">
 			<span class="jws-am__me-name">
-				<?php echo esc_html( $jws_am_current ? $jws_am_current->name : wp_get_current_user()->display_name ); ?>
+				<?php echo esc_html( $jws_am_on && $jws_am_current ? $jws_am_current->name : wp_get_current_user()->display_name ); ?>
 				<?php if ( $jws_am_kid ) : ?>
 					<span class="jws-pf-kids-badge"><?php esc_html_e( 'Kids', 'jws_streamvid' ); ?></span>
 				<?php endif; ?>
@@ -115,7 +116,7 @@ if ( $jws_am_kid ) {
 		</span>
 	</a>
 
-	<?php if ( $jws_am_others || ! $jws_am_kid ) : ?>
+	<?php if ( $jws_am_on && ( $jws_am_others || ! $jws_am_kid ) ) : ?>
 		<div class="jws-am__profiles">
 			<?php if ( $jws_am_others ) : ?>
 				<p class="jws-am__label"><?php esc_html_e( 'Switch profile', 'jws_streamvid' ); ?></p>

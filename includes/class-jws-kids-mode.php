@@ -45,7 +45,7 @@ class Jws_Kids_Mode {
 			$author = (int) get_queried_object_id();
 
 			if ( get_current_user_id() !== $author ) {
-				self::redirect( home_url( '/' ) );
+				self::redirect( Jws_Profiles_Settings::kids_home_url() );
 			}
 			if ( ! self::on_allowed_profile_tab() ) {
 				self::redirect( jws_streamvid()->get()->profile->get_endpoint( $author, 'history', '' ), false );
@@ -54,7 +54,7 @@ class Jws_Kids_Mode {
 		}
 
 		if ( self::is_account_page() ) {
-			self::redirect( home_url( '/' ) );
+			self::redirect( Jws_Profiles_Settings::kids_home_url() );
 		}
 	}
 

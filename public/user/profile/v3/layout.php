@@ -171,7 +171,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $jws_v3_viewing ) : ?>
+			<?php if ( $jws_v3_viewing && Jws_Profiles::enabled() ) : ?>
 				<div class="jws-pv3__viewing">
 					<?php echo Jws_Profiles_Front::avatar_img( $jws_v3_viewing, 32, 'jws-pv3__viewing-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
 					<span>

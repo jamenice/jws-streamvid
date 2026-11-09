@@ -54,8 +54,6 @@ class Jws_Profiles {
 	/** Hard ceiling whatever an option or filter says. */
 	const MAX_LIMIT = 10;
 
-	const OPTION_DEFAULT_LIMIT = 'jws_profile_limit_default';
-
 	/** Prefix for the per-level limit, the same pattern as the theme's `device_limit_{level_id}`. */
 	const OPTION_LEVEL_LIMIT = 'profile_limit_';
 
@@ -73,6 +71,15 @@ class Jws_Profiles {
 
 	/** Per-request cache: user id => data key of the profile in use. */
 	private static $current = array();
+
+	/**
+	 * Whether viewer profiles are switched on (Theme Options > Profile >
+	 * Viewer Profiles). Off: everything reads and writes the main profile, as
+	 * before the feature existed; profiles and their data are kept.
+	 */
+	public static function enabled() {
+		return (bool) apply_filters( 'jws_profiles_enabled', true );
+	}
 
 	/* ------------------------------------------------------------------ *
 	 * Reading
@@ -158,7 +165,7 @@ class Jws_Profiles {
 		$current_user = get_current_user_id();
 		$user_id      = $user_id ? (int) $user_id : $current_user;
 
-		if ( $user_id <= 0 || $user_id !== $current_user ) {
+		if ( $user_id <= 0 || $user_id !== $current_user || ! self::enabled() ) {
 			return 0;
 		}
 		if ( isset( self::$current[ $user_id ] ) ) {
@@ -293,7 +300,12 @@ class Jws_Profiles {
 	 */
 	public static function get_limit( $user_id ) {
 
-		$limit = (int) get_option( self::OPTION_DEFAULT_LIMIT, self::DEFAULT_LIMIT );
+		/**
+		 * Filters the profile limit for accounts whose levels set none.
+		 *
+		 * @param int $limit Default 5; Theme Options > Profile > Viewer Profiles.
+		 */
+		$limit = (int) apply_filters( 'jws_profiles_default_limit', self::DEFAULT_LIMIT );
 
 		if ( function_exists( 'pmpro_getMembershipLevelsForUser' ) ) {
 
@@ -1016,7 +1028,18 @@ class Jws_Profiles {
 	/** New profiles get an avatar nobody on the account uses yet, when one is left. */
 	private static function pick_unused_avatar( array $profiles ) {
 
-		$all  = self::avatars();
+		$all = self::avatars();
+
+		/**
+		 * Filters how a new profile's avatar is chosen: 'random' (one nobody on
+		 * the account uses yet) or 'first' (the first in the list).
+		 *
+		 * @param string $rule Default random.
+		 */
+		if ( $all && 'first' === apply_filters( 'jws_profiles_new_avatar_rule', 'random' ) ) {
+			return $all[0];
+		}
+
 		$free = array_values( array_diff( $all, wp_list_pluck( $profiles, 'avatar' ) ) );
 		$pool = $free ? $free : $all;
 

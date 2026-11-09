@@ -85,7 +85,7 @@ class Jws_Profile_Filter {
 
 		self::$restriction = false;
 
-		if ( is_user_logged_in() && ! self::is_builder_preview() ) {
+		if ( is_user_logged_in() && ! self::is_builder_preview() && Jws_Profiles::enabled() ) {
 
 			$profile = Jws_Profiles::current_profile();
 
@@ -247,7 +247,8 @@ class Jws_Profile_Filter {
 		}
 
 		if ( $hidden ) {
-			wp_safe_redirect( add_query_arg( 'jws_blocked', 1, home_url( '/' ) ) );
+			$home = $restriction['kids'] ? Jws_Profiles_Settings::kids_home_url() : home_url( '/' );
+			wp_safe_redirect( add_query_arg( 'jws_blocked', 1, $home ) );
 			exit;
 		}
 	}
@@ -327,11 +328,19 @@ class Jws_Profile_Filter {
 
 		list( $allowed_tt, $blocked_tt ) = self::split_terms( $restriction['max'] );
 
+		/**
+		 * Filters whether a Kids profile hides titles that have no Age rating.
+		 * When false, Kids profiles hide only titles rated above their maturity.
+		 *
+		 * @param bool $hide Default true.
+		 */
+		$strict = $restriction['kids'] && (bool) apply_filters( 'jws_profiles_kids_hide_untagged', true );
+
 		$types   = self::RATED_TYPES;
 		$type_in = implode( ',', array_fill( 0, count( $types ), '%s' ) );
 		$hidden  = array();
 
-		if ( $restriction['kids'] ) {
+		if ( $strict ) {
 
 			$sql = "SELECT p.ID FROM {$wpdb->posts} p WHERE p.post_type IN ({$type_in})";
 			$arg = $types;
@@ -358,7 +367,7 @@ class Jws_Profile_Filter {
 		$hidden = array_map( 'intval', $hidden );
 
 		foreach ( self::CHILD_TYPES as $child_type => $meta_key ) {
-			$hidden = array_merge( $hidden, self::blocked_children( $child_type, $meta_key, $hidden, $restriction['kids'] ) );
+			$hidden = array_merge( $hidden, self::blocked_children( $child_type, $meta_key, $hidden, $strict ) );
 		}
 
 		self::$blocked = array_fill_keys( $hidden, true );
