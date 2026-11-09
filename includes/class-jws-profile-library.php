@@ -243,6 +243,52 @@ class Jws_Profile_Library {
 		exit;
 	}
 
+	/**
+	 * Devices tab: signs out one device (sign_out = device id) or every
+	 * device but this one (sign_out_others). Uses the theme's
+	 * jws_remove_user_devices(), which also signs the app out by push.
+	 */
+	public static function handle_devices_post() {
+
+		if ( ! is_author() || ! isset( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== $_SERVER['REQUEST_METHOD'] || ! isset( $_POST['_jws_devices_nonce'] ) ) {
+			return;
+		}
+
+		$back = remove_query_arg( array( 'jws_lib', 'n' ), self::current_url() );
+
+		if ( ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['_jws_devices_nonce'] ) ), 'jws_devices' ) ) {
+			wp_safe_redirect( add_query_arg( 'jws_lib', 'expired', $back ) );
+			exit;
+		}
+
+		$user_id = get_current_user_id();
+
+		if ( ! $user_id || (int) get_queried_object_id() !== $user_id || Jws_Kids_Mode::is_active() || ! function_exists( 'jws_remove_user_devices' ) ) {
+			return;
+		}
+
+		$devices = get_user_meta( $user_id, 'jws_user_devices', true );
+		$devices = is_array( $devices ) ? $devices : array();
+		// Device ids are compared exactly (the app's may be mixed-case), so no sanitize_key() here.
+		$current = isset( $_COOKIE['jws_device_id'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['jws_device_id'] ) ) : '';
+		$ids     = array();
+
+		if ( ! empty( $_POST['sign_out_others'] ) ) {
+			foreach ( $devices as $device ) {
+				if ( isset( $device['device_id'] ) && (string) $device['device_id'] !== $current ) {
+					$ids[] = (string) $device['device_id'];
+				}
+			}
+		} elseif ( ! empty( $_POST['sign_out'] ) ) {
+			$ids[] = sanitize_text_field( wp_unslash( $_POST['sign_out'] ) );
+		}
+
+		$removed = $ids ? jws_remove_user_devices( $user_id, $ids ) : 0;
+
+		wp_safe_redirect( add_query_arg( array( 'jws_lib' => 'signed_out', 'n' => $removed ), $back ) );
+		exit;
+	}
+
 	/** @return string Message for ?jws_lib=, or ''. */
 	public static function notice() {
 
@@ -255,6 +301,10 @@ class Jws_Profile_Library {
 		}
 		if ( 'cleared' === $code ) {
 			return __( 'History cleared.', 'jws_streamvid' );
+		}
+		if ( 'signed_out' === $code ) {
+			/* translators: %d: number of devices signed out */
+			return sprintf( _n( '%d device signed out.', '%d devices signed out.', $n, 'jws_streamvid' ), $n );
 		}
 		if ( 'expired' === $code ) {
 			return __( 'This form has expired. Reload the page and try again.', 'jws_streamvid' );
@@ -296,3 +346,4 @@ class Jws_Profile_Library {
 }
 
 add_action( 'template_redirect', array( 'Jws_Profile_Library', 'handle_post' ), 15 );
+add_action( 'template_redirect', array( 'Jws_Profile_Library', 'handle_devices_post' ), 15 );

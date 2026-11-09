@@ -2147,6 +2147,126 @@
 	font-size: 13px;
 }
 
+/* Devices (user/profile/v3/devices.php) */
+
+.jws-dev {
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+}
+
+.jws-dev__limit {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 18px 22px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+}
+
+.jws-dev__limit .jws-pf-meter {
+	width: 100%;
+	height: 8px;
+}
+
+.jws-dev__limit .jws-pf-meter__fill {
+	height: 8px;
+}
+
+.jws-dev__hint {
+	color: var(--body2);
+	font-size: 13px;
+}
+
+.jws-dev__section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.jws-dev__form {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 14px;
+}
+
+.jws-dev__form .jws-coin__list {
+	width: 100%;
+}
+
+.jws-dev__row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 18px;
+	padding: 14px 18px;
+}
+
+.jws-dev__row + .jws-dev__row {
+	border-top: 1px solid var(--border-color);
+}
+
+.jws-dev__row--this {
+	border: 1px solid var(--main);
+	border-radius: 14px;
+	background: var(--input-background2);
+}
+
+.jws-dev__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	background: var(--input-background2);
+	color: var(--heading);
+	font-size: 22px;
+	line-height: 1;
+}
+
+.jws-dev__row--this .jws-dev__icon {
+	background: var(--background-item);
+	color: var(--main);
+}
+
+.jws-dev__text {
+	display: flex;
+	flex: 1 1 200px;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.jws-dev__name {
+	color: var(--heading);
+	font-weight: 600;
+}
+
+.jws-dev__seen {
+	color: var(--body2);
+	font-size: 13px;
+}
+
+.jws-dev__badge {
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: var(--main);
+	color: var(--btn-color);
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.jws-pf-btn.jws-dev__out {
+	min-height: 40px;
+	padding: 0 14px;
+	font-size: 14px;
+}
+
 /* Tablet: account card on top, sections in a scrolling bar. */
 @media (min-width: 768px) and (max-width: 1024px) {
 
@@ -2392,6 +2512,14 @@
 
 	.jws-sub__plan {
 		padding: 18px;
+	}
+
+	.jws-dev__all {
+		width: 100%;
+	}
+
+	.jws-dev__row {
+		padding: 12px 14px;
 	}
 
 	.jws-sub__name {
