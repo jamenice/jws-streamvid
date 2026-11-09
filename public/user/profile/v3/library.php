@@ -79,10 +79,10 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 			<?php endif; ?>
 		</div>
 
-		<nav class="jws-lib__chips" aria-label="<?php esc_attr_e( 'Filter by type', 'jws_streamvid' ); ?>">
-			<a class="jws-lib__chip<?php echo 'all' === $jws_lib_type ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_lib_page ); ?>"<?php echo 'all' === $jws_lib_type ? ' aria-current="page"' : ''; ?>><?php esc_html_e( 'All', 'jws_streamvid' ); ?></a>
+		<nav class="jws-pv3__tabs" aria-label="<?php esc_attr_e( 'Filter by type', 'jws_streamvid' ); ?>">
+			<a class="jws-pv3__tab<?php echo 'all' === $jws_lib_type ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_lib_page ); ?>"<?php echo 'all' === $jws_lib_type ? ' aria-current="page"' : ''; ?>><?php esc_html_e( 'All', 'jws_streamvid' ); ?></a>
 			<?php foreach ( jws_profile_tab_post_types() as $jws_lib_t ) : ?>
-				<a class="jws-lib__chip<?php echo $jws_lib_type === $jws_lib_t ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'type', $jws_lib_t, $jws_lib_page ) ); ?>"<?php echo $jws_lib_type === $jws_lib_t ? ' aria-current="page"' : ''; ?>><?php echo esc_html( jws_profile_tab_label( $jws_lib_t ) ); ?></a>
+				<a class="jws-pv3__tab<?php echo $jws_lib_type === $jws_lib_t ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'type', $jws_lib_t, $jws_lib_page ) ); ?>"<?php echo $jws_lib_type === $jws_lib_t ? ' aria-current="page"' : ''; ?>><?php echo esc_html( jws_profile_tab_label( $jws_lib_t ) ); ?></a>
 			<?php endforeach; ?>
 		</nav>
 

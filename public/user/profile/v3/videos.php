@@ -115,7 +115,7 @@ $jws_vid_status = array(
 	<?php endif; ?>
 
 	<div class="jws-vid__tools">
-		<nav class="jws-lib__chips" aria-label="<?php esc_attr_e( 'Filter', 'jws_streamvid' ); ?>">
+		<nav class="jws-pv3__tabs" aria-label="<?php esc_attr_e( 'Filter', 'jws_streamvid' ); ?>">
 			<?php
 			$jws_vid_chips = array(
 				'all'     => __( 'All', 'jws_streamvid' ),
@@ -125,7 +125,7 @@ $jws_vid_status = array(
 			foreach ( $jws_vid_chips as $jws_vid_key => $jws_vid_label ) :
 				$jws_vid_href = add_query_arg( array( 'vtype' => 'all' === $jws_vid_key ? false : $jws_vid_key, 'sortby' => 'date' === $jws_vid_sort ? false : $jws_vid_sort ), $jws_vid_page );
 				?>
-				<a class="jws-lib__chip<?php echo $jws_vid_filter === $jws_vid_key ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_vid_href ); ?>"<?php echo $jws_vid_filter === $jws_vid_key ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $jws_vid_label ); ?></a>
+				<a class="jws-pv3__tab<?php echo $jws_vid_filter === $jws_vid_key ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_vid_href ); ?>"<?php echo $jws_vid_filter === $jws_vid_key ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $jws_vid_label ); ?></a>
 			<?php endforeach; ?>
 		</nav>
 

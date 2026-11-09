@@ -1075,23 +1075,36 @@
 	outline-offset: 2px;
 }
 
-/* Rented / Purchased share one menu entry and switch here. */
+/*
+ * One tab style for every switch inside a profile tab (type filters,
+ * Rented / Purchased, playlist types, coin activity): text with a line
+ * under the active one. Scrolls sideways when the tabs do not fit.
+ */
 .jws-pv3__tabs {
 	display: flex;
 	gap: 4px;
 	margin-bottom: 22px;
+	overflow-x: auto;
 	border-bottom: 1px solid var(--border-color);
+	scrollbar-width: none;
+}
+
+.jws-pv3__tabs::-webkit-scrollbar {
+	display: none;
 }
 
 .jws-pv3__tab {
 	display: flex;
+	flex: 0 0 auto;
 	align-items: center;
 	min-height: 46px;
 	padding: 0 16px;
 	border-bottom: 3px solid transparent;
 	color: var(--body2);
+	font-size: 15px;
 	font-weight: 600;
 	text-decoration: none;
+	white-space: nowrap;
 }
 
 .jws-pv3__tab:hover {
@@ -1368,35 +1381,10 @@
 	font-size: 14px;
 }
 
-.jws-lib__chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.jws-lib__chip {
-	display: inline-flex;
-	align-items: center;
-	min-height: 38px;
-	padding: 0 16px;
-	border: 1px solid var(--border-color2);
-	border-radius: 999px;
-	color: var(--body);
-	font-size: 14px;
-	font-weight: 600;
-	text-decoration: none;
-	white-space: nowrap;
-}
-
-.jws-lib__chip:hover {
-	border-color: var(--heading);
-	color: var(--heading);
-}
-
-.jws-lib__chip.is-active {
-	border-color: var(--heading);
-	background: var(--heading);
-	color: var(--background-body);
+/* The type tabs sit in the form's flex column, which already spaces them. */
+.jws-lib .jws-pv3__tabs,
+.jws-vid .jws-pv3__tabs {
+	margin-bottom: 0;
 }
 
 .jws-lib__groups {
@@ -2387,6 +2375,11 @@
 	gap: 12px;
 }
 
+.jws-vid__tools .jws-pv3__tabs {
+	flex: 1 1 320px;
+	min-width: 0;
+}
+
 .jws-vid__sort {
 	display: flex;
 	align-items: center;
@@ -2661,13 +2654,15 @@
 		background: transparent;
 	}
 
+	/* Tabs run edge to edge and scroll sideways. */
 	.jws-pv3__tabs {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		margin-inline: calc(-1 * var(--full-fd));
+		padding-inline: var(--full-fd);
 	}
 
 	.jws-pv3__tab {
-		justify-content: center;
+		padding: 0 12px;
+		font-size: 14px;
 	}
 
 	.jws-pf-tab__head .jws-pf-btn {
@@ -2762,23 +2757,6 @@
 		flex: 1;
 	}
 
-	.jws-pl .jws-pv3__tabs {
-		display: flex;
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-
-	.jws-lib__chips {
-		flex-wrap: nowrap;
-		margin: 0 calc(-1 * var(--full-fd));
-		padding: 0 var(--full-fd);
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-
-	.jws-lib__chips::-webkit-scrollbar {
-		display: none;
-	}
 
 	.jws-lib__title {
 		font-size: 14px;
