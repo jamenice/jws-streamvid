@@ -187,6 +187,23 @@ class Jws_Profiles {
 		return self::$current[ $user_id ];
 	}
 
+	/**
+	 * Whether this browser picked a profile during the current login session,
+	 * and that profile can still be used. "Who's watching?" asks until it has.
+	 */
+	public static function has_chosen( $user_id = 0 ) {
+
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		if ( $user_id <= 0 || get_current_user_id() !== $user_id ) {
+			return false;
+		}
+
+		$profile_id = self::read_cookie( $user_id );
+
+		return $profile_id && self::get( $user_id, $profile_id ) && ! self::is_locked( $user_id, $profile_id );
+	}
+
 	/** @return object|null The profile in use, or null when no user is logged in. */
 	public static function current_profile( $user_id = 0 ) {
 
@@ -238,6 +255,10 @@ class Jws_Profiles {
 			return new WP_Error( 'profile_locked', __( 'This profile is not available on your current plan.', 'jws_streamvid' ) );
 		}
 		if ( $profile->has_pin ) {
+			// No PIN typed is a question, not a wrong answer: it does not use up an attempt.
+			if ( null === $pin || '' === (string) $pin ) {
+				return new WP_Error( 'profile_pin_required', __( 'Enter the PIN for this profile.', 'jws_streamvid' ) );
+			}
 			$checked = self::verify_pin( $user_id, $profile->id, (string) $pin );
 			if ( is_wp_error( $checked ) ) {
 				return $checked;
@@ -681,6 +702,59 @@ class Jws_Profiles {
 		return array_values( array_filter( (array) apply_filters( 'jws_profiles_avatars', $builtin ), 'is_string' ) );
 	}
 
+	/**
+	 * The avatar picker's sections. Only avatars still offered by avatars()
+	 * are listed; a group left empty is dropped.
+	 *
+	 * @return array[] key => array( 'label' => string, 'avatars' => string[] ).
+	 */
+	public static function avatar_groups() {
+
+		$offered = self::avatars();
+		$groups  = array(
+			'animals'    => array(
+				'label'   => __( 'Animals', 'jws_streamvid' ),
+				'avatars' => array( 'fox', 'cat', 'bear', 'panda', 'rabbit', 'owl', 'frog', 'penguin' ),
+			),
+			'characters' => array(
+				'label'   => __( 'Characters', 'jws_streamvid' ),
+				'avatars' => array( 'robot', 'alien', 'astronaut', 'ghost', 'dino', 'monster', 'ninja', 'wizard' ),
+			),
+		);
+
+		$listed = array();
+
+		foreach ( $groups as $key => $group ) {
+			$values = array();
+			foreach ( $group['avatars'] as $slug ) {
+				$values[] = 'builtin:' . $slug;
+			}
+			$groups[ $key ]['avatars'] = array_values( array_intersect( $values, $offered ) );
+			$listed                    = array_merge( $listed, $values );
+		}
+
+		// Anything else offered (images an admin added) gets a section of its own.
+		$more = array_values( array_diff( $offered, $listed ) );
+
+		if ( $more ) {
+			$groups['more'] = array(
+				'label'   => __( 'More', 'jws_streamvid' ),
+				'avatars' => $more,
+			);
+		}
+
+		/**
+		 * Filters the avatar picker's sections.
+		 *
+		 * @param array[] $groups key => array( 'label' => string, 'avatars' => string[] ).
+		 */
+		$groups = (array) apply_filters( 'jws_profiles_avatar_groups', $groups );
+
+		return array_filter( $groups, function ( $group ) {
+			return ! empty( $group['avatars'] );
+		} );
+	}
+
 	/** @return string Image URL for a stored avatar value, or '' when it has none. */
 	public static function avatar_url( $avatar ) {
 
@@ -699,6 +773,11 @@ class Jws_Profiles {
 		 * @param string $avatar Stored value.
 		 */
 		return (string) apply_filters( 'jws_profiles_avatar_url', $url, $avatar );
+	}
+
+	/** An avatar nobody on the account uses yet, to preselect for a new profile. */
+	public static function suggest_avatar( $user_id ) {
+		return self::pick_unused_avatar( self::get_all( $user_id ) );
 	}
 
 	/** Highest maturity a Kids profile may be set to. */

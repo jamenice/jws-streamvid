@@ -166,7 +166,7 @@ class Jws_Streamvid_Profile {
 			'priority'		=>	40
 	   );
        $items[ 'profile' ] 	= array(
-			'title'			=>	esc_html__( 'Setting', 'jws_streamvid' ),
+			'title'			=>	esc_html__( 'Settings', 'jws_streamvid' ),
 			'icon'			=>	'jws-icon-gear',
 			'callback'		=>	'',
             'parent'    =>  'dashboard', 
