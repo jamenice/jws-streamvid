@@ -100,7 +100,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 						printf(
 							/* translators: %s: highest rating a Kids profile can watch, such as "PG and below" */
 							esc_html__( 'Shows only titles rated %s. Kids cannot buy, rent, review or change account settings.', 'jws_streamvid' ),
-							esc_html( strtolower( Jws_Profiles_Front::maturity_label( $jws_pf_kids_max ) ) )
+							esc_html( Jws_Profiles_Front::maturity_label( $jws_pf_kids_max ) )
 						);
 						?>
 					</span>
