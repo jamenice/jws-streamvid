@@ -6,6 +6,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! jws_streamvid()->get()->profile->_profile_is_owner() ) {
     return false;
 }
+
+// Profile Version 3: same edit modals, laid out as cards.
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::is_v3() ) {
+    jws_streamvid_load_template( 'user/profile/v3/settings.php', false );
+    return;
+}
 ?>
 
 <div class="dashboard-profile">
