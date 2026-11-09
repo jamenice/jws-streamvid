@@ -2324,6 +2324,11 @@
 	font-size: var(--font-size-sm);
 }
 
+/* select2 copies the native select's width inline, which cuts "Most viewed"; let it fit the label. */
+.jws-vid__sort .select2-container {
+	width: auto !important;
+}
+
 .jws-vid__live {
 	top: 10px;
 	inset-inline-end: 10px;

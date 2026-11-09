@@ -394,6 +394,28 @@
 		} );
 	}
 
+	// The theme turns selects into select2 on page load (jwsThemeModule.select2_global): the same selects and options, for one tab only.
+	var SELECT2 = 'select:not([aria-labelledby]):not(#pmpro-admin-membership-access):not(.jws-no-select2)';
+
+	function enhance( scope ) {
+		var $ = window.jQuery;
+
+		if ( $ && $.fn.select2 ) {
+			$( scope ).find( SELECT2 ).select2( {
+				dropdownAutoWidth: true,
+				minimumResultsForSearch: 10,
+			} );
+		}
+	}
+
+	function teardown( scope ) {
+		var $ = window.jQuery;
+
+		if ( $ && $.fn.select2 ) {
+			$( scope ).find( 'select.select2-hidden-accessible' ).select2( 'destroy' );
+		}
+	}
+
 	function swap( doc ) {
 		var nextRoot = doc.querySelector( '.jws-pv3[data-jws-base]' );
 		var nextContent = nextRoot && nextRoot.querySelector( '.jws-pv3__content' );
@@ -405,7 +427,9 @@
 
 		var fresh = document.importNode( nextContent, true );
 
+		teardown( area );
 		area.parentNode.replaceChild( fresh, area );
+		enhance( fresh );
 
 		[ '.jws-pv3__title', '.jws-pv3__card', '.jws-pv3__nav' ].forEach( function ( selector ) {
 			var mine = root.querySelector( selector );
