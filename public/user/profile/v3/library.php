@@ -57,13 +57,13 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 			<p class="jws-lib__sub"><?php echo esc_html( sprintf( $jws_lib_copy[0], $jws_lib_name ) ); ?></p>
 			<?php if ( $jws_lib_items ) : ?>
 				<div class="jws-lib__actions">
-					<label for="jws-lib-select" class="jws-pf-btn jws-pf-btn--ghost jws-lib__select">
+					<label for="jws-lib-select" class="button-custom jws-btn-sm jws-lib__select">
 						<i class="jws-icon-check-square" aria-hidden="true"></i>
 						<?php esc_html_e( 'Select', 'jws_streamvid' ); ?>
 					</label>
 					<?php if ( 'history' === $jws_lib_tab ) : ?>
 						<details class="jws-lib__clear">
-							<summary class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Clear all history', 'jws_streamvid' ); ?></summary>
+							<summary class="button-custom jws-btn-sm"><?php esc_html_e( 'Clear all history', 'jws_streamvid' ); ?></summary>
 							<div class="jws-lib__clear-box">
 								<p>
 									<?php
@@ -71,7 +71,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 									echo esc_html( sprintf( __( 'Clear everything %s watched on this profile? This cannot be undone.', 'jws_streamvid' ), $jws_lib_name ) );
 									?>
 								</p>
-								<button type="submit" name="clear_all" value="1" class="jws-pf-btn jws-pf-btn--danger"><?php esc_html_e( 'Clear history', 'jws_streamvid' ); ?></button>
+								<button type="submit" name="clear_all" value="1" class="button-default jws-btn-danger"><?php esc_html_e( 'Clear history', 'jws_streamvid' ); ?></button>
 							</div>
 						</details>
 					<?php endif; ?>
@@ -107,7 +107,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 												<span class="jws-lib__progress"><span style="width: <?php echo (int) $jws_lib_card['progress']; ?>%"></span></span>
 											<?php endif; ?>
 										</span>
-										<span class="jws-lib__title"><?php echo esc_html( $jws_lib_card['title'] ); ?></span>
+										<h6 class="jws-lib__title"><?php echo esc_html( $jws_lib_card['title'] ); ?></h6>
 										<?php if ( $jws_lib_card['meta'] ) : ?>
 											<span class="jws-lib__meta"><?php echo esc_html( $jws_lib_card['meta'] ); ?></span>
 										<?php endif; ?>
@@ -139,7 +139,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 
 			<?php if ( $jws_lib_total > $jws_lib_shown ) : ?>
 				<div class="jws-lib__more">
-					<a class="jws-pf-btn jws-pf-btn--ghost" href="<?php echo esc_url( add_query_arg( array( 'type' => 'all' === $jws_lib_type ? false : $jws_lib_type, 'shown' => $jws_lib_shown + Jws_Profile_Library::PER_PAGE ), $jws_lib_page ) ); ?>">
+					<a class="button-custom" href="<?php echo esc_url( add_query_arg( array( 'type' => 'all' === $jws_lib_type ? false : $jws_lib_type, 'shown' => $jws_lib_shown + Jws_Profile_Library::PER_PAGE ), $jws_lib_page ) ); ?>">
 						<?php esc_html_e( 'Show more', 'jws_streamvid' ); ?>
 					</a>
 				</div>
@@ -152,8 +152,8 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 					printf( esc_html__( '%s selected', 'jws_streamvid' ), '<span class="jws-lib__num"></span>' );
 					?>
 				</span>
-				<label for="jws-lib-select" class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Cancel', 'jws_streamvid' ); ?></label>
-				<button type="submit" name="remove_selected" value="1" class="jws-pf-btn jws-pf-btn--danger">
+				<label for="jws-lib-select" class="button-custom"><?php esc_html_e( 'Cancel', 'jws_streamvid' ); ?></label>
+				<button type="submit" name="remove_selected" value="1" class="button-default jws-btn-danger">
 					<i class="jws-icon-trash" aria-hidden="true"></i>
 					<?php esc_html_e( 'Remove selected', 'jws_streamvid' ); ?>
 				</button>
@@ -165,7 +165,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 				</span>
 				<h2><?php echo esc_html( $jws_lib_copy[1] ); ?></h2>
 				<p><?php echo esc_html( $jws_lib_copy[2] ); ?></p>
-				<a class="jws-pf-btn" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
+				<a class="button-default" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
 			</div>
 		<?php endif; ?>
 	</form>

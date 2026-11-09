@@ -50,7 +50,7 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 
 	<div class="jws-lib__head">
 		<p class="jws-lib__sub"><?php esc_html_e( 'Group titles into lists you can keep private or share.', 'jws_streamvid' ); ?></p>
-		<a href="#" class="jws-pf-btn" data-modal-jws="#create-playlist">
+		<a href="#" class="button-default" data-modal-jws="#create-playlist">
 			<i class="jws-icon-plus" aria-hidden="true"></i>
 			<?php esc_html_e( 'Create Playlist', 'jws_streamvid' ); ?>
 		</a>
@@ -115,7 +115,7 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 							</span>
 							<span class="jws-pl__play"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php esc_html_e( 'Play All', 'jws_streamvid' ); ?></span>
 						</span>
-						<span class="jws-lib__title"><?php echo esc_html( $jws_pl_term->name ); ?></span>
+						<h6 class="jws-lib__title"><?php echo esc_html( $jws_pl_term->name ); ?></h6>
 					</a>
 					<span class="jws-pl__meta">
 						<span class="jws-pl__privacy">
@@ -136,7 +136,7 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 			<span class="jws-lib__empty-icon" aria-hidden="true"><i class="jws-icon-queue"></i></span>
 			<h2><?php esc_html_e( 'No playlists yet', 'jws_streamvid' ); ?></h2>
 			<p><?php esc_html_e( 'Create a playlist, then add titles to it from any title page.', 'jws_streamvid' ); ?></p>
-			<a href="#" class="jws-pf-btn" data-modal-jws="#create-playlist"><?php esc_html_e( 'Create Playlist', 'jws_streamvid' ); ?></a>
+			<a href="#" class="button-default" data-modal-jws="#create-playlist"><?php esc_html_e( 'Create Playlist', 'jws_streamvid' ); ?></a>
 		</div>
 	<?php endif; ?>
 </div>

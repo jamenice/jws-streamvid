@@ -114,14 +114,14 @@ $jws_dev_icon = function ( $device ) {
 								<span class="jws-dev__name"><?php echo esc_html( $jws_dev_name( $jws_dev_item ) ); ?></span>
 								<span class="jws-dev__seen"><?php echo esc_html( $jws_dev_seen( $jws_dev_item ) ); ?></span>
 							</span>
-							<button type="submit" name="sign_out" value="<?php echo esc_attr( $jws_dev_item['device_id'] ); ?>" class="jws-pf-btn jws-pf-btn--ghost jws-dev__out">
+							<button type="submit" name="sign_out" value="<?php echo esc_attr( $jws_dev_item['device_id'] ); ?>" class="button-custom jws-btn-sm jws-dev__out">
 								<?php esc_html_e( 'Sign out', 'jws_streamvid' ); ?>
 								<span class="screen-reader-text"><?php echo esc_html( $jws_dev_name( $jws_dev_item ) ); ?></span>
 							</button>
 						</li>
 					<?php endforeach; ?>
 				</ul>
-				<button type="submit" name="sign_out_others" value="1" class="jws-pf-btn jws-pf-btn--danger-ghost jws-dev__all"><?php esc_html_e( 'Sign out of all other devices', 'jws_streamvid' ); ?></button>
+				<button type="submit" name="sign_out_others" value="1" class="button-custom jws-btn-danger jws-dev__all"><?php esc_html_e( 'Sign out of all other devices', 'jws_streamvid' ); ?></button>
 			</form>
 		<?php else : ?>
 			<p class="jws-coin__empty" role="status"><?php esc_html_e( 'No other devices are signed in.', 'jws_streamvid' ); ?></p>

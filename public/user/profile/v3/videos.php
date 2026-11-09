@@ -90,13 +90,13 @@ $jws_vid_status = array(
 			<div class="jws-lib__actions">
 				<?php if ( jws_theme_get_option( 'video_live' ) ) : ?>
 					<?php $jws_vid_live_url = jws_streamvid()->get()->live_videos->get_create_page_url(); ?>
-					<a class="jws-pf-btn jws-pf-btn--ghost" href="<?php echo esc_url( $jws_vid_live_url ? $jws_vid_live_url : '#' ); ?>"<?php echo $jws_vid_live_url ? '' : ' data-modal-jws="#upload-videos-live"'; ?>>
+					<a class="button-custom" href="<?php echo esc_url( $jws_vid_live_url ? $jws_vid_live_url : '#' ); ?>"<?php echo $jws_vid_live_url ? '' : ' data-modal-jws="#upload-videos-live"'; ?>>
 						<i class="jws-icon-video-camera" aria-hidden="true"></i>
 						<?php esc_html_e( 'Go live', 'jws_streamvid' ); ?>
 					</a>
 				<?php endif; ?>
 				<?php if ( jws_theme_get_option( 'video_upload' ) ) : ?>
-					<a class="jws-pf-btn" <?php echo jws_streamvid()->get()->videos->upload_trigger_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in upload_trigger_attrs(). ?>>
+					<a class="button-default" <?php echo jws_streamvid()->get()->videos->upload_trigger_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in upload_trigger_attrs(). ?>>
 						<i class="jws-icon-upload" aria-hidden="true"></i>
 						<?php esc_html_e( 'Upload Video', 'jws_streamvid' ); ?>
 					</a>
@@ -140,7 +140,7 @@ $jws_vid_status = array(
 				<option value="likes" <?php selected( $jws_vid_sort, 'likes' ); ?>><?php esc_html_e( 'Most liked', 'jws_streamvid' ); ?></option>
 				<option value="title" <?php selected( $jws_vid_sort, 'title' ); ?>><?php esc_html_e( 'Title', 'jws_streamvid' ); ?></option>
 			</select>
-			<noscript><button type="submit" class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Sort', 'jws_streamvid' ); ?></button></noscript>
+			<noscript><button type="submit" class="button-custom"><?php esc_html_e( 'Sort', 'jws_streamvid' ); ?></button></noscript>
 		</form>
 	</div>
 
@@ -169,7 +169,7 @@ $jws_vid_status = array(
 								<span class="jws-vid__length"><?php echo esc_html( $jws_vid_length ); ?></span>
 							<?php endif; ?>
 						</span>
-						<span class="jws-lib__title"><?php the_title(); ?></span>
+						<h6 class="jws-lib__title"><?php the_title(); ?></h6>
 					</a>
 					<span class="jws-vid__meta">
 						<span class="jws-lib__meta">
@@ -197,7 +197,7 @@ $jws_vid_status = array(
 			<h2><?php esc_html_e( 'No videos yet', 'jws_streamvid' ); ?></h2>
 			<?php if ( $jws_vid_owner && jws_theme_get_option( 'video_upload' ) ) : ?>
 				<p><?php esc_html_e( 'Videos you upload and live streams you run show up here.', 'jws_streamvid' ); ?></p>
-				<a class="jws-pf-btn" <?php echo jws_streamvid()->get()->videos->upload_trigger_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in upload_trigger_attrs(). ?>><?php esc_html_e( 'Upload Video', 'jws_streamvid' ); ?></a>
+				<a class="button-default" <?php echo jws_streamvid()->get()->videos->upload_trigger_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in upload_trigger_attrs(). ?>><?php esc_html_e( 'Upload Video', 'jws_streamvid' ); ?></a>
 			<?php endif; ?>
 		</div>
 	<?php endif; ?>

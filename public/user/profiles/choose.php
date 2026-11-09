@@ -131,15 +131,15 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 					</li>
 				<?php endforeach; ?>
 			</ul>
-			<button type="submit" class="jws-pf-btn"><?php esc_html_e( 'Save', 'jws_streamvid' ); ?></button>
+			<button type="submit" class="button-default"><?php esc_html_e( 'Save', 'jws_streamvid' ); ?></button>
 		</form>
 	<?php endif; ?>
 
 	<div class="jws-pf-actions">
 		<?php if ( $jws_pf_manage ) : ?>
-			<a class="jws-pf-btn" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Done', 'jws_streamvid' ); ?></a>
+			<a class="button-default" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Done', 'jws_streamvid' ); ?></a>
 		<?php elseif ( ! $jws_pf_kid ) : ?>
-			<a class="jws-pf-btn jws-pf-btn--ghost" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1, 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Manage Profiles', 'jws_streamvid' ); ?></a>
+			<a class="button-custom" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1, 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Manage Profiles', 'jws_streamvid' ); ?></a>
 		<?php endif; ?>
 	</div>
 </section>

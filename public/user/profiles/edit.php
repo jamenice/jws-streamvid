@@ -130,8 +130,8 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		</div>
 
 		<div class="jws-pf-row">
-			<button type="submit" class="jws-pf-btn"><?php esc_html_e( 'Save', 'jws_streamvid' ); ?></button>
-			<a class="jws-pf-btn jws-pf-btn--ghost" href="<?php echo esc_url( $jws_pf_manage ); ?>"><?php esc_html_e( 'Cancel', 'jws_streamvid' ); ?></a>
+			<button type="submit" class="button-default"><?php esc_html_e( 'Save', 'jws_streamvid' ); ?></button>
+			<a class="button-custom" href="<?php echo esc_url( $jws_pf_manage ); ?>"><?php esc_html_e( 'Cancel', 'jws_streamvid' ); ?></a>
 		</div>
 	</form>
 
@@ -166,9 +166,9 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 						<p class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_err_pin ); ?></p>
 					<?php endif; ?>
 					<div class="jws-pf-row">
-						<button type="submit" class="jws-pf-btn"><?php echo $jws_pf_profile->has_pin ? esc_html__( 'Change PIN', 'jws_streamvid' ) : esc_html__( 'Turn on Profile Lock', 'jws_streamvid' ); ?></button>
+						<button type="submit" class="button-default"><?php echo $jws_pf_profile->has_pin ? esc_html__( 'Change PIN', 'jws_streamvid' ) : esc_html__( 'Turn on Profile Lock', 'jws_streamvid' ); ?></button>
 						<?php if ( $jws_pf_profile->has_pin ) : ?>
-							<button type="submit" name="remove_pin" value="1" class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Turn off Profile Lock', 'jws_streamvid' ); ?></button>
+							<button type="submit" name="remove_pin" value="1" class="button-custom"><?php esc_html_e( 'Turn off Profile Lock', 'jws_streamvid' ); ?></button>
 						<?php endif; ?>
 					</div>
 				</form>
@@ -180,7 +180,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 				<h2 id="jws-pf-del-title" class="jws-pf-section__title"><?php esc_html_e( 'Delete profile', 'jws_streamvid' ); ?></h2>
 				<p class="jws-pf-help"><?php esc_html_e( 'Deleting a profile also removes its history, Watchlist and Favorites. Purchases stay on the account.', 'jws_streamvid' ); ?></p>
 				<details class="jws-pf-confirm">
-					<summary class="jws-pf-btn jws-pf-btn--danger-ghost"><?php esc_html_e( 'Delete Profile', 'jws_streamvid' ); ?></summary>
+					<summary class="button-custom jws-btn-danger"><?php esc_html_e( 'Delete Profile', 'jws_streamvid' ); ?></summary>
 					<form method="post">
 						<?php Jws_Profiles_Front::form_fields( 'delete', $jws_pf_profile->id ); ?>
 						<p>
@@ -189,7 +189,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 							echo esc_html( sprintf( __( 'Delete %s? This cannot be undone.', 'jws_streamvid' ), $jws_pf_profile->name ) );
 							?>
 						</p>
-						<button type="submit" class="jws-pf-btn jws-pf-btn--danger">
+						<button type="submit" class="button-default jws-btn-danger">
 							<?php
 							/* translators: %s: profile name */
 							echo esc_html( sprintf( __( 'Delete %s', 'jws_streamvid' ), $jws_pf_profile->name ) );

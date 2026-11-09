@@ -106,8 +106,8 @@ $jws_sub_status = array(
 					</span>
 				</div>
 				<div class="jws-sub__actions">
-					<a class="jws-pf-btn" href="<?php echo esc_url( $jws_sub_plans ); ?>"><?php esc_html_e( 'Change plan', 'jws_streamvid' ); ?></a>
-					<a class="jws-pf-btn jws-pf-btn--danger-ghost" href="<?php echo esc_url( pmpro_url( 'cancel', '?levelstocancel=' . (int) $jws_sub_level->id ) ); ?>"><?php esc_html_e( 'Cancel membership', 'jws_streamvid' ); ?></a>
+					<a class="button-default" href="<?php echo esc_url( $jws_sub_plans ); ?>"><?php esc_html_e( 'Change plan', 'jws_streamvid' ); ?></a>
+					<a class="button-custom jws-btn-danger" href="<?php echo esc_url( pmpro_url( 'cancel', '?levelstocancel=' . (int) $jws_sub_level->id ) ); ?>"><?php esc_html_e( 'Cancel membership', 'jws_streamvid' ); ?></a>
 				</div>
 			</div>
 	<?php else : ?>
@@ -119,7 +119,7 @@ $jws_sub_status = array(
 					<span class="jws-sub__cost"><?php esc_html_e( 'Upgrade to watch premium titles, add more profiles and sign in on more devices.', 'jws_streamvid' ); ?></span>
 				</div>
 				<div class="jws-sub__actions">
-					<a class="jws-pf-btn" href="<?php echo esc_url( $jws_sub_plans ); ?>">
+					<a class="button-default" href="<?php echo esc_url( $jws_sub_plans ); ?>">
 						<i class="jws-icon-crown-simple" aria-hidden="true"></i>
 						<?php esc_html_e( 'View all Membership Options', 'jws_streamvid' ); ?>
 					</a>
@@ -175,7 +175,7 @@ $jws_sub_status = array(
 							</span>
 						</span>
 						<span class="jws-buy__chip jws-buy__chip--<?php echo 'paid' === $jws_sub_chip[0] ? 'owned' : ( 'refunded' === $jws_sub_chip[0] ? 'expired' : 'pending' ); ?>"><?php echo esc_html( $jws_sub_chip[1] ); ?></span>
-						<button type="button" class="jws-pf-btn jws-pf-btn--ghost jws-sub__pdf download-invoice-pmpro" data-invoice="<?php echo esc_attr( $jws_sub_order->code ); ?>">
+						<button type="button" class="button-custom jws-btn-sm jws-sub__pdf download-invoice-pmpro" data-invoice="<?php echo esc_attr( $jws_sub_order->code ); ?>">
 							<i class="jws-icon-arrow-line-down" aria-hidden="true"></i>
 							<?php esc_html_e( 'PDF', 'jws_streamvid' ); ?>
 							<span class="screen-reader-text">

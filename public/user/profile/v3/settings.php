@@ -78,7 +78,7 @@ $jws_set_rows = array(
 					<span class="jws-set__meta"><?php esc_html_e( 'Add your photo, date of birth and postcode.', 'jws_streamvid' ); ?></span>
 				<?php endif; ?>
 			</span>
-			<button type="button" class="jws-pf-btn jws-pf-btn--ghost" data-modal-jws="#edit-personal">
+			<button type="button" class="button-custom" data-modal-jws="#edit-personal">
 				<i class="jws-icon-pencil-line" aria-hidden="true"></i>
 				<?php esc_html_e( 'Edit', 'jws_streamvid' ); ?>
 			</button>
@@ -94,7 +94,7 @@ $jws_set_rows = array(
 						<span class="jws-set__label"><?php echo esc_html( $jws_set_row['label'] ); ?></span>
 						<span class="jws-set__value"><?php echo esc_html( $jws_set_row['value'] ); ?></span>
 					</span>
-					<button type="button" class="jws-pf-btn jws-pf-btn--ghost jws-set__change" data-modal-jws="<?php echo esc_attr( $jws_set_row['modal'] ); ?>">
+					<button type="button" class="button-custom jws-btn-sm jws-set__change" data-modal-jws="<?php echo esc_attr( $jws_set_row['modal'] ); ?>">
 						<?php echo esc_html( $jws_set_row['action'] ); ?>
 						<span class="screen-reader-text"><?php echo esc_html( $jws_set_row['label'] ); ?></span>
 					</button>

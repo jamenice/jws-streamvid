@@ -52,7 +52,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 		</div>
 
 		<?php if ( Jws_Profiles::can_create( $jws_pt_user ) ) : ?>
-			<a class="jws-pf-btn" href="<?php echo esc_url( Jws_Profiles_Front::url( 'add' ) ); ?>">
+			<a class="button-default" href="<?php echo esc_url( Jws_Profiles_Front::url( 'add' ) ); ?>">
 				<i class="jws-icon-plus" aria-hidden="true"></i>
 				<?php esc_html_e( 'Add Profile', 'jws_streamvid' ); ?>
 			</a>
@@ -106,7 +106,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 					<?php endif; ?>
 				</span>
 
-				<a class="jws-pf-btn jws-pf-btn--ghost jws-pf-list__edit" href="<?php echo esc_url( Jws_Profiles_Front::url( 'edit', $jws_pt_p->id ) ); ?>">
+				<a class="button-custom jws-btn-sm jws-pf-list__edit" href="<?php echo esc_url( Jws_Profiles_Front::url( 'edit', $jws_pt_p->id ) ); ?>">
 					<?php esc_html_e( 'Edit', 'jws_streamvid' ); ?>
 					<span class="screen-reader-text"><?php echo esc_html( $jws_pt_p->name ); ?></span>
 				</a>

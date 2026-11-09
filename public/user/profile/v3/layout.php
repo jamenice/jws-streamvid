@@ -166,7 +166,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 						<span class="jws-pv3__plan-name"><?php echo esc_html( $jws_v3_level ? $jws_v3_level->name : __( 'Free Plan', 'jws_streamvid' ) ); ?></span>
 					</span>
 					<?php if ( $jws_v3_upgrade ) : ?>
-						<a class="jws-pf-btn jws-pv3__upgrade" href="<?php echo esc_url( get_permalink( $jws_v3_upgrade ) ); ?>"><?php esc_html_e( 'Upgrade', 'jws_streamvid' ); ?></a>
+						<a class="button-default jws-btn-sm jws-pv3__upgrade" href="<?php echo esc_url( get_permalink( $jws_v3_upgrade ) ); ?>"><?php esc_html_e( 'Upgrade', 'jws_streamvid' ); ?></a>
 					<?php endif; ?>
 				</div>
 			<?php endif; ?>

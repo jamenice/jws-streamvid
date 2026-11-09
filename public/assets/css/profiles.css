@@ -61,59 +61,53 @@
 	background: color-mix(in srgb, var(--jws-pf-danger) 12%, transparent);
 }
 
-.jws-pf-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
+/*
+ * Buttons are the theme's: .button-default (primary, theme gradient) and
+ * .button-custom (secondary). The theme gives .button-custom no background
+ * of its own, so profile screens give it one; hover is the theme's gradient.
+ * jws-btn-sm, jws-btn-block and jws-btn-danger only adjust size and colour.
+ */
+.jws-pf :is(.button-default, .button-custom),
+.jws-pv3 :is(.button-default, .button-custom),
+.jws-kids-bar :is(.button-default, .button-custom) {
 	gap: 8px;
-	min-height: 48px;
-	padding: 0 22px;
-	border: 1px solid var(--main);
-	border-radius: 8px;
-	background: var(--main);
-	color: var(--btn-color);
-	font: inherit;
-	font-weight: 600;
-	line-height: 1.2;
+	font-family: inherit;
 	text-decoration: none;
 	cursor: pointer;
 }
 
-.jws-pf-btn:hover,
-.jws-pf-btn:focus-visible {
-	background: color-mix(in srgb, var(--main) 85%, var(--light));
+.jws-pf .button-custom,
+.jws-pv3 .button-custom {
+	background: var(--input-background2);
+	color: var(--heading);
+}
+
+.jws-pf .button-custom:hover,
+.jws-pv3 .button-custom:hover {
 	color: var(--btn-color);
 }
 
-.jws-pf-btn--ghost {
-	border-color: var(--border-color2);
-	background: transparent;
-	color: var(--heading);
+.jws-btn-sm:is(.button-default, .button-custom) {
+	padding: 10px 18px;
+	font-size: 14px;
+	line-height: 20px;
 }
 
-.jws-pf-btn--ghost:hover,
-.jws-pf-btn--ghost:focus-visible {
-	border-color: var(--heading);
-	background: transparent;
-	color: var(--heading);
+.jws-btn-block {
+	width: 100%;
 }
 
-.jws-pf-btn--danger,
-.jws-pf-btn--danger:hover,
-.jws-pf-btn--danger:focus-visible {
-	border-color: var(--jws-pf-danger);
-	background: var(--jws-pf-danger);
-	color: var(--dark);
-}
-
-.jws-pf-btn--danger-ghost {
-	border-color: var(--jws-pf-danger);
-	background: transparent;
+/* Scoped so the theme's .button-default colour, loaded later, does not win. */
+:is(.jws-pf, .jws-pv3) .jws-btn-danger.button-custom {
+	background: color-mix(in srgb, var(--jws-pf-danger) 14%, transparent);
 	color: var(--jws-pf-danger);
 }
 
-.jws-pf-btn--block {
-	width: 100%;
+:is(.jws-pf, .jws-pv3) .jws-btn-danger.button-default,
+:is(.jws-pf, .jws-pv3) .jws-btn-danger:is(.button-default, .button-custom):hover {
+	background: var(--jws-pf-danger) !important;
+	color: var(--dark);
+	box-shadow: none;
 }
 
 .jws-pf a:focus-visible,
@@ -217,10 +211,6 @@
 	word-break: break-word;
 }
 
-.jws-pf-tile__btn:hover .jws-pf-tile__art,
-.jws-pf-tile__btn:focus-visible .jws-pf-tile__art {
-	outline-color: var(--heading);
-}
 
 .jws-pf-tile__btn:hover .jws-pf-tile__name,
 .jws-pf-tile__btn:focus-visible .jws-pf-tile__name {
@@ -443,8 +433,8 @@
 	border: 0;
 }
 
-.jws-pf-field > label,
-.jws-pf-field > legend {
+.jws-pf-field>label,
+.jws-pf-field>legend {
 	padding: 0;
 	color: var(--heading);
 	font-size: 15px;
@@ -521,11 +511,9 @@
 	outline-color: var(--border-color2);
 }
 
-.jws-pf-avatar-opt input:focus-visible + img {
-	outline-color: var(--heading);
-}
 
-.jws-pf-avatar-opt input:checked + img {
+
+.jws-pf-avatar-opt input:checked+img {
 	outline-color: var(--main);
 }
 
@@ -979,7 +967,7 @@
 	font-weight: 700;
 }
 
-.jws-pf-btn.jws-pv3__upgrade {
+:is(.button-default, .button-custom).jws-pv3__upgrade {
 	min-height: 36px;
 	padding: 0 12px;
 	font-size: 13px;
@@ -1191,7 +1179,7 @@
 	padding: 16px 20px;
 }
 
-.jws-pf-list__item + .jws-pf-list__item {
+.jws-pf-list__item+.jws-pf-list__item {
 	border-top: 1px solid var(--border-color);
 }
 
@@ -1244,7 +1232,7 @@
 	font-size: 14px;
 }
 
-.jws-pf-btn.jws-pf-list__edit {
+:is(.button-default, .button-custom).jws-pf-list__edit {
 	min-height: 40px;
 	margin-inline-start: auto;
 	padding: 0 16px;
@@ -1315,7 +1303,7 @@
 	white-space: nowrap;
 }
 
-.jws-lib__toggle:focus-visible ~ .jws-lib__head .jws-lib__select {
+.jws-lib__toggle:focus-visible~.jws-lib__head .jws-lib__select {
 	outline: 3px solid var(--main);
 	outline-offset: 2px;
 }
@@ -1402,7 +1390,7 @@
 
 .jws-pv3 ul.jws-lib__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 	gap: 20px 16px;
 	margin: 0;
 	padding: 0;
@@ -1440,10 +1428,6 @@
 	object-fit: cover;
 }
 
-.jws-lib__card:hover .jws-lib__art,
-.jws-lib__card:focus-visible .jws-lib__art {
-	outline-color: var(--heading);
-}
 
 .jws-lib__card:focus-visible {
 	outline: none;
@@ -1474,10 +1458,10 @@
 	background: var(--main);
 }
 
+/* An h6: size and weight come from the theme's heading typography. */
 .jws-lib__title {
 	overflow: hidden;
-	font-size: 15px;
-	font-weight: 600;
+	margin: 0;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -1523,15 +1507,15 @@
 }
 
 /* Select mode */
-.jws-lib__toggle:checked ~ .jws-lib__head .jws-lib__actions {
+.jws-lib__toggle:checked~.jws-lib__head .jws-lib__actions {
 	visibility: hidden;
 }
 
-.jws-lib__toggle:checked ~ .jws-lib__groups .jws-lib__x {
+.jws-lib__toggle:checked~.jws-lib__groups .jws-lib__x {
 	display: none;
 }
 
-.jws-lib__toggle:checked ~ .jws-lib__groups .jws-lib__tick {
+.jws-lib__toggle:checked~.jws-lib__groups .jws-lib__tick {
 	position: absolute;
 	inset: 0 0 auto;
 	display: flex;
@@ -1562,7 +1546,7 @@
 	counter-increment: jws-lib-picked;
 }
 
-.jws-lib__toggle:checked ~ .jws-lib__bar {
+.jws-lib__toggle:checked~.jws-lib__bar {
 	position: sticky;
 	bottom: 0;
 	z-index: 10;
@@ -1828,7 +1812,7 @@
 	margin-inline-start: auto;
 }
 
-.jws-buy__actions .jws-pf-btn {
+.jws-buy__actions :is(.button-default, .button-custom) {
 	min-height: 42px;
 	padding: 0 16px;
 	font-size: 14px;
@@ -1932,7 +1916,7 @@
 	padding: 14px 18px;
 }
 
-.jws-coin__row + .jws-coin__row {
+.jws-coin__row+.jws-coin__row {
 	border-top: 1px solid var(--border-color);
 }
 
@@ -2100,7 +2084,7 @@
 	background: var(--background-item);
 }
 
-.jws-sub__billing > [class^="jws-icon-"] {
+.jws-sub__billing>[class^="jws-icon-"] {
 	color: var(--main);
 	font-size: 26px;
 	line-height: 1;
@@ -2129,7 +2113,7 @@
 	gap: 12px;
 }
 
-.jws-pf-btn.jws-sub__pdf {
+:is(.button-default, .button-custom).jws-sub__pdf {
 	min-height: 40px;
 	padding: 0 12px;
 	font-size: 13px;
@@ -2192,7 +2176,7 @@
 	padding: 14px 18px;
 }
 
-.jws-dev__row + .jws-dev__row {
+.jws-dev__row+.jws-dev__row {
 	border-top: 1px solid var(--border-color);
 }
 
@@ -2249,7 +2233,7 @@
 	text-transform: uppercase;
 }
 
-.jws-pf-btn.jws-dev__out {
+:is(.button-default, .button-custom).jws-dev__out {
 	min-height: 40px;
 	padding: 0 14px;
 	font-size: 14px;
@@ -2347,7 +2331,7 @@
 	white-space: nowrap;
 }
 
-.jws-pf-btn.jws-set__change {
+:is(.button-default, .button-custom).jws-set__change {
 	min-height: 40px;
 	padding: 0 16px;
 	font-size: 14px;
@@ -2505,7 +2489,7 @@
 		gap: 6px;
 	}
 
-	.jws-pv3__group + .jws-pv3__group {
+	.jws-pv3__group+.jws-pv3__group {
 		padding-inline-start: 10px;
 		border-inline-start: 1px solid var(--border-color);
 	}
@@ -2665,7 +2649,7 @@
 		font-size: 14px;
 	}
 
-	.jws-pf-tab__head .jws-pf-btn {
+	.jws-pf-tab__head :is(.button-default, .button-custom) {
 		width: 100%;
 	}
 
@@ -2675,12 +2659,12 @@
 		gap: 16px 12px;
 	}
 
-	.jws-pl .jws-lib__head .jws-pf-btn {
+	.jws-pl .jws-lib__head :is(.button-default, .button-custom) {
 		width: 100%;
 	}
 
-	.jws-coin__balance .jws-pf-btn,
-	.jws-sub__actions .jws-pf-btn {
+	.jws-coin__balance :is(.button-default, .button-custom),
+	.jws-sub__actions :is(.button-default, .button-custom) {
 		width: 100%;
 	}
 
@@ -2753,20 +2737,15 @@
 		margin: 0;
 	}
 
-	.jws-buy__actions .jws-pf-btn {
+	.jws-buy__actions :is(.button-default, .button-custom) {
 		flex: 1;
-	}
-
-
-	.jws-lib__title {
-		font-size: 14px;
 	}
 
 	.jws-lib__meta {
 		font-size: 12px;
 	}
 
-	.jws-lib__toggle:checked ~ .jws-lib__bar {
+	.jws-lib__toggle:checked~.jws-lib__bar {
 		position: fixed;
 		inset: auto 0 0;
 		z-index: 100;
@@ -2774,7 +2753,7 @@
 		border-radius: 0;
 	}
 
-	.jws-lib__toggle:checked ~ .jws-lib__more {
+	.jws-lib__toggle:checked~.jws-lib__more {
 		padding-bottom: 80px;
 	}
 
@@ -2927,7 +2906,7 @@
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 
-	.jws-pf-row .jws-pf-btn {
+	.jws-pf-row :is(.button-default, .button-custom) {
 		flex: 1 1 100%;
 	}
 
@@ -2967,7 +2946,7 @@
 }
 
 .jws-pv3__sections [class^="jws-icon-"],
-.jws-pf-btn [class^="jws-icon-"],
+:is(.button-default, .button-custom) [class^="jws-icon-"],
 .jws-lib__select [class^="jws-icon-"],
 .jws-lib__bar [class^="jws-icon-"] {
 	font-size: 18px;
@@ -2990,7 +2969,7 @@
 	font-size: 16px;
 }
 
-.jws-pf-info > [class^="jws-icon-"] {
+.jws-pf-info>[class^="jws-icon-"] {
 	margin-top: 1px;
 	color: var(--main);
 	font-size: 20px;
@@ -3019,7 +2998,7 @@
 	font-size: 18px;
 }
 
-.jws-kids-bar__notice > [class^="jws-icon-"] {
+.jws-kids-bar__notice>[class^="jws-icon-"] {
 	font-size: 20px;
 }
 

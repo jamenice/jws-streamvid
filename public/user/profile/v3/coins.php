@@ -42,7 +42,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 				<span class="jws-coin__label"><?php esc_html_e( 'Your balance', 'jws_streamvid' ); ?></span>
 				<span class="jws-coin__value sv-coin-balance-number"><?php echo esc_html( number_format_i18n( Jws_Drama_Wallet::balance( $jws_coin_user ) ) ); ?></span>
 			</span>
-			<button type="button" class="jws-pf-btn" data-jws-coin-modal>
+			<button type="button" class="button-default" data-jws-coin-modal>
 				<i class="jws-icon-plus" aria-hidden="true"></i>
 				<?php esc_html_e( 'Top up', 'jws_streamvid' ); ?>
 			</button>
@@ -119,7 +119,7 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 									<img src="<?php echo esc_url( $jws_coin_img ); ?>" alt="" loading="lazy" decoding="async">
 								<?php endif; ?>
 							</span>
-							<span class="jws-lib__title"><?php echo esc_html( $jws_coin_drama ? get_the_title( $jws_coin_drama ) : get_the_title( $jws_coin_ep ) ); ?></span>
+							<h6 class="jws-lib__title"><?php echo esc_html( $jws_coin_drama ? get_the_title( $jws_coin_drama ) : get_the_title( $jws_coin_ep ) ); ?></h6>
 							<span class="jws-lib__meta">
 								<?php
 								/* translators: 1: episode number, 2: coins spent */

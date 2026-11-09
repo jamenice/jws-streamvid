@@ -136,15 +136,15 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 					</div>
 					<div class="jws-buy__actions">
 						<?php if ( $jws_buy_item['watch'] ) : ?>
-							<a class="jws-pf-btn" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>">
+							<a class="button-default" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>">
 								<i class="jws-icon-play-fill" aria-hidden="true"></i>
 								<?php echo esc_html( $jws_buy_item['watch'] ); ?>
 							</a>
 						<?php elseif ( $jws_buy_item['again'] && ! $jws_buy_item['blocked'] ) : ?>
-							<a class="jws-pf-btn" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php esc_html_e( 'Rent again', 'jws_streamvid' ); ?></a>
+							<a class="button-default" href="<?php echo esc_url( $jws_buy_item['url'] ); ?>"><?php esc_html_e( 'Rent again', 'jws_streamvid' ); ?></a>
 						<?php endif; ?>
 						<?php if ( $jws_buy_item['order'] ) : ?>
-							<button type="button" class="jws-pf-btn jws-pf-btn--ghost download-invoice-woo" data-invoice="<?php echo esc_attr( $jws_buy_item['order'] ); ?>">
+							<button type="button" class="button-custom jws-btn-sm download-invoice-woo" data-invoice="<?php echo esc_attr( $jws_buy_item['order'] ); ?>">
 								<i class="jws-icon-arrow-line-down" aria-hidden="true"></i>
 								<?php esc_html_e( 'Invoice', 'jws_streamvid' ); ?>
 							</button>
@@ -165,7 +165,7 @@ foreach ( $jws_buy_rows as $jws_buy_row ) {
 					: esc_html__( 'Titles you buy stay on this account for good and show up here.', 'jws_streamvid' );
 				?>
 			</p>
-			<a class="jws-pf-btn" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
+			<a class="button-default" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
 		</div>
 	<?php endif; ?>
 </div>

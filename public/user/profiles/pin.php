@@ -47,7 +47,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 			<?php if ( $jws_pf_error ) : ?>
 				<p id="jws-pf-pin-error" class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_error ); ?></p>
 			<?php endif; ?>
-			<button type="submit" class="jws-pf-btn jws-pf-btn--block"><?php esc_html_e( 'Continue', 'jws_streamvid' ); ?></button>
+			<button type="submit" class="button-default jws-btn-block"><?php esc_html_e( 'Continue', 'jws_streamvid' ); ?></button>
 		</form>
 
 	<?php else : ?>
@@ -56,7 +56,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 		<form method="post">
 			<?php Jws_Profiles_Front::form_fields( 'switch', $jws_pf_profile->id ); ?>
 			<input type="hidden" name="back" value="<?php echo esc_url( $jws_pf_back ); ?>">
-			<button type="submit" class="jws-pf-btn jws-pf-btn--block">
+			<button type="submit" class="button-default jws-btn-block">
 				<?php
 				/* translators: %s: profile name */
 				echo esc_html( sprintf( __( 'Continue as %s', 'jws_streamvid' ), $jws_pf_profile->name ) );
@@ -90,8 +90,8 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 						<p class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_pin_err ); ?></p>
 					<?php endif; ?>
 					<div class="jws-pf-row">
-						<button type="submit" class="jws-pf-btn"><?php esc_html_e( 'Save PIN', 'jws_streamvid' ); ?></button>
-						<button type="submit" name="remove_pin" value="1" class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Turn off Profile Lock', 'jws_streamvid' ); ?></button>
+						<button type="submit" class="button-default"><?php esc_html_e( 'Save PIN', 'jws_streamvid' ); ?></button>
+						<button type="submit" name="remove_pin" value="1" class="button-custom"><?php esc_html_e( 'Turn off Profile Lock', 'jws_streamvid' ); ?></button>
 					</div>
 				</form>
 			<?php endif; ?>
