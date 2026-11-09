@@ -7,6 +7,9 @@
  * oldest-first, matching the old array's insertion order, so existing callers
  * that do `array_reverse()` to show newest-first keep working unchanged.
  *
+ * Every method works on one viewer profile: the `$profile_id` given, or the
+ * profile the current request is using when it is null. See Jws_Profiles.
+ *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes
  */
@@ -17,47 +20,49 @@ if ( ! defined( 'WPINC' ) ) {
 
 class Jws_Watchlist {
 
-	public static function is_watchlisted( $user_id, $post_id ) {
+	public static function is_watchlisted( $user_id, $post_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_watchlist();
 		return (bool) $wpdb->get_var( $wpdb->prepare(
-			"SELECT 1 FROM {$table} WHERE user_id = %d AND post_id = %d LIMIT 1",
-			$user_id, $post_id
+			"SELECT 1 FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_id = %d LIMIT 1",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_id
 		) );
 	}
 
-	public static function get_ids( $user_id ) {
+	public static function get_ids( $user_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_watchlist();
 		$ids = $wpdb->get_col( $wpdb->prepare(
-			"SELECT post_id FROM {$table} WHERE user_id = %d ORDER BY created_at ASC, id ASC",
-			$user_id
+			"SELECT post_id FROM {$table} WHERE user_id = %d AND profile_id = %d ORDER BY created_at ASC, id ASC",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id )
 		) );
 		return array_map( 'intval', $ids );
 	}
 
-	public static function add( $user_id, $post_id ) {
+	public static function add( $user_id, $post_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_watchlist();
 		$wpdb->query( $wpdb->prepare(
-			"INSERT IGNORE INTO {$table} (user_id, post_id, created_at) VALUES (%d, %d, %s)",
-			$user_id, $post_id, current_time( 'mysql' )
+			"INSERT IGNORE INTO {$table} (user_id, profile_id, post_id, created_at) VALUES (%d, %d, %d, %s)",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_id, current_time( 'mysql' )
 		) );
 	}
 
-	public static function remove( $user_id, $post_id ) {
+	public static function remove( $user_id, $post_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_watchlist();
 		$wpdb->delete( $table, array(
-			'user_id' => $user_id,
-			'post_id' => $post_id,
-		), array( '%d', '%d' ) );
+			'user_id'    => $user_id,
+			'profile_id' => Jws_Profiles::resolve( $user_id, $profile_id ),
+			'post_id'    => $post_id,
+		), array( '%d', '%d', '%d' ) );
 	}
 
 	/**
-	 * Copies every `post_watchlist` usermeta row into the table. Safe to run
-	 * more than once: the unique key on (user_id, post_id) makes each insert
-	 * a no-op if that row already exists.
+	 * Copies every `post_watchlist` usermeta row into the table, under the main
+	 * profile (profile_id 0, the column default). Safe to run more than once:
+	 * the unique key on (user_id, profile_id, post_id) makes each insert a
+	 * no-op if that row already exists.
 	 *
 	 * @return array { migrated: int, users: int }
 	 */

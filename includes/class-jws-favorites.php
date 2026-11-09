@@ -7,6 +7,9 @@
  * oldest-first, matching the old array's insertion order, so existing callers
  * that do `array_reverse()` to show newest-first keep working unchanged.
  *
+ * Every method works on one viewer profile: the `$profile_id` given, or the
+ * profile the current request is using when it is null. See Jws_Profiles.
+ *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes
  */
@@ -17,48 +20,50 @@ if ( ! defined( 'WPINC' ) ) {
 
 class Jws_Favorites {
 
-	public static function is_liked( $user_id, $post_id, $post_type ) {
+	public static function is_liked( $user_id, $post_id, $post_type, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_favorites();
 		return (bool) $wpdb->get_var( $wpdb->prepare(
-			"SELECT 1 FROM {$table} WHERE user_id = %d AND post_id = %d AND post_type = %s LIMIT 1",
-			$user_id, $post_id, $post_type
+			"SELECT 1 FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_id = %d AND post_type = %s LIMIT 1",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_id, $post_type
 		) );
 	}
 
-	public static function get_ids( $user_id, $post_type ) {
+	public static function get_ids( $user_id, $post_type, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_favorites();
 		$ids = $wpdb->get_col( $wpdb->prepare(
-			"SELECT post_id FROM {$table} WHERE user_id = %d AND post_type = %s ORDER BY created_at ASC, id ASC",
-			$user_id, $post_type
+			"SELECT post_id FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_type = %s ORDER BY created_at ASC, id ASC",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_type
 		) );
 		return array_map( 'intval', $ids );
 	}
 
-	public static function add( $user_id, $post_id, $post_type ) {
+	public static function add( $user_id, $post_id, $post_type, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_favorites();
 		$wpdb->query( $wpdb->prepare(
-			"INSERT IGNORE INTO {$table} (user_id, post_id, post_type, created_at) VALUES (%d, %d, %s, %s)",
-			$user_id, $post_id, $post_type, current_time( 'mysql' )
+			"INSERT IGNORE INTO {$table} (user_id, profile_id, post_id, post_type, created_at) VALUES (%d, %d, %d, %s, %s)",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_id, $post_type, current_time( 'mysql' )
 		) );
 	}
 
-	public static function remove( $user_id, $post_id, $post_type ) {
+	public static function remove( $user_id, $post_id, $post_type, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_favorites();
 		$wpdb->delete( $table, array(
-			'user_id'   => $user_id,
-			'post_id'   => $post_id,
-			'post_type' => $post_type,
-		), array( '%d', '%d', '%s' ) );
+			'user_id'    => $user_id,
+			'profile_id' => Jws_Profiles::resolve( $user_id, $profile_id ),
+			'post_id'    => $post_id,
+			'post_type'  => $post_type,
+		), array( '%d', '%d', '%d', '%s' ) );
 	}
 
 	/**
-	 * Copies every `{post_type}_liked` usermeta row into the table. Safe to
-	 * run more than once: the unique key on (user_id, post_id, post_type)
-	 * makes each insert a no-op if that row already exists.
+	 * Copies every `{post_type}_liked` usermeta row into the table, under the
+	 * main profile (profile_id 0, the column default). Safe to run more than
+	 * once: the unique key on (user_id, profile_id, post_id, post_type) makes
+	 * each insert a no-op if that row already exists.
 	 *
 	 * @return array { migrated: int, skipped: int, users: int, errors: string[] }
 	 */

@@ -12,6 +12,9 @@
  * shows up in "continue watching", and that row's episode_id points back at
  * the episode — the episode's own row has no episode_id.
  *
+ * Every method works on one viewer profile: the `$profile_id` given, or the
+ * profile the current request is using when it is null. See Jws_Profiles.
+ *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes
  */
@@ -22,15 +25,15 @@ if ( ! defined( 'WPINC' ) ) {
 
 class Jws_History {
 
-	/** Matches the old class-api-history.php MAX_HISTORY cap. */
+	/** Matches the old class-api-history.php MAX_HISTORY cap, per profile. */
 	const MAX_HISTORY = 200;
 
-	public static function get_all( $user_id ) {
+	public static function get_all( $user_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_history();
 		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT post_id, progress, duration, episode_id, watched_at FROM {$table} WHERE user_id = %d ORDER BY watched_at ASC, id ASC",
-			$user_id
+			"SELECT post_id, progress, duration, episode_id, watched_at FROM {$table} WHERE user_id = %d AND profile_id = %d ORDER BY watched_at ASC, id ASC",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id )
 		) );
 
 		$out = array();
@@ -40,12 +43,12 @@ class Jws_History {
 		return $out;
 	}
 
-	public static function get_item( $user_id, $post_id ) {
+	public static function get_item( $user_id, $post_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_history();
 		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT post_id, progress, duration, episode_id, watched_at FROM {$table} WHERE user_id = %d AND post_id = %d LIMIT 1",
-			$user_id, $post_id
+			"SELECT post_id, progress, duration, episode_id, watched_at FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_id = %d LIMIT 1",
+			$user_id, Jws_Profiles::resolve( $user_id, $profile_id ), $post_id
 		) );
 		return $row ? self::row_to_item( $row ) : null;
 	}
@@ -62,21 +65,22 @@ class Jws_History {
 		return $item;
 	}
 
-	public static function set_item( $user_id, $post_id, $progress, $duration, $episode_id = 0 ) {
+	public static function set_item( $user_id, $post_id, $progress, $duration, $episode_id = 0, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_history();
+		$profile_id = Jws_Profiles::resolve( $user_id, $profile_id );
 
 		$wpdb->query( $wpdb->prepare(
-			"INSERT INTO {$table} (user_id, post_id, progress, duration, episode_id, watched_at)
-			 VALUES (%d, %d, %d, %d, %d, %s)
+			"INSERT INTO {$table} (user_id, profile_id, post_id, progress, duration, episode_id, watched_at)
+			 VALUES (%d, %d, %d, %d, %d, %d, %s)
 			 ON DUPLICATE KEY UPDATE progress = VALUES(progress), duration = VALUES(duration), episode_id = VALUES(episode_id), watched_at = VALUES(watched_at)",
-			$user_id, $post_id, max( 0, (int) $progress ), max( 0, (int) $duration ), max( 0, (int) $episode_id ), current_time( 'mysql' )
+			$user_id, $profile_id, $post_id, max( 0, (int) $progress ), max( 0, (int) $duration ), max( 0, (int) $episode_id ), current_time( 'mysql' )
 		) );
 
-		self::trim( $user_id );
+		self::trim( $user_id, $profile_id );
 	}
 
-	public static function delete_items( $user_id, array $post_ids ) {
+	public static function delete_items( $user_id, array $post_ids, $profile_id = null ) {
 		global $wpdb;
 		if ( empty( $post_ids ) ) {
 			return;
@@ -85,36 +89,40 @@ class Jws_History {
 		$post_ids = array_map( 'intval', $post_ids );
 		$placeholders = implode( ',', array_fill( 0, count( $post_ids ), '%d' ) );
 		$wpdb->query( $wpdb->prepare(
-			"DELETE FROM {$table} WHERE user_id = %d AND post_id IN ({$placeholders})",
-			array_merge( array( $user_id ), $post_ids )
+			"DELETE FROM {$table} WHERE user_id = %d AND profile_id = %d AND post_id IN ({$placeholders})",
+			array_merge( array( $user_id, Jws_Profiles::resolve( $user_id, $profile_id ) ), $post_ids )
 		) );
 	}
 
-	public static function clear( $user_id ) {
+	public static function clear( $user_id, $profile_id = null ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_history();
-		$wpdb->delete( $table, array( 'user_id' => $user_id ), array( '%d' ) );
+		$wpdb->delete( $table, array(
+			'user_id'    => $user_id,
+			'profile_id' => Jws_Profiles::resolve( $user_id, $profile_id ),
+		), array( '%d', '%d' ) );
 	}
 
-	/** Caps history per user at MAX_HISTORY rows, dropping the oldest. */
-	private static function trim( $user_id ) {
+	/** Caps history per profile at MAX_HISTORY rows, dropping the oldest. */
+	private static function trim( $user_id, $profile_id ) {
 		global $wpdb;
 		$table = Jws_Streamvid_Tables::table_history();
-		$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d", $user_id ) );
+		$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d AND profile_id = %d", $user_id, $profile_id ) );
 		if ( $count <= self::MAX_HISTORY ) {
 			return;
 		}
 		$excess = $count - self::MAX_HISTORY;
 		$wpdb->query( $wpdb->prepare(
-			"DELETE FROM {$table} WHERE user_id = %d ORDER BY watched_at ASC, id ASC LIMIT %d",
-			$user_id, $excess
+			"DELETE FROM {$table} WHERE user_id = %d AND profile_id = %d ORDER BY watched_at ASC, id ASC LIMIT %d",
+			$user_id, $profile_id, $excess
 		) );
 	}
 
 	/**
-	 * Copies every `video_progress_data` usermeta row into the table. Safe to
-	 * run more than once: the unique key on (user_id, post_id) makes each
-	 * insert a no-op if that row already exists.
+	 * Copies every `video_progress_data` usermeta row into the table, under the
+	 * main profile (profile_id 0, the column default). Safe to run more than
+	 * once: the unique key on (user_id, profile_id, post_id) makes each insert
+	 * a no-op if that row already exists.
 	 *
 	 * @return array { migrated: int, users: int }
 	 */

@@ -36,6 +36,21 @@ function jws_metabox_register_terms() {
 			'acf_groups' => array( 'age_settings' ),
 			'fields'     => array(
 				array( 'type' => 'text', 'name' => 'ages_badge', 'key' => 'field_age_ages_badge', 'label' => __( 'Badge', 'jws_streamvid' ), 'placeholder' => '13+', 'desc' => __( 'Short label shown on posters.', 'jws_streamvid' ) ),
+				array(
+					'type'    => 'select',
+					'name'    => Jws_Profile_Filter::TERM_META,
+					'key'     => 'field_age_jws_maturity',
+					'label'   => __( 'Maturity level', 'jws_streamvid' ),
+					'choices' => array(
+						''   => __( 'Automatic (from the slug)', 'jws_streamvid' ),
+						'0'  => __( 'All ages (G)', 'jws_streamvid' ),
+						'7'  => __( '7+ (PG)', 'jws_streamvid' ),
+						'13' => __( '13+ (PG-13)', 'jws_streamvid' ),
+						'17' => __( '17+ (R)', 'jws_streamvid' ),
+						'18' => __( '18+ (NC-17)', 'jws_streamvid' ),
+					),
+					'desc'    => __( 'Profiles only show titles at or below their maturity level. Kids profiles show up to 7+ (PG). Automatic reads the slugs g, pg, pg-13, r and nc-17; any other slug counts as 18+.', 'jws_streamvid' ),
+				),
 			),
 		)
 	);
