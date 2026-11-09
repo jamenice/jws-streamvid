@@ -19,6 +19,12 @@ if ( ! $user_id ) {
 	return;
 }
 
+// Profile Version 3 has its own Coins layout (user/profile/v3/coins.php).
+if ( class_exists( 'Jws_Profile_Library' ) && Jws_Profile_Library::is_v3() ) {
+	jws_streamvid_load_template( 'user/profile/v3/coins.php', false );
+	return;
+}
+
 $balance = Jws_Drama_Wallet::balance( $user_id );
 $history = Jws_Drama_Wallet::history( $user_id, 30 );
 $unlocks = Jws_Drama_Wallet::unlock_history( $user_id, 30 );
