@@ -844,6 +844,8 @@
 .jws-pv3 {
 	display: grid;
 	grid-template-columns: 290px minmax(0, 1fr);
+	/* The sidebar spans both rows; without this a short tab stretches the title row. */
+	grid-template-rows: auto 1fr;
 	grid-template-areas:
 		"side bar"
 		"side content";
@@ -1637,11 +1639,106 @@
 	line-height: 1.5;
 }
 
+/* Playlists (user/profile/v3/playlists.php) */
+
+.jws-pl {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.jws-pl .jws-pv3__tabs {
+	margin-bottom: 0;
+}
+
+.jws-pv3 ul.jws-pl__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+	gap: 22px 18px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-pl__item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.jws-pl__art {
+	aspect-ratio: 16 / 10;
+}
+
+.jws-pl__count {
+	position: absolute;
+	inset-inline-end: 8px;
+	bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 9px;
+	border-radius: 6px;
+	background: color-mix(in srgb, var(--background-body) 85%, transparent);
+	color: var(--heading);
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.jws-pl__play {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	background: color-mix(in srgb, var(--background-body) 60%, transparent);
+	color: var(--heading);
+	font-size: 14px;
+	font-weight: 700;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.jws-lib__card:hover .jws-pl__play,
+.jws-lib__card:focus-visible .jws-pl__play {
+	opacity: 1;
+}
+
+.jws-pl__meta {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	color: var(--body2);
+	font-size: 13px;
+}
+
+.jws-pl__privacy {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.jws-pl__edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	min-height: 32px;
+	margin-inline-start: auto;
+	font-weight: 600;
+}
+
+.jws-pl [class^="jws-icon-"] {
+	line-height: 1;
+}
+
 /* Tablet: account card on top, sections in a scrolling bar. */
 @media (min-width: 768px) and (max-width: 1024px) {
 
 	.jws-pv3 {
 		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto;
 		grid-template-areas:
 			"side"
 			"bar"
@@ -1732,6 +1829,7 @@
 
 	.jws-pv3 {
 		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto;
 		grid-template-areas:
 			"bar"
 			"side"
@@ -1863,9 +1961,20 @@
 		width: 100%;
 	}
 
-	.jws-pv3 ul.jws-lib__grid {
+	.jws-pv3 ul.jws-lib__grid,
+	.jws-pv3 ul.jws-pl__grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 16px 12px;
+	}
+
+	.jws-pl .jws-lib__head .jws-pf-btn {
+		width: 100%;
+	}
+
+	.jws-pl .jws-pv3__tabs {
+		display: flex;
+		overflow-x: auto;
+		scrollbar-width: none;
 	}
 
 	.jws-lib__chips {
