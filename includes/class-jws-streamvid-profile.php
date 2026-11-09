@@ -666,7 +666,8 @@ class Jws_Streamvid_Profile {
         
             $menu_items = $this->get_menu_items();
 
-            if(jws_theme_get_option('profile_layout') == 'v2') {
+            // V2 and V3 list every tab in one menu (V3 groups them, see user/profile/v3/layout.php).
+            if(in_array(jws_theme_get_option('profile_layout'), array('v2', 'v3'), true)) {
                 $dashboard_items = $this->get_menu_dashboard_items();
                 $membership_items = $this->get_menu_membership_items();
                 

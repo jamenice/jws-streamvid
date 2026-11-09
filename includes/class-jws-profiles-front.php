@@ -33,8 +33,8 @@ class Jws_Profiles_Front {
 
 	const NONCE = 'jws_profiles';
 
-	/** Bump when the rewrite rules change so they are rebuilt once. */
-	const REWRITE_VERSION = '1';
+	/** Bump when the rewrite rules change so they are rebuilt once (3: Profiles tab endpoint). */
+	const REWRITE_VERSION = '3';
 
 	const OPTION_REWRITE = 'jws_profiles_rewrite';
 
@@ -495,18 +495,51 @@ class Jws_Profiles_Front {
 
 	public static function enqueue() {
 
-		if ( ! is_user_logged_in() ) {
+		$v3 = is_author() && function_exists( 'jws_theme_get_option' ) && 'v3' === jws_theme_get_option( 'profile_layout' );
+
+		// The header menu needs the styles on every page for logged-in users; the V3 profile page for everyone.
+		if ( ! is_user_logged_in() && ! $v3 ) {
 			return;
 		}
 
-		$file = JWS_STREAMVID_PATH_PUBLIC . '/assets/css/profiles.css';
+		$css = JWS_STREAMVID_PATH_PUBLIC . '/assets/css/profiles.css';
 
 		wp_enqueue_style(
 			'jws-profiles',
 			JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/profiles.css',
 			array(),
-			file_exists( $file ) ? (string) filemtime( $file ) : JWS_STREAMVID_VERSION
+			file_exists( $css ) ? (string) filemtime( $css ) : JWS_STREAMVID_VERSION
 		);
+
+		if ( $v3 ) {
+			$js = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/profiles.js';
+
+			wp_enqueue_script(
+				'jws-profiles',
+				JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/profiles.js',
+				array(),
+				file_exists( $js ) ? (string) filemtime( $js ) : JWS_STREAMVID_VERSION,
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
+			);
+		}
+	}
+
+	/** Adds the Profiles tab to the profile page menu; the Profile Menu sorter can move or hide it. */
+	public static function profile_tab( $items ) {
+
+		$items['profiles'] = array(
+			'title'    => esc_html__( 'Profiles', 'jws_streamvid' ),
+			'icon'     => '',
+			'callback' => function () {
+				jws_streamvid_load_template( 'user/profile/profiles.php' );
+			},
+			'priority' => 45,
+		);
+
+		return $items;
 	}
 
 	/** Keeps search engines off the profile screens. */
@@ -530,6 +563,7 @@ add_filter( 'pre_get_document_title', array( 'Jws_Profiles_Front', 'document_tit
 add_filter( 'body_class', array( 'Jws_Profiles_Front', 'body_class' ) );
 add_action( 'wp_enqueue_scripts', array( 'Jws_Profiles_Front', 'enqueue' ), 20 );
 add_filter( 'wp_robots', array( 'Jws_Profiles_Front', 'robots' ) );
+add_filter( 'streamvid_profile_default_menu_items', array( 'Jws_Profiles_Front', 'profile_tab' ) );
 
 if ( ! function_exists( 'jws_streamvid_account_menu' ) ) {
 	/**

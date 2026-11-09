@@ -836,6 +836,687 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Profile page, Version 3 (user/profile/v3/layout.php)
+ * Desktop from 1025px: sidebar. 768-1024px: account card and a scrolling
+ * bar. To 767px: "Sections" sheet (profiles.js adds .jws-pv3-js).
+ * ------------------------------------------------------------------ */
+
+.jws-pv3 {
+	display: grid;
+	grid-template-columns: 290px minmax(0, 1fr);
+	grid-template-areas:
+		"side bar"
+		"side content";
+	align-items: start;
+	gap: 0 28px;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 28px clamp(16px, 3vw, 40px) 64px;
+	color: var(--body);
+}
+
+.jws-pv3__bar {
+	grid-area: bar;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.jws-pv3__title {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	color: var(--heading);
+	font-size: clamp(24px, 3vw, 32px);
+	line-height: 1.2;
+}
+
+.jws-pv3__sections {
+	display: none;
+	align-items: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 0 16px;
+	border: 1px solid var(--border-color2);
+	border-radius: 999px;
+	background: var(--background-item);
+	color: var(--heading);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.jws-pv3__side {
+	grid-area: side;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding: 16px;
+	border: 1px solid var(--border-color);
+	border-radius: 18px;
+	background: var(--background-item);
+}
+
+.jws-pv3__content {
+	grid-area: content;
+	min-width: 0;
+}
+
+.jws-pv3__sheet-head,
+.jws-pv3__backdrop {
+	display: none;
+}
+
+.jws-pv3__card {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 6px 4px 16px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.jws-pv3__me {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.jws-pv3__me-avatar,
+.jws-pv3__creator-avatar {
+	flex: 0 0 auto;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.jws-pv3__me-text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.jws-pv3__me-name {
+	color: var(--heading);
+	font-size: 17px;
+	font-weight: 700;
+}
+
+.jws-pv3__me-email {
+	overflow: hidden;
+	color: var(--body2);
+	font-size: 13px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.jws-pv3__plan {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 10px 12px;
+	border-radius: 12px;
+	background: var(--input-background2);
+}
+
+.jws-pv3__plan-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.jws-pv3__plan-label {
+	color: var(--body2);
+	font-size: 12px;
+}
+
+.jws-pv3__plan-name {
+	color: var(--heading);
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.jws-pf-btn.jws-pv3__upgrade {
+	min-height: 36px;
+	padding: 0 12px;
+	font-size: 13px;
+}
+
+.jws-pv3__viewing {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+}
+
+.jws-pv3__viewing span {
+	flex: 1;
+}
+
+.jws-pv3__viewing strong {
+	color: var(--heading);
+}
+
+.jws-pv3__viewing a {
+	font-weight: 600;
+}
+
+.jws-pv3__viewing-avatar {
+	display: block;
+	width: 32px;
+	height: 32px;
+	border-radius: 7px;
+	object-fit: cover;
+}
+
+.jws-pv3__nav {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.jws-pv3__group {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.jws-pv3__group-label {
+	padding: 0 12px 6px;
+	color: var(--body2);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 1.2px;
+	text-transform: uppercase;
+}
+
+.jws-pv3__link {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 42px;
+	padding: 0 12px;
+	border-radius: 10px;
+	color: var(--body);
+	font-size: 15px;
+	font-weight: 500;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.jws-pv3__link svg {
+	flex: 0 0 auto;
+}
+
+.jws-pv3__link:hover,
+.jws-pv3__link:focus-visible {
+	background: var(--input-background2);
+	color: var(--heading);
+}
+
+.jws-pv3__link.is-active,
+.jws-pv3__link.is-active:hover {
+	background: var(--main);
+	color: var(--btn-color);
+}
+
+.jws-pv3__logout {
+	padding-top: 12px;
+	border-top: 1px solid var(--border-color);
+	border-radius: 0;
+}
+
+.jws-pv3 a:focus-visible,
+.jws-pv3 button:focus-visible {
+	outline: 3px solid var(--main);
+	outline-offset: 2px;
+}
+
+/* Rented / Purchased share one menu entry and switch here. */
+.jws-pv3__tabs {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 22px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.jws-pv3__tab {
+	display: flex;
+	align-items: center;
+	min-height: 46px;
+	padding: 0 16px;
+	border-bottom: 3px solid transparent;
+	color: var(--body2);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.jws-pv3__tab:hover {
+	color: var(--heading);
+}
+
+.jws-pv3__tab.is-active {
+	border-bottom-color: var(--main);
+	color: var(--heading);
+}
+
+.jws-pv3--public {
+	display: block;
+}
+
+.jws-pv3__creator {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-bottom: 28px;
+}
+
+/* Profiles tab (user/profile/profiles.php) */
+
+.jws-pf-tab {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.jws-pf-tab__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.jws-pf-usage {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 240px;
+}
+
+.jws-pf-usage__text {
+	margin: 0;
+	color: var(--body2);
+	font-size: 15px;
+}
+
+.jws-pf-meter {
+	display: block;
+	width: 240px;
+	max-width: 100%;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--border-color);
+}
+
+.jws-pf-meter__fill {
+	display: block;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--main);
+}
+
+.jws-pf ul.jws-pf-list,
+.jws-pf-tab ul.jws-pf-list {
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+	list-style: none;
+	overflow: hidden;
+}
+
+.jws-pf-list__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 14px 20px;
+	padding: 16px 20px;
+}
+
+.jws-pf-list__item + .jws-pf-list__item {
+	border-top: 1px solid var(--border-color);
+}
+
+.jws-pf-list__avatar {
+	display: block;
+	flex: 0 0 auto;
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+	object-fit: cover;
+}
+
+.jws-pf-list__item.is-locked .jws-pf-list__avatar {
+	opacity: 0.4;
+	filter: grayscale(1);
+}
+
+.jws-pf-list__who {
+	display: flex;
+	flex: 1 1 160px;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.jws-pf-list__name {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--heading);
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.jws-pf-list__meta {
+	color: var(--body2);
+	font-size: 13px;
+}
+
+.jws-pf-list__rating {
+	flex: 1 1 150px;
+	font-size: 14px;
+}
+
+.jws-pf-list__lock {
+	display: flex;
+	flex: 1 1 110px;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+}
+
+.jws-pf-btn.jws-pf-list__edit {
+	min-height: 40px;
+	margin-inline-start: auto;
+	padding: 0 16px;
+}
+
+.jws-pf-chip {
+	padding: 2px 7px;
+	border-radius: 5px;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.jws-pf-chip--main {
+	background: var(--main);
+	color: var(--btn-color);
+}
+
+.jws-pf-chip--adult {
+	border: 1px solid var(--border-color2);
+	color: var(--body);
+}
+
+.jws-pf-chip--kids {
+	background: var(--jws-pf-kids);
+	color: var(--dark);
+}
+
+.jws-pf-info {
+	display: flex;
+	gap: 12px;
+	padding: 16px 18px;
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	background: var(--input-background);
+	color: var(--body);
+}
+
+.jws-pf-info svg {
+	flex: 0 0 auto;
+	margin-top: 2px;
+	color: var(--main);
+}
+
+.jws-pf-info p {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+/* Tablet: account card on top, sections in a scrolling bar. */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+	.jws-pv3 {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"side"
+			"bar"
+			"content";
+		padding-top: 20px;
+	}
+
+	.jws-pv3__side {
+		gap: 14px;
+		margin-bottom: 22px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+	}
+
+	.jws-pv3__card {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 18px;
+		padding: 14px 16px;
+		border: 1px solid var(--border-color);
+		border-radius: 16px;
+		background: var(--background-item);
+	}
+
+	.jws-pv3__me {
+		flex: 1 1 200px;
+	}
+
+	.jws-pv3__plan {
+		order: 3;
+	}
+
+	.jws-pv3__viewing {
+		padding: 0 18px;
+		border-inline: 1px solid var(--border-color);
+	}
+
+	.jws-pv3__nav {
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+		overflow-x: auto;
+		padding: 2px 48px 6px 0;
+		scrollbar-width: none;
+		-webkit-mask-image: linear-gradient(to right, var(--dark) calc(100% - 56px), transparent);
+		mask-image: linear-gradient(to right, var(--dark) calc(100% - 56px), transparent);
+	}
+
+	.jws-pv3__nav::-webkit-scrollbar {
+		display: none;
+	}
+
+	.jws-pv3__group {
+		flex: 0 0 auto;
+		flex-direction: row;
+		gap: 6px;
+	}
+
+	.jws-pv3__group + .jws-pv3__group {
+		padding-inline-start: 10px;
+		border-inline-start: 1px solid var(--border-color);
+	}
+
+	.jws-pv3__group-label,
+	.jws-pv3__logout {
+		display: none;
+	}
+
+	.jws-pv3__link {
+		min-height: 44px;
+		padding: 0 14px;
+		border: 1px solid var(--border-color);
+		border-radius: 999px;
+		background: var(--background-item);
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.jws-pv3__link.is-active {
+		border-color: var(--main);
+	}
+}
+
+/* Phones: title and a "Sections" button; the menu opens as a sheet. */
+@media (max-width: 767px) {
+
+	.jws-pv3 {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"bar"
+			"side"
+			"content";
+		padding: 0 16px 48px;
+	}
+
+	.jws-pv3__bar {
+		position: sticky;
+		top: 0;
+		z-index: 20;
+		margin: 0 -16px 14px;
+		padding: 10px 16px;
+		border-bottom: 1px solid var(--border-color);
+		background: var(--background-body);
+	}
+
+	.jws-pv3__title {
+		font-size: 22px;
+	}
+
+	/* Without JavaScript the menu stays in the page, above the tab. */
+	.jws-pv3__side {
+		margin-bottom: 20px;
+	}
+
+	.jws-pv3-js .jws-pv3__sections {
+		display: inline-flex;
+	}
+
+	.jws-pv3-js .jws-pv3__side {
+		position: fixed;
+		inset: auto 0 0;
+		z-index: 100001;
+		max-height: calc(100% - 56px);
+		margin: 0;
+		overflow-y: auto;
+		border-radius: 20px 20px 0 0;
+		transform: translateY(100%);
+		visibility: hidden;
+		transition: transform 0.25s ease, visibility 0s linear 0.25s;
+	}
+
+	.jws-pv3-js .jws-pv3__side.is-open {
+		transform: none;
+		visibility: visible;
+		transition: transform 0.25s ease;
+	}
+
+	.jws-pv3-js .jws-pv3__sheet-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.jws-pv3__sheet-title {
+		color: var(--heading);
+		font-size: 20px;
+		font-weight: 700;
+	}
+
+	.jws-pv3__close {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		margin-inline-end: -8px;
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--body);
+		cursor: pointer;
+	}
+
+	.jws-pv3-js .jws-pv3__backdrop:not([hidden]) {
+		position: fixed;
+		inset: 0;
+		z-index: 100000;
+		display: block;
+		background: color-mix(in srgb, var(--dark) 72%, transparent);
+	}
+
+	.jws-pv3-locked {
+		overflow: hidden;
+	}
+
+	/* Sections as two-column tiles in the sheet. */
+	.jws-pv3__group {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	.jws-pv3__group-label {
+		grid-column: 1 / -1;
+		padding: 0;
+	}
+
+	.jws-pv3__link {
+		min-height: 52px;
+		padding: 8px 12px;
+		border: 1px solid var(--border-color);
+		border-radius: 12px;
+		background: var(--input-background2);
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.25;
+		white-space: normal;
+	}
+
+	.jws-pv3__logout {
+		justify-content: center;
+		border: 1px solid var(--border-color2);
+		border-radius: 12px;
+		background: transparent;
+	}
+
+	.jws-pv3__tabs {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.jws-pv3__tab {
+		justify-content: center;
+	}
+
+	.jws-pf-tab__head .jws-pf-btn {
+		width: 100%;
+	}
+
+	.jws-pf-list__rating,
+	.jws-pf-list__lock {
+		flex: 0 0 auto;
+		font-size: 13px;
+	}
+}
+
+/* ------------------------------------------------------------------ *
  * Kids mode
  * ------------------------------------------------------------------ */
 

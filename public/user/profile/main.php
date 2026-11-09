@@ -6,6 +6,9 @@ $profile_layout = jws_theme_get_option('profile_layout');
 
 <div id="primary" class="content-area">
     <main id="main" class="site-main">
+        <?php if ($profile_layout === 'v3') : ?>
+            <?php jws_streamvid_load_template( 'user/profile/v3/layout.php', false ); ?>
+        <?php else : ?>
         <?php do_action('streamvid/profile/header'); ?>
 
         <?php if ($profile_layout === 'v2') : ?>
@@ -22,6 +25,7 @@ $profile_layout = jws_theme_get_option('profile_layout');
             <div class="profile-main">
                 <?php do_action('streamvid/profile/main'); ?>
             </div>
+        <?php endif; ?>
         <?php endif; ?>
     </main>
 </div>
