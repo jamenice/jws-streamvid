@@ -836,7 +836,6 @@
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	margin-bottom: 20px;
 }
 
 /* An h5: size, weight and line height come from the theme's heading typography. */
@@ -1352,10 +1351,15 @@
 	color: var(--body);
 }
 
+/*
+ * Cards follow the theme's video card (layout1): same column width, 10px
+ * corners, 11px to the title, image zoom on hover, h6.fs-small title, and
+ * the theme's .time-data progress bar.
+ */
 .jws-pv3 ul.jws-lib__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-	gap: 20px 16px;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 25px 20px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -1369,7 +1373,7 @@
 .jws-lib__card {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 4px;
 	color: var(--heading);
 	text-decoration: none;
 }
@@ -1378,6 +1382,7 @@
 	position: relative;
 	display: block;
 	aspect-ratio: 16 / 9;
+	margin-bottom: 7px;
 	border-radius: 10px;
 	background: var(--background-item);
 	overflow: hidden;
@@ -1390,49 +1395,59 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	transition: transform 0.5s;
 }
 
+.jws-lib__item:hover .jws-lib__art img {
+	transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.jws-lib__art img {
+		transition: none;
+	}
+}
 
 .jws-lib__card:focus-visible {
 	outline: none;
 }
 
-.jws-lib__type {
+/* Badges on the image, shaped like the theme's .time badge; type is .fs-small on the markup. */
+.jws-lib__type,
+.jws-vid__live,
+.jws-vid__length,
+.jws-pl__count {
 	position: absolute;
-	top: 8px;
-	inset-inline-start: 8px;
-	padding: 3px 7px;
-	border-radius: 5px;
-	background: color-mix(in srgb, var(--background-body) 80%, transparent);
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 20px;
+	background: color-mix(in srgb, var(--background-body) 60%, transparent);
 	color: var(--heading);
-	font-size: var(--jws-pf-fs-xs);
-	font-weight: 700;
 }
 
-.jws-lib__progress {
-	position: absolute;
-	inset: auto 0 0;
-	height: 4px;
-	background: color-mix(in srgb, var(--light) 25%, transparent);
+.jws-lib__type {
+	top: 10px;
+	inset-inline-start: 10px;
 }
 
-.jws-lib__progress span {
-	display: block;
-	height: 4px;
-	background: var(--main);
+.jws-lib__art .time-data {
+	inset-inline-start: 0;
 }
 
-/* An h6: size and weight come from the theme's heading typography. */
+/* An h6 with the theme's .fs-small, as on the theme's video cards; two lines at most. */
 .jws-lib__title {
+	display: -webkit-box;
 	overflow: hidden;
 	margin: 0;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 .jws-lib__meta {
 	color: var(--body2);
-	font-size: var(--font-size-sm);
 }
 
 .jws-lib__x {
@@ -1585,8 +1600,8 @@
 
 .jws-pv3 ul.jws-pl__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-	gap: 22px 18px;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 25px 20px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -1595,27 +1610,13 @@
 .jws-pl__item {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 4px;
 	min-width: 0;
 }
 
-.jws-pl__art {
-	aspect-ratio: 16 / 10;
-}
-
 .jws-pl__count {
-	position: absolute;
-	inset-inline-end: 8px;
-	bottom: 8px;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	padding: 4px 9px;
-	border-radius: 6px;
-	background: color-mix(in srgb, var(--background-body) 85%, transparent);
-	color: var(--heading);
-	font-size: var(--jws-pf-fs-xs);
-	font-weight: 700;
+	bottom: 10px;
+	inset-inline-end: 10px;
 }
 
 .jws-pl__play {
@@ -1627,7 +1628,6 @@
 	gap: 8px;
 	background: color-mix(in srgb, var(--background-body) 60%, transparent);
 	color: var(--heading);
-	font-size: var(--font-size-sm);
 	opacity: 0;
 	transition: opacity 0.2s;
 }
@@ -1642,7 +1642,6 @@
 	align-items: center;
 	gap: 12px;
 	color: var(--body2);
-	font-size: var(--font-size-sm);
 }
 
 .jws-pl__privacy {
@@ -2307,29 +2306,17 @@
 	font-size: var(--font-size-sm);
 }
 
-.jws-vid__live,
-.jws-vid__length {
-	position: absolute;
-	padding: 3px 7px;
-	border-radius: 5px;
-	font-size: var(--jws-pf-fs-xs);
-	font-weight: 700;
-}
-
 .jws-vid__live {
-	top: 8px;
-	inset-inline-end: 8px;
+	top: 10px;
+	inset-inline-end: 10px;
 	background: var(--jws-pf-danger);
 	color: var(--dark);
-	letter-spacing: 0.5px;
 	text-transform: uppercase;
 }
 
 .jws-vid__length {
-	inset-inline-start: 8px;
-	bottom: 8px;
-	background: color-mix(in srgb, var(--background-body) 85%, transparent);
-	color: var(--heading);
+	bottom: 10px;
+	inset-inline-start: 10px;
 }
 
 .jws-vid__meta {
@@ -2847,6 +2834,11 @@
 .jws-pv3__close [class^="jws-icon-"],
 .jws-pf-close [class^="jws-icon-"] {
 	font-size: 22px;
+}
+
+/* Same icon size as the theme's .time badge on video cards. */
+.jws-vid__length [class^="jws-icon-"] {
+	font-size: 20px;
 }
 
 .jws-lib__x [class^="jws-icon-"] {

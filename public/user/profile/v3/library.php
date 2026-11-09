@@ -102,14 +102,14 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 											<?php if ( $jws_lib_card['image'] ) : ?>
 												<img src="<?php echo esc_url( $jws_lib_card['image'] ); ?>" alt="" loading="lazy" decoding="async">
 											<?php endif; ?>
-											<span class="jws-lib__type"><?php echo esc_html( $jws_lib_card['type'] ); ?></span>
+											<span class="jws-lib__type fs-small"><?php echo esc_html( $jws_lib_card['type'] ); ?></span>
 											<?php if ( null !== $jws_lib_card['progress'] ) : ?>
-												<span class="jws-lib__progress"><span style="width: <?php echo (int) $jws_lib_card['progress']; ?>%"></span></span>
+												<span class="time-data"><span style="width: <?php echo (int) $jws_lib_card['progress']; ?>%"></span></span>
 											<?php endif; ?>
 										</span>
-										<h6 class="jws-lib__title"><?php echo esc_html( $jws_lib_card['title'] ); ?></h6>
+										<h6 class="jws-lib__title fs-small"><?php echo esc_html( $jws_lib_card['title'] ); ?></h6>
 										<?php if ( $jws_lib_card['meta'] ) : ?>
-											<span class="jws-lib__meta"><?php echo esc_html( $jws_lib_card['meta'] ); ?></span>
+											<span class="jws-lib__meta fs-small"><?php echo esc_html( $jws_lib_card['meta'] ); ?></span>
 										<?php endif; ?>
 									</a>
 									<label class="jws-lib__tick">

@@ -163,16 +163,16 @@ $jws_vid_status = array(
 								<img src="<?php echo esc_url( $jws_vid_thumb ); ?>" alt="" loading="lazy" decoding="async">
 							<?php endif; ?>
 							<?php if ( in_array( $jws_vid_livest, array( 'yes', '1' ), true ) ) : ?>
-								<span class="jws-vid__live"><?php esc_html_e( 'Live', 'jws_streamvid' ); ?></span>
+								<span class="jws-vid__live fs-small"><?php esc_html_e( 'Live', 'jws_streamvid' ); ?></span>
 							<?php endif; ?>
 							<?php if ( $jws_vid_length ) : ?>
-								<span class="jws-vid__length"><?php echo esc_html( $jws_vid_length ); ?></span>
+								<span class="jws-vid__length fs-small"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php echo esc_html( $jws_vid_length ); ?></span>
 							<?php endif; ?>
 						</span>
-						<h6 class="jws-lib__title"><?php the_title(); ?></h6>
+						<h6 class="jws-lib__title fs-small"><?php the_title(); ?></h6>
 					</a>
 					<span class="jws-vid__meta">
-						<span class="jws-lib__meta">
+						<span class="jws-lib__meta fs-small">
 							<?php
 							/* translators: 1: number of views, 2: time since, such as "3 days" */
 							echo esc_html( sprintf( _n( '%1$s view · %2$s ago', '%1$s views · %2$s ago', $jws_vid_views, 'jws_streamvid' ), number_format_i18n( $jws_vid_views ), human_time_diff( get_post_time( 'U', true ), time() ) ) );

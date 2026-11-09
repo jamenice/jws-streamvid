@@ -109,15 +109,15 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 							<?php if ( $jws_pl_src ) : ?>
 								<img src="<?php echo esc_url( $jws_pl_src ); ?>" alt="" loading="lazy" decoding="async">
 							<?php endif; ?>
-							<span class="jws-pl__count">
+							<span class="jws-pl__count fs-small">
 								<i class="jws-icon-queue" aria-hidden="true"></i>
 								<?php echo esc_html( number_format_i18n( $jws_pl_term->count ) ); ?>
 							</span>
-							<span class="jws-pl__play"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php esc_html_e( 'Play All', 'jws_streamvid' ); ?></span>
+							<span class="jws-pl__play fs-small"><i class="jws-icon-play-circle" aria-hidden="true"></i><?php esc_html_e( 'Play All', 'jws_streamvid' ); ?></span>
 						</span>
-						<h6 class="jws-lib__title"><?php echo esc_html( $jws_pl_term->name ); ?></h6>
+						<h6 class="jws-lib__title fs-small"><?php echo esc_html( $jws_pl_term->name ); ?></h6>
 					</a>
-					<span class="jws-pl__meta">
+					<span class="jws-pl__meta fs-small">
 						<span class="jws-pl__privacy">
 							<i class="<?php echo 'private' === $jws_pl_status_key ? 'jws-icon-lock-key-fill' : 'jws-icon-globe-hemisphere-west-fill'; ?>" aria-hidden="true"></i>
 							<?php echo esc_html( $jws_pl_status[ $jws_pl_status_key ] ); ?>

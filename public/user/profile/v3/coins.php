@@ -119,8 +119,8 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 									<img src="<?php echo esc_url( $jws_coin_img ); ?>" alt="" loading="lazy" decoding="async">
 								<?php endif; ?>
 							</span>
-							<h6 class="jws-lib__title"><?php echo esc_html( $jws_coin_drama ? get_the_title( $jws_coin_drama ) : get_the_title( $jws_coin_ep ) ); ?></h6>
-							<span class="jws-lib__meta">
+							<h6 class="jws-lib__title fs-small"><?php echo esc_html( $jws_coin_drama ? get_the_title( $jws_coin_drama ) : get_the_title( $jws_coin_ep ) ); ?></h6>
+							<span class="jws-lib__meta fs-small">
 								<?php
 								/* translators: 1: episode number, 2: coins spent */
 								echo esc_html( sprintf( __( 'Episode %1$d · %2$s coins', 'jws_streamvid' ), (int) Jws_Drama_Wallet::episode_number( $jws_coin_ep ), number_format_i18n( abs( $jws_coin_row->delta ) ) ) );
