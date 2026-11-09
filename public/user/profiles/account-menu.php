@@ -129,7 +129,7 @@ if ( $jws_am_kid ) {
 									<?php echo Jws_Profiles_Front::avatar_img( $jws_am_p, 36, 'jws-am__avatar jws-am__avatar--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in avatar_img(). ?>
 									<span class="jws-am__switch-name"><?php echo esc_html( $jws_am_p->name ); ?></span>
 									<?php if ( $jws_am_p->has_pin ) : ?>
-										<svg class="jws-am__lock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+										<i class="jws-icon-lock-key-fill jws-am__lock" aria-hidden="true"></i>
 										<span class="screen-reader-text"><?php esc_html_e( '(PIN required)', 'jws_streamvid' ); ?></span>
 									<?php endif; ?>
 								</button>
@@ -140,7 +140,7 @@ if ( $jws_am_kid ) {
 			<?php endif; ?>
 			<?php if ( ! $jws_am_kid ) : ?>
 				<a class="jws-am__item jws-am__item--manage" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1, 'back' => $jws_am_here ) ) ); ?>">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg>
+					<i class="jws-icon-pencil-line" aria-hidden="true"></i>
 					<span><?php esc_html_e( 'Manage Profiles', 'jws_streamvid' ); ?></span>
 				</a>
 			<?php endif; ?>
@@ -171,7 +171,7 @@ if ( $jws_am_kid ) {
 	<div class="jws-am__group jws-am__group--end">
 		<?php if ( $jws_am_kid ) : ?>
 			<a class="jws-am__item jws-am__item--exit" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose' ) ); ?>">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4"></path><path d="M10 8l-4 4 4 4M6 12h10"></path></svg>
+				<i class="jws-icon-sign-out" aria-hidden="true"></i>
 				<span><?php esc_html_e( 'Exit Kids', 'jws_streamvid' ); ?></span>
 			</a>
 		<?php elseif ( $jws_am_logout ) : ?>

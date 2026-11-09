@@ -71,18 +71,18 @@ $jws_v3_titles = array(
 	'profile'         => __( 'Settings', 'jws_streamvid' ),
 );
 $jws_v3_icons = array(
-	'history'         => 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2',
-	'watchlist'       => 'M6 4h12v17l-6-4-6 4z',
-	'favorites'       => 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
-	'playlist'        => 'M4 6h12M4 12h12M4 18h8M17 15v6l4.5-3z',
-	'pay_per_view'    => 'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
-	'rented'          => 'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
-	'drama-coins'     => 'M5 7a7 3 0 1 0 14 0a7 3 0 1 0-14 0M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5',
-	'video'           => 'M5 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM17 10l4-2v8l-4-2',
-	'profiles'        => 'M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.5 3.6 5.5',
-	'subscriptions'   => 'M3 8l4 4 5-7 5 7 4-4-2 11H5z',
-	'devices_manager' => 'M3.5 4h11A1.5 1.5 0 0 1 16 5.5v8a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 2 13.5v-8A1.5 1.5 0 0 1 3.5 4zM6 19h6M18 9h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z',
-	'profile'         => 'M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1',
+	'history'         => 'jws-icon-eye',
+	'watchlist'       => 'jws-icon-bookmark-simple',
+	'favorites'       => 'jws-icon-heart',
+	'playlist'        => 'jws-icon-queue',
+	'pay_per_view'    => 'jws-icon-handbag',
+	'rented'          => 'jws-icon-handbag',
+	'drama-coins'     => 'jws-icon-coins',
+	'video'           => 'jws-icon-monitor-play',
+	'profiles'        => 'jws-icon-user-circle',
+	'subscriptions'   => 'jws-icon-crown-simple',
+	'devices_manager' => 'jws-icon-devices',
+	'profile'         => 'jws-icon-gear',
 );
 $jws_v3_purchase_tabs = array_values( array_intersect( array( 'rented', 'pay_per_view' ), array_keys( $jws_v3_items ) ) );
 $jws_v3_title         = '';
@@ -111,7 +111,7 @@ foreach ( $jws_v3_items as $jws_v3_id => $jws_v3_menu ) {
 	$jws_v3_groups[ $jws_v3_group ]['items'][ $jws_v3_id ] = array(
 		'label' => $jws_v3_label,
 		'href'  => $jws_v3_menu['url'] ? $jws_v3_menu['url'] : $jws_v3_profile->get_url( $jws_v3_id, $jws_v3_menu['parent'] ),
-		'icon'  => isset( $jws_v3_icons[ $jws_v3_id ] ) ? $jws_v3_icons[ $jws_v3_id ] : 'M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0',
+		'icon'  => isset( $jws_v3_icons[ $jws_v3_id ] ) ? $jws_v3_icons[ $jws_v3_id ] : 'jws-icon-list',
 		'on'    => $jws_v3_on,
 	);
 }
@@ -136,7 +136,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 	<div class="jws-pv3__bar">
 		<h1 class="jws-pv3__title"><?php echo esc_html( $jws_v3_title ); ?></h1>
 		<button type="button" class="jws-pv3__sections" aria-controls="jws-pv3-side" aria-expanded="false" hidden>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"></rect></svg>
+			<i class="jws-icon-squares-four" aria-hidden="true"></i>
 			<?php esc_html_e( 'Sections', 'jws_streamvid' ); ?>
 		</button>
 	</div>
@@ -145,7 +145,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 		<div class="jws-pv3__sheet-head">
 			<span class="jws-pv3__sheet-title"><?php esc_html_e( 'My account', 'jws_streamvid' ); ?></span>
 			<button type="button" class="jws-pv3__close">
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+				<i class="jws-icon-x" aria-hidden="true"></i>
 				<span class="screen-reader-text"><?php esc_html_e( 'Close', 'jws_streamvid' ); ?></span>
 			</button>
 		</div>
@@ -192,7 +192,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 					<span class="jws-pv3__group-label"><?php echo esc_html( $jws_v3_group['label'] ); ?></span>
 					<?php foreach ( $jws_v3_group['items'] as $jws_v3_id => $jws_v3_item ) : ?>
 						<a class="jws-pv3__link<?php echo $jws_v3_item['on'] ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_v3_item['href'] ); ?>"<?php echo $jws_v3_item['on'] ? ' aria-current="page"' : ''; ?>>
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<?php echo esc_attr( $jws_v3_item['icon'] ); ?>"></path></svg>
+							<i class="<?php echo esc_attr( $jws_v3_item['icon'] ); ?>" aria-hidden="true"></i>
 							<span><?php echo esc_html( $jws_v3_item['label'] ); ?></span>
 						</a>
 					<?php endforeach; ?>
@@ -202,7 +202,7 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 
 		<?php if ( ! $jws_v3_kids ) : ?>
 			<a class="jws-pv3__link jws-pv3__logout" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4"></path><path d="M10 8l-4 4 4 4M6 12h10"></path></svg>
+				<i class="jws-icon-sign-out" aria-hidden="true"></i>
 				<span><?php esc_html_e( 'Log out', 'jws_streamvid' ); ?></span>
 			</a>
 		<?php endif; ?>

@@ -75,7 +75,7 @@ class Jws_Streamvid_Profile {
        
        $items[ 'favorites' ] 	= array(
 			'title'			=>	esc_html__( 'Favorites', 'jws_streamvid' ),
-			'icon'			=>	'jws-icon-thumbs-up',
+			'icon'			=>	'jws-icon-heart',
 			'callback'		=>	function(){
 				jws_streamvid_load_template( 'user/profile/favorites.php' );
 			},

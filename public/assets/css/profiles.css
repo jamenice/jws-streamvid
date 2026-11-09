@@ -848,10 +848,8 @@
 		"side bar"
 		"side content";
 	align-items: start;
-	gap: 0 28px;
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 28px clamp(16px, 3vw, 40px) 64px;
+	gap: 0 30px;
+	padding: 40px var(--full-fd) 64px;
 	color: var(--body);
 }
 
@@ -1738,15 +1736,15 @@
 			"bar"
 			"side"
 			"content";
-		padding: 0 16px 48px;
+		padding: 0 var(--full-fd) 48px;
 	}
 
 	.jws-pv3__bar {
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		margin: 0 -16px 14px;
-		padding: 10px 16px;
+		margin: 0 calc(-1 * var(--full-fd)) 14px;
+		padding: 10px var(--full-fd);
 		border-bottom: 1px solid var(--border-color);
 		background: var(--background-body);
 	}
@@ -1872,8 +1870,8 @@
 
 	.jws-lib__chips {
 		flex-wrap: nowrap;
-		margin: 0 -16px;
-		padding: 0 16px;
+		margin: 0 calc(-1 * var(--full-fd));
+		padding: 0 var(--full-fd);
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
@@ -1932,9 +1930,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px 14px;
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 8px 16px;
+	padding: 8px var(--full-fd);
 }
 
 .jws-kids-bar__who {
@@ -2071,4 +2067,84 @@
 		max-height: 85vh;
 		border-radius: 20px 20px 0 0;
 	}
+}
+
+/* ------------------------------------------------------------------ *
+ * Theme icons (jws-icon-*, the theme's icon font)
+ * ------------------------------------------------------------------ */
+
+.jws-pf [class^="jws-icon-"],
+.jws-pv3 [class^="jws-icon-"],
+.jws-am [class^="jws-icon-"],
+.jws-kids-bar [class^="jws-icon-"] {
+	display: inline-block;
+	flex: 0 0 auto;
+	line-height: 1;
+	text-align: center;
+}
+
+.jws-pv3__link [class^="jws-icon-"] {
+	width: 20px;
+	font-size: 20px;
+}
+
+.jws-pv3__sections [class^="jws-icon-"],
+.jws-pf-btn [class^="jws-icon-"],
+.jws-lib__select [class^="jws-icon-"],
+.jws-lib__bar [class^="jws-icon-"] {
+	font-size: 18px;
+}
+
+.jws-pv3__close [class^="jws-icon-"],
+.jws-pf-close [class^="jws-icon-"] {
+	font-size: 22px;
+}
+
+.jws-lib__x [class^="jws-icon-"] {
+	font-size: 14px;
+}
+
+.jws-lib__empty-icon [class^="jws-icon-"] {
+	font-size: 30px;
+}
+
+.jws-pf-list__lock [class^="jws-icon-"] {
+	font-size: 16px;
+}
+
+.jws-pf-info > [class^="jws-icon-"] {
+	margin-top: 1px;
+	color: var(--main);
+	font-size: 20px;
+}
+
+.jws-pf-tile__overlay [class^="jws-icon-"] {
+	font-size: 32px;
+}
+
+.jws-pf-tile__lock [class^="jws-icon-"] {
+	font-size: 16px;
+}
+
+.jws-pf-tile--add .jws-pf-tile__art [class^="jws-icon-"] {
+	font-size: 44px;
+}
+
+.jws-am .jws-am__lock {
+	padding: 3px;
+	font-size: 11px;
+}
+
+.jws-am__item--manage [class^="jws-icon-"],
+.jws-am__item--exit [class^="jws-icon-"] {
+	width: 20px;
+	font-size: 18px;
+}
+
+.jws-kids-bar__notice > [class^="jws-icon-"] {
+	font-size: 20px;
+}
+
+.jws-kids-bar__dismiss [class^="jws-icon-"] {
+	font-size: 16px;
 }

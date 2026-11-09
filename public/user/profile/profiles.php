@@ -53,7 +53,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 
 		<?php if ( Jws_Profiles::can_create( $jws_pt_user ) ) : ?>
 			<a class="jws-pf-btn" href="<?php echo esc_url( Jws_Profiles_Front::url( 'add' ) ); ?>">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+				<i class="jws-icon-plus" aria-hidden="true"></i>
 				<?php esc_html_e( 'Add Profile', 'jws_streamvid' ); ?>
 			</a>
 		<?php endif; ?>
@@ -99,7 +99,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 					<?php if ( $jws_pt_locked ) : ?>
 						<?php esc_html_e( 'Not on your plan', 'jws_streamvid' ); ?>
 					<?php elseif ( $jws_pt_p->has_pin ) : ?>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+						<i class="jws-icon-lock-key-fill" aria-hidden="true"></i>
 						<?php esc_html_e( 'PIN on', 'jws_streamvid' ); ?>
 					<?php else : ?>
 						<?php esc_html_e( 'No PIN', 'jws_streamvid' ); ?>
@@ -128,7 +128,7 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 	<?php endif; ?>
 
 	<div class="jws-pf-info">
-		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
+		<i class="jws-icon-info-light" aria-hidden="true"></i>
 		<p>
 			<?php esc_html_e( 'Your membership, purchased and rented titles, and signed-in devices are shared by every profile on this account. Each profile has its own history, Watchlist and Favorites.', 'jws_streamvid' ); ?>
 			<?php if ( $jws_pt_upgrade ) : ?>

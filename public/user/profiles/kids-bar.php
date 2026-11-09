@@ -34,10 +34,10 @@ if ( ! $jws_kb_kids && ! $jws_kb_message ) {
 
 	<?php if ( $jws_kb_message ) : ?>
 		<div class="jws-kids-bar__notice" role="status">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
+			<i class="jws-icon-info-light" aria-hidden="true"></i>
 			<span><?php echo esc_html( $jws_kb_message ); ?></span>
 			<a class="jws-kids-bar__dismiss" href="<?php echo esc_url( remove_query_arg( 'jws_blocked' ) ); ?>">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+				<i class="jws-icon-x" aria-hidden="true"></i>
 				<span class="screen-reader-text"><?php esc_html_e( 'Dismiss', 'jws_streamvid' ); ?></span>
 			</a>
 		</div>

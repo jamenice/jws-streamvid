@@ -42,9 +42,9 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 			$jws_pf_badge  = '';
 
 			if ( $jws_pf_manage ) {
-				$jws_pf_badge = '<span class="jws-pf-tile__overlay" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg></span>';
+				$jws_pf_badge = '<span class="jws-pf-tile__overlay" aria-hidden="true"><i class="jws-icon-pencil-line" aria-hidden="true"></i></span>';
 			} elseif ( $jws_pf_locked || $jws_pf_p->has_pin ) {
-				$jws_pf_badge = '<span class="jws-pf-tile__lock" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span>';
+				$jws_pf_badge = '<span class="jws-pf-tile__lock" aria-hidden="true"><i class="jws-icon-lock-key-fill" aria-hidden="true"></i></span>';
 			}
 			?>
 			<li class="jws-pf-tile<?php echo $jws_pf_locked ? ' is-locked' : ''; ?><?php echo $jws_pf_p->is_kid ? ' is-kid' : ''; ?>">
@@ -99,7 +99,7 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 			<li class="jws-pf-tile jws-pf-tile--add">
 				<a class="jws-pf-tile__btn" href="<?php echo esc_url( Jws_Profiles_Front::url( 'add' ) ); ?>">
 					<span class="jws-pf-tile__art">
-						<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+						<i class="jws-icon-plus" aria-hidden="true"></i>
 					</span>
 					<span class="jws-pf-tile__name"><?php esc_html_e( 'Add Profile', 'jws_streamvid' ); ?></span>
 				</a>

@@ -21,7 +21,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 <section class="jws-pf-card jws-pf-pin" aria-labelledby="jws-pf-title">
 
 	<a class="jws-pf-close" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_pf_back ) ) ); ?>">
-		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+		<i class="jws-icon-x" aria-hidden="true"></i>
 		<span class="screen-reader-text"><?php esc_html_e( 'Back to profiles', 'jws_streamvid' ); ?></span>
 	</a>
 

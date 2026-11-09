@@ -58,7 +58,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 			<?php if ( $jws_lib_items ) : ?>
 				<div class="jws-lib__actions">
 					<label for="jws-lib-select" class="jws-pf-btn jws-pf-btn--ghost jws-lib__select">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8.5 12l2.5 2.5 4.5-5"></path></svg>
+						<i class="jws-icon-check-square" aria-hidden="true"></i>
 						<?php esc_html_e( 'Select', 'jws_streamvid' ); ?>
 					</label>
 					<?php if ( 'history' === $jws_lib_tab ) : ?>
@@ -122,7 +122,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 										</span>
 									</label>
 									<button type="submit" name="remove_one" value="<?php echo (int) $jws_lib_item['id']; ?>" class="jws-lib__x">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+										<i class="jws-icon-x" aria-hidden="true"></i>
 										<span class="screen-reader-text">
 											<?php
 											/* translators: %s: title */
@@ -154,14 +154,14 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 				</span>
 				<label for="jws-lib-select" class="jws-pf-btn jws-pf-btn--ghost"><?php esc_html_e( 'Cancel', 'jws_streamvid' ); ?></label>
 				<button type="submit" name="remove_selected" value="1" class="jws-pf-btn jws-pf-btn--danger">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+					<i class="jws-icon-trash" aria-hidden="true"></i>
 					<?php esc_html_e( 'Remove selected', 'jws_streamvid' ); ?>
 				</button>
 			</div>
 		<?php else : ?>
 			<div class="jws-lib__empty">
 				<span class="jws-lib__empty-icon" aria-hidden="true">
-					<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M10 9.5v5l4-2.5z"></path></svg>
+					<i class="jws-icon-play-circle" aria-hidden="true"></i>
 				</span>
 				<h2><?php echo esc_html( $jws_lib_copy[1] ); ?></h2>
 				<p><?php echo esc_html( $jws_lib_copy[2] ); ?></p>
