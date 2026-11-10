@@ -753,7 +753,8 @@ class Jws_Profiles_Front {
 
 		$v3 = is_author() && function_exists( 'jws_theme_get_option' ) && 'v3' === jws_theme_get_option( 'profile_layout' );
 
-		// The header menu needs the styles on every page for logged-in users; the V3 profile page for everyone.
+		// profiles.css: the header menu, Kids bar and "Who's watching?" modal, on every page for logged-in users.
+		// profile-page.css: the profile page, added below. The V3 profile page loads both for everyone.
 		if ( ! is_user_logged_in() && ! $v3 ) {
 			return;
 		}
@@ -766,6 +767,18 @@ class Jws_Profiles_Front {
 			array(),
 			file_exists( $css ) ? (string) filemtime( $css ) : JWS_STREAMVID_VERSION
 		);
+
+		// The profile page and its tabs, on profile pages only (the Profiles tab is on every Profile Version).
+		if ( is_author() ) {
+			$page_css = JWS_STREAMVID_PATH_PUBLIC . '/assets/css/profile-page.css';
+
+			wp_enqueue_style(
+				'jws-profile-page',
+				JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/profile-page.css',
+				array( 'jws-profiles' ),
+				file_exists( $page_css ) ? (string) filemtime( $page_css ) : JWS_STREAMVID_VERSION
+			);
+		}
 
 		// Header account menu on phones: placed under the avatar, also with a sticky header.
 		if ( is_user_logged_in() ) {
