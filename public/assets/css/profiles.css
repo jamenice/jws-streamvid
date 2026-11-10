@@ -499,19 +499,23 @@ html.jws-pfm-busy {
 }
 
 /* ------------------------------------------------------------------ *
- * Add / edit profile
+ * Add / edit profile (one compact form; Save stays in view)
  * ------------------------------------------------------------------ */
 
 .jws-pf-edit {
-	max-width: 760px;
+	max-width: 640px;
 	margin: 0 auto;
+}
+
+.jws-pf-edit .jws-pf__title {
+	margin-bottom: 8px;
 }
 
 .jws-pf-form {
 	display: flex;
 	flex-direction: column;
-	gap: 24px;
-	margin-top: 16px;
+	gap: 18px;
+	margin-top: 20px;
 }
 
 .jws-pf-form--tight {
@@ -561,8 +565,76 @@ html.jws-pfm-busy {
 	letter-spacing: 0.4em;
 }
 
+/* Avatar and name on one row; the avatar opens the choices below. */
+.jws-pf-ident {
+	display: flex;
+	align-items: flex-end;
+	gap: 18px;
+}
+
+.jws-pf-ident__name {
+	flex: 1;
+}
+
+.jws-pf-avatar-btn {
+	position: relative;
+	flex: 0 0 88px;
+	width: 88px;
+	height: 88px;
+	padding: 0;
+	border: 0;
+	border-radius: 16px;
+	background: none;
+	cursor: pointer;
+}
+
+.jws-pf-avatar-btn__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 16px;
+	object-fit: cover;
+}
+
+.jws-pf-avatar-btn__edit {
+	position: absolute;
+	inset-inline-end: -6px;
+	bottom: -6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border: 2px solid var(--background-body);
+	border-radius: 50%;
+	background: var(--main);
+	color: var(--btn-color);
+}
+
+.jws-pf-avatar-btn:hover .jws-pf-avatar-btn__img,
+.jws-pf-avatar-btn[aria-expanded="true"] .jws-pf-avatar-btn__img {
+	outline: 3px solid var(--main);
+	outline-offset: 2px;
+}
+
+.jws-pf-avatar-btn:focus-visible {
+	outline: 3px solid var(--main);
+	outline-offset: 4px;
+}
+
+.jws-pf-avatars[hidden] {
+	display: none;
+}
+
+.jws-pf-avatars {
+	padding: 16px;
+	border: 1px solid var(--border-color);
+	border-radius: 16px;
+	background: var(--background-item);
+}
+
 .jws-pf-avatars__label {
-	margin: 8px 0 0;
+	margin: 4px 0 0;
 	color: var(--body2);
 	font-size: var(--jws-pf-fs-xs);
 	font-weight: 700;
@@ -572,8 +644,8 @@ html.jws-pfm-busy {
 
 .jws-pf-avatars__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+	gap: 10px;
 }
 
 .jws-pf-avatar-opt {
@@ -603,24 +675,73 @@ html.jws-pfm-busy {
 	outline-color: var(--border-color2);
 }
 
-
-
 .jws-pf-avatar-opt input:checked+img {
 	outline-color: var(--main);
 }
 
+.jws-pf-avatar-opt input:focus-visible+img {
+	outline-color: var(--main);
+	outline-style: dashed;
+}
+
+/* A block of related settings. */
+.jws-pf-group {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding: 18px;
+	border: 1px solid var(--border-color);
+	border-radius: 16px;
+	background: var(--background-item);
+}
+
+/* Switches: the checkbox drawn as a track and knob. */
 .jws-pf-toggle {
 	flex-direction: row;
 	align-items: flex-start;
-	gap: 12px;
+	gap: 14px;
 }
 
 .jws-pf-toggle input {
-	flex: 0 0 auto;
-	width: 22px;
-	height: 22px;
-	margin: 2px 0 0;
-	accent-color: var(--main);
+	appearance: none;
+	position: relative;
+	flex: 0 0 44px;
+	width: 44px;
+	height: 26px;
+	margin: 0;
+	border-radius: 999px;
+	background: var(--border-color2);
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.jws-pf-toggle input::before {
+	content: "";
+	position: absolute;
+	top: 3px;
+	inset-inline-start: 3px;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--light);
+	transition: transform 0.2s;
+}
+
+.jws-pf-toggle input:checked {
+	background: var(--main);
+}
+
+.jws-pf-toggle input:checked::before {
+	transform: translateX(18px);
+}
+
+[dir="rtl"] .jws-pf-toggle input:checked::before {
+	transform: translateX(-18px);
+}
+
+.jws-pf-toggle input:focus-visible {
+	outline: 3px solid var(--main);
+	outline-offset: 2px;
 }
 
 .jws-pf-toggle label {
@@ -631,67 +752,127 @@ html.jws-pfm-busy {
 }
 
 .jws-pf-toggle__title {
+	margin: 0;
 	color: var(--heading);
 }
 
-.jws-pf-toggle .jws-pf-help {
+.jws-pf-toggle .jws-pf-help,
+.jws-pf-group>.jws-pf-help {
 	margin: 0;
 }
 
-.jws-pf-radio {
+/* Maturity: one chip per level, on as few rows as fit. */
+.jws-pf-maturity .jws-pf-help {
+	margin: 0;
+}
+
+.jws-pf-choices {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	min-height: 40px;
-	color: var(--body);
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.jws-pf-choice {
+	position: relative;
 	cursor: pointer;
 }
 
-/* Drawn, not native: a native radio on the dark background reads filled when off. */
-.jws-pf-radio input {
-	appearance: none;
-	display: grid;
-	place-content: center;
-	flex: 0 0 auto;
-	width: 22px;
-	height: 22px;
+.jws-pf-choice input {
+	position: absolute;
+	inset: 0;
 	margin: 0;
-	border: 2px solid var(--border-color2);
-	border-radius: 50%;
-	background: transparent;
+	opacity: 0;
 	cursor: pointer;
 }
 
-.jws-pf-radio input::before {
-	content: "";
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-	background: var(--main);
-	transform: scale(0);
-	transition: transform 0.15s;
+.jws-pf-choice span {
+	display: inline-flex;
+	align-items: center;
+	min-height: 38px;
+	padding: 0 14px;
+	border: 1px solid var(--border-color2);
+	border-radius: 999px;
+	color: var(--body);
+	font-size: var(--font-size-sm);
+	transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
-.jws-pf-radio input:checked {
+.jws-pf-choice:hover span {
 	border-color: var(--main);
 }
 
-.jws-pf-radio input:checked::before {
-	transform: scale(1);
+.jws-pf-choice input:checked+span {
+	border-color: var(--main);
+	background: color-mix(in srgb, var(--main) 20%, transparent);
+	color: var(--heading);
 }
 
-.jws-pf-radio input:focus-visible {
+.jws-pf-choice input:focus-visible+span {
 	outline: 3px solid var(--main);
 	outline-offset: 2px;
 }
 
-.jws-pf-radio:has(input:checked) {
-	color: var(--heading);
+/* A Kids profile cannot pick the adult ratings. */
+.jws-pf-form:has(#jws-pf-kid:checked) .jws-pf-choice.is-adult-only {
+	display: none;
 }
 
-/* A Kids profile cannot pick the adult ratings. */
-.jws-pf-form:has(#jws-pf-kid:checked) .jws-pf-radio.is-adult-only {
+/*
+ * Profile Lock: the PIN shows once the switch is on; the account password
+ * once a PIN is typed, or when an existing lock is being turned off.
+ */
+.jws-pf-lock__fields {
 	display: none;
+	flex-wrap: wrap;
+	gap: 14px 18px;
+}
+
+.jws-pf-lock:has(#jws-pf-lock:checked) .jws-pf-lock__fields,
+.jws-pf-lock.has-pin .jws-pf-lock__fields,
+.jws-pf-lock.is-open .jws-pf-lock__fields {
+	display: flex;
+}
+
+.jws-pf-lock.has-pin:not(:has(#jws-pf-lock:checked)) .jws-pf-lock__pin {
+	display: none;
+}
+
+.jws-pf-lock__pin {
+	flex: 0 0 auto;
+}
+
+.jws-pf-lock__pass {
+	display: none;
+	flex: 1 1 220px;
+}
+
+.jws-pf-lock:has(#jws-pf-new-pin:not(:placeholder-shown)) .jws-pf-lock__pass,
+.jws-pf-lock.has-pin:not(:has(#jws-pf-lock:checked)) .jws-pf-lock__pass,
+.jws-pf-lock.is-open .jws-pf-lock__pass {
+	display: flex;
+}
+
+.jws-pf-lock__pass .jws-pf-help {
+	margin: 0;
+}
+
+.jws-pf-lock__fields>.jws-pf-msg {
+	flex-basis: 100%;
+	margin: 0;
+}
+
+/* Save and Cancel stay at the bottom of the modal while the form scrolls. */
+.jws-pf-savebar {
+	position: sticky;
+	bottom: 0;
+	z-index: 2;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 0 -16px;
+	padding: 14px 16px;
+	border-top: 1px solid var(--border-color);
+	background: var(--background-body);
 }
 
 .jws-pf-section {
@@ -705,12 +886,26 @@ html.jws-pfm-busy {
 	color: var(--heading);
 }
 
+/* Deleting: one quiet line under the form, a confirm box when opened. */
+.jws-pf-confirm {
+	margin-top: 22px;
+}
+
 .jws-pf-confirm summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--jws-pf-danger);
+	cursor: pointer;
 	list-style: none;
 }
 
 .jws-pf-confirm summary::-webkit-details-marker {
 	display: none;
+}
+
+.jws-pf-confirm summary:hover {
+	text-decoration: underline;
 }
 
 .jws-pf-confirm[open] summary {
@@ -726,6 +921,24 @@ html.jws-pfm-busy {
 .jws-pf-confirm p {
 	margin: 0 0 12px;
 	color: var(--heading);
+}
+
+@media (max-width: 767px) {
+
+	.jws-pf-ident {
+		align-items: center;
+		gap: 14px;
+	}
+
+	.jws-pf-avatar-btn {
+		flex-basis: 72px;
+		width: 72px;
+		height: 72px;
+	}
+
+	.jws-pf-group {
+		padding: 14px;
+	}
 }
 
 /* ------------------------------------------------------------------ *

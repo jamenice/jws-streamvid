@@ -366,6 +366,14 @@ class Jws_Profiles_Front {
 
 				self::$posted = $data;
 
+				// Profile Lock is part of this form: check it first, so a wrong password saves nothing.
+				$lock = self::lock_change( $user_id, $profile_id );
+
+				if ( is_wp_error( $lock ) ) {
+					self::$errors['pin'] = $lock->get_error_message();
+					return;
+				}
+
 				$result = $profile_id
 					? Jws_Profiles::update( $user_id, $profile_id, $data )
 					: Jws_Profiles::create( $user_id, $data );
@@ -373,6 +381,15 @@ class Jws_Profiles_Front {
 				if ( is_wp_error( $result ) ) {
 					self::$errors[ self::error_field( $result ) ] = $result->get_error_message();
 					return;
+				}
+
+				if ( null !== $lock ) {
+					$locked = Jws_Profiles::set_pin( $user_id, $result->id, $lock['pin'], $lock['password'] );
+
+					if ( is_wp_error( $locked ) ) {
+						// The profile is saved; show the lock error on its edit screen.
+						self::go( self::url( 'edit', $result->id, array( 'notice' => 'pin_failed' ) ) );
+					}
 				}
 
 				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
@@ -426,6 +443,57 @@ class Jws_Profiles_Front {
 		self::$errors[''] = __( 'Something went wrong. Try again.', 'jws_streamvid' );
 	}
 
+	/**
+	 * The Profile Lock part of the add / edit form (sent with lock_form=1):
+	 * what to do with the PIN once the profile is saved.
+	 *
+	 * @return array|null|WP_Error array( pin, password ): pin '' turns the lock
+	 *                             off; null leaves it as it is; WP_Error when
+	 *                             the PIN or the account password is wrong.
+	 */
+	private static function lock_change( $user_id, $profile_id ) {
+
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- handle_post() verified the nonce.
+		if ( empty( $_POST['lock_form'] ) ) {
+			return null;
+		}
+
+		$wanted   = ! empty( $_POST['lock_pin'] );
+		$pin      = isset( $_POST['new_pin'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['new_pin'] ) ) ) : '';
+		$password = isset( $_POST['account_password'] ) ? (string) wp_unslash( $_POST['account_password'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- passwords are compared, never stored or printed.
+		// phpcs:enable
+
+		$profile = $profile_id ? Jws_Profiles::get( $user_id, $profile_id ) : null;
+		$has_pin = $profile && $profile->has_pin;
+
+		self::$posted['lock_pin'] = $wanted;
+
+		if ( ! $wanted ) {
+			if ( ! $has_pin ) {
+				return null;
+			}
+			$pin = '';
+		} elseif ( '' === $pin ) {
+			if ( $has_pin ) {
+				return null;
+			}
+			return new WP_Error( 'profile_pin_format', __( 'Enter a 4-digit PIN, or turn Profile Lock off.', 'jws_streamvid' ) );
+		} elseif ( ! preg_match( '/^\d{4}$/', $pin ) ) {
+			return new WP_Error( 'profile_pin_format', __( 'The PIN must be 4 digits.', 'jws_streamvid' ) );
+		}
+
+		$checked = Jws_Profiles::check_account_password( $user_id, $password );
+
+		if ( is_wp_error( $checked ) ) {
+			return $checked;
+		}
+
+		return array(
+			'pin'      => $pin,
+			'password' => $password,
+		);
+	}
+
 	/** Which form field an error from Jws_Profiles belongs to. */
 	private static function error_field( WP_Error $error ) {
 
@@ -467,6 +535,7 @@ class Jws_Profiles_Front {
 			'deleted'     => __( 'Profile deleted.', 'jws_streamvid' ),
 			'pin_saved'   => __( 'Profile Lock is on.', 'jws_streamvid' ),
 			'pin_removed' => __( 'Profile Lock is off.', 'jws_streamvid' ),
+			'pin_failed'  => __( 'The profile is saved, but Profile Lock did not change. Try again.', 'jws_streamvid' ),
 			'limit'       => __( 'Your plan has no room for another profile.', 'jws_streamvid' ),
 			'kids'        => __( 'Switch to an adult profile to manage profiles.', 'jws_streamvid' ),
 		);

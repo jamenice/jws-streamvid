@@ -1063,7 +1063,13 @@ class Jws_Profiles {
 		return 'jws_pin_tries_' . (int) $user_id . '_' . (int) $profile_id;
 	}
 
-	private static function check_account_password( $user_id, $password ) {
+	/**
+	 * Checks the account password that guards PIN changes. Public so a form
+	 * can check it before saving anything else.
+	 *
+	 * @return true|WP_Error profile_password_unset or profile_password.
+	 */
+	public static function check_account_password( $user_id, $password ) {
 
 		$user = get_userdata( $user_id );
 

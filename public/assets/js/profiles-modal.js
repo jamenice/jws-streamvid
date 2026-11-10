@@ -307,6 +307,36 @@
 		load( action.href, { method: 'POST', body: data, action: data.get( 'jws_profiles_action' ) } );
 	} );
 
+	// Add / edit: the avatar button shows or hides the choices; picking one updates the button.
+	document.addEventListener( 'click', function ( event ) {
+		var button = event.target.closest && event.target.closest( '.jws-pf-avatar-btn' );
+		var list = button && document.getElementById( button.getAttribute( 'aria-controls' ) );
+
+		if ( ! list ) {
+			return;
+		}
+		list.hidden = ! list.hidden;
+		button.setAttribute( 'aria-expanded', list.hidden ? 'false' : 'true' );
+		if ( ! list.hidden ) {
+			var picked = list.querySelector( 'input:checked' ) || list.querySelector( 'input' );
+
+			if ( picked ) {
+				picked.focus( { preventScroll: true } );
+			}
+		}
+	} );
+
+	document.addEventListener( 'change', function ( event ) {
+		var input = event.target;
+		var choice = 'avatar' === input.name && input.closest( '.jws-pf-avatar-opt' );
+		var preview = choice && input.form && input.form.querySelector( '.jws-pf-avatar-btn__img' );
+		var image = choice && choice.querySelector( 'img' );
+
+		if ( preview && image ) {
+			preview.src = image.src;
+		}
+	} );
+
 	document.addEventListener( 'keydown', function ( event ) {
 		if ( ! modal || modal.hidden ) {
 			return;
@@ -346,10 +376,13 @@
 	// The gate first; else a screen named in the address (a direct visit to a screen URL comes back here).
 	var named = window.location.hash.match( /^#jws-profiles=(.+)$/ );
 
+	if ( named ) {
+		window.history.replaceState( window.history.state, '', here() );
+	}
+
 	if ( config.gate ) {
 		open( config.gate, true );
 	} else if ( named ) {
-		window.history.replaceState( window.history.state, '', here() );
 		open( decodeURIComponent( named[ 1 ] ), false );
 	}
 }() );
