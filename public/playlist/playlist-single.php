@@ -24,7 +24,8 @@ if(!empty($playlist_type)) {
 if(isset($term)) :
 
 $status = get_term_meta( $id , 'status', true);
-$thumbnail = get_term_meta( $id, 'playlist_image', true);
+// Cover: the newest title's image (playlists have no image of their own).
+$thumbnail = jws_streamvid()->get()->playlist->cover_image_id( $id, $playlist_type );
 
 $count = $term->count;
 $query = jws_streamvid()->get()->playlist->playlist_query($id,$playlist_type,$post_type); 
@@ -39,11 +40,16 @@ $playlist_all = jws_streamvid()->get()->playlist->playlist_url_all($id,$playlist
             <div class="playlist-background ratio_16x9">
                 <a href="<?php echo esc_url($playlist_all); ?>">      
                     <?php 
-                        $image = jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full'));
-                        echo !empty($image) ? $image : '';
+                        // No placeholder when no title has an image.
+                        if ( $thumbnail ) {
+                            echo jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from jws_image_advanced().
+                        }
                    
-                      printf( '<div class="content-hover"><div><i class="jws-icon-play-circle"></i>%s</div></div>',
-                      esc_html__('Play All','jws_streamvid')); 
+                      // Nothing to play in an empty playlist.
+                      if ( $count ) {
+                          printf( '<div class="content-hover"><div><i class="jws-icon-play-circle"></i>%s</div></div>',
+                          esc_html__('Play All','jws_streamvid')); 
+                      }
                    ?> 
                </a>  
             </div>

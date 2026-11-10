@@ -719,12 +719,6 @@ class Jws_Streamvid {
 			'set_item_playlist'
 	   );
        
-       $this->loader->add_action( 
-			'wp_ajax_set_image_playlist_from_post', 
-			$this->plugin_action->playlist, 
-			'set_image_playlist_from_post'
-	   );
-       
        
        $this->loader->add_action( 
 			'wp_ajax_get_save_to_playlist', 

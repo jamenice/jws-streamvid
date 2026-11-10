@@ -37,7 +37,7 @@ $i = 0;
         
         foreach($terms as $term) {
             $status = get_term_meta( $term->term_id, 'status', true);
-            $thumbnail = get_term_meta( $term->term_id, 'playlist_image', true);
+            $thumbnail = jws_streamvid()->get()->playlist->cover_image_id( $term->term_id, $taxonomy );
             $type2 = get_term_meta( $term->term_id, 'type', true);
             $url =  add_query_arg( 
              array(  
@@ -69,8 +69,9 @@ $i = 0;
                     <div class="playlist-thumbnail">
                         <a class="ratio_16x9" href="<?php echo esc_url($playlist_all); ?>">
                         <?php 
-                            $image = jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full'));
-                            echo !empty($image) ? $image : '';
+                            if ( $thumbnail ) {
+                                echo jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from jws_image_advanced().
+                            }
                         ?>
                     
                             <?php

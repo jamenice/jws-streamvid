@@ -73,7 +73,6 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 				<?php
 				$jws_pl_status_key = get_term_meta( $jws_pl_term->term_id, 'status', true );
 				$jws_pl_status_key = isset( $jws_pl_status[ $jws_pl_status_key ] ) ? $jws_pl_status_key : 'public';
-				$jws_pl_image      = (int) get_term_meta( $jws_pl_term->term_id, 'playlist_image', true );
 				$jws_pl_play       = $jws_pl_class->playlist_url_all( $jws_pl_term->term_id, $jws_pl_tab, $jws_pl_posttype[ $jws_pl_tab ] );
 				$jws_pl_edit       = add_query_arg(
 					array(
@@ -83,24 +82,8 @@ $jws_pl_terms = isset( $jws_pl_lists[ $jws_pl_tab ] ) ? $jws_pl_lists[ $jws_pl_t
 					$jws_pl_page
 				);
 
-				// No cover chosen: use the newest title in the playlist.
-				if ( ! $jws_pl_image && $jws_pl_term->count ) {
-					$jws_pl_first = get_posts(
-						array(
-							'post_type'      => $jws_pl_posttype[ $jws_pl_tab ],
-							'posts_per_page' => 1,
-							'fields'         => 'ids',
-							'no_found_rows'  => true,
-							'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-								array(
-									'taxonomy' => $jws_pl_tab,
-									'terms'    => $jws_pl_term->term_id,
-								),
-							),
-						)
-					);
-					$jws_pl_image = $jws_pl_first ? (int) get_post_thumbnail_id( $jws_pl_first[0] ) : 0;
-				}
+				// Cover: the newest title's image (playlists have no image of their own).
+				$jws_pl_image = $jws_pl_class->cover_image_id( $jws_pl_term->term_id, $jws_pl_tab );
 				$jws_pl_src = $jws_pl_image ? wp_get_attachment_image_url( $jws_pl_image, 'medium_large' ) : '';
 				?>
 				<li class="jws-pl__item">

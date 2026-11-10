@@ -213,47 +213,6 @@ class Jws_Streamvid_Playlist {
 
             update_term_meta( $term_id, 'status', $status );
             
-            if( isset( $_FILES[ 'playlist_image' ]['error'] ) && $_FILES[ 'playlist_image' ]['error'] == 0 ){ 
-                 $file = $_FILES[ 'playlist_image' ];
-                 
-                  if( $file['error'] != 0 ){
-                    $errors->add(
-                        'file_broken',
-                        esc_html__( 'File was not found or broken', 'jws_streamvid' )
-                    );            
-                }
-                 
-                 $type = array_key_exists( 'type' , $file ) ? $file['type'] : '';
-                 if ( 0 !== strpos( $type, 'image/' ) ) {
-                    $errors->add( 
-                        'file_not_accepted', 
-                        esc_html__( 'File format is not accepted.', 'jws_streamvid' )
-                    );
-                }
-                $max_size = jws_get_max_upload_image_size();
-                    
-                if( $file['size'] > $max_size ){
-                    $errors->add( 
-                        'file_size_not_allowed',
-                        sprintf(
-                            esc_html__( 'File size has to be smaller than %s', 'jws_streamvid' ),
-                            size_format( $max_size )
-                        )
-                    );                    
-                }
-              
-                if( $errors->get_error_code() ){
-                    return $errors;
-                } 
-                      
-                $attachment_id = media_handle_upload( 'playlist_image', 0, array( '' ), array('test_form' => FALSE) );
-          
-                if( ! is_wp_error( $attachment_id ) ){
-                    update_term_meta( $term_id, 'playlist_image', $attachment_id );
-                }
-        
-                return $attachment_id; 
-            }
  
 
         }
@@ -292,47 +251,6 @@ class Jws_Streamvid_Playlist {
 
             update_term_meta( $term['term_id'], 'status', $status );
             
-            if( isset( $_FILES[ 'playlist_image' ]['error'] ) && $_FILES[ 'playlist_image' ]['error'] == 0 ){ 
-                 $file = $_FILES[ 'playlist_image' ];
-                 
-                  if( $file['error'] != 0 ){
-                    $errors->add(
-                        'file_broken',
-                        esc_html__( 'File was not found or broken', 'jws_streamvid' )
-                    );            
-                }
-                 
-                 $type = array_key_exists( 'type' , $file ) ? $file['type'] : '';
-                 if ( 0 !== strpos( $type, 'image/' ) ) {
-                    $errors->add( 
-                        'file_not_accepted', 
-                        esc_html__( 'File format is not accepted.', 'jws_streamvid' )
-                    );
-                }
-                $max_size = jws_get_max_upload_image_size();
-                    
-                if( $file['size'] > $max_size ){
-                    $errors->add( 
-                        'file_size_not_allowed',
-                        sprintf(
-                            esc_html__( 'File size has to be smaller than %s', 'jws_streamvid' ),
-                            size_format( $max_size )
-                        )
-                    );                    
-                }
-              
-                if( $errors->get_error_code() ){
-                    return $errors;
-                } 
-                      
-                $attachment_id = media_handle_upload( 'playlist_image', 0, array( '' ), array('test_form' => FALSE) );
-          
-                if( ! is_wp_error( $attachment_id ) ){
-                    update_term_meta( $term['term_id'], 'playlist_image', $attachment_id );
-                }
-        
-                return $attachment_id; 
-            }
  
 
         }
@@ -623,11 +541,8 @@ class Jws_Streamvid_Playlist {
        
        extract( $args );
        
-       $thumbnail = get_term_meta( $term_id , 'playlist_image', true); 
        $status = get_term_meta( $term_id , 'status', true);
        $term = get_term( $term_id, $playlist_type ); 
-       $max_size = jws_get_max_upload_image_size();
-       
        ?>
         
         <div id="<?php echo $type; ?>-playlist" class="mfp-hide">
@@ -716,24 +631,6 @@ class Jws_Streamvid_Playlist {
             
             </p>
             
-            <div class="field-item">
-                <label class="has-des" for="playlist_image"><?php echo esc_html__('Playlist Thumbnail','jws_streamvid'); ?></label>
-                  <?php
-                    printf(
-                        '<div class="note-max-size">'.esc_html__( 'Support *.png, *.jpeg, *.gif, *.jpg. Maximun upload file size: ' , 'jws_streamvid' ).'%smb.</div>',
-                        number_format_i18n( ceil( $max_size/1048576 ) )
-                    );
-                 ?>
-                <div class="file-thumbnail">
-                     <?php 
-                       if($thumbnail) {
-                            $image = jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full'));
-                            echo !empty($image) ? $image : '';
-                       }  
-                    ?>
-                </div>
-                <input id="playlist_image" type="file" name="playlist_image" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff">
-            </div>
                                    
             <input type="hidden" name="term_id" value="<?php echo esc_attr( $term_id ); ?>">
             <input type="hidden" name="post_id" value="0">
@@ -754,70 +651,45 @@ class Jws_Streamvid_Playlist {
     }
     
     
-    public function set_image_playlist_from_post(){ 
-       
-        $args = wp_parse_args( $_POST, array(
-            'post_id'   =>  0,
-            'term_id'   =>  0
+    /**
+     * The playlist's cover: the featured image of its newest title that has
+     * one. Playlists have no image of their own; one set before (term meta
+     * playlist_image) is no longer used.
+     *
+     * @param int    $term_id  Playlist.
+     * @param string $taxonomy Playlist taxonomy (videos_playlist, movies_playlist, ...).
+     * @return int Attachment id, 0 when no title in it has an image.
+     */
+    public function cover_image_id( $term_id, $taxonomy ) {
+
+        $post_types = $this->playlist_post_type();
+
+        if ( empty( $post_types[ $taxonomy ] ) ) {
+            return 0;
+        }
+
+        $ids = get_posts( array(
+            'post_type'      => $post_types[ $taxonomy ],
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+            'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+                array(
+                    'taxonomy' => $taxonomy,
+                    'terms'    => (int) $term_id,
+                ),
+            ),
+            'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                array(
+                    'key'     => '_thumbnail_id',
+                    'compare' => 'EXISTS',
+                ),
+            ),
         ) );
-        
-        extract( $args );
 
-        $post_id = (int)$post_id;
-        $term_id = (int)$term_id;
-
-        $errors = new WP_Error();
-
-        if( ! $this->_is_owner( $term_id ) ){
-            $errors->add(
-                'no_permission',
-                esc_html__( 'You do not have permission to add post to this collection', 'jws_streamvid' )
-            );
-        }
-
-        if( ! has_post_thumbnail( $post_id ) ){
-            $errors->add(
-                'no_thumbnail',
-                esc_html__( 'Thumbnail Image was not found', 'jws_streamvid' )
-            );
-        }
-       
-        $errors = apply_filters( 'streamvid/playlist/playlist/from/post', $errors , $args );
-        
-      
-        
-        if( $errors->get_error_code() ){
-             wp_send_json_error( $errors );
-        } 
-        
-        $thumbnail_id   = get_post_thumbnail_id( $post_id );
-        $thumbnail_url  = wp_get_attachment_image_url( $thumbnail_id, 'full' );
-        $results = update_term_meta( $term_id, 'playlist_image', $thumbnail_id );
-        
-         
-         if( ! $results ){
-            wp_send_json_error(
-                new WP_Error(
-                    'error',
-                    esc_html__( 'It seems you tried to set up a same thumbnail image, please choose another one', 'jws_streamvid' )
-                )
-            );
-        }
-        
-        if( is_wp_error( $results )){
-            wp_send_json_error( $results );
-        }
-       
-     
-        $message = esc_html__( 'Thumbnail Image has been set up successfully', 'jws_streamvid' );
-   
-        wp_send_json_success( compact( 'thumbnail_url','message' ) );
-        
+        return $ids ? (int) get_post_thumbnail_id( $ids[0] ) : 0;
     }
-    
-    
-    
-    
+
     public static  function the_playlist_control($args) {
         $args = wp_parse_args( $args, array(
             'post_id'   => 0,
@@ -833,7 +705,6 @@ class Jws_Streamvid_Playlist {
                 <button class="dr-button"><i class="jws-icon-dots-three-outline-vertical"></i></button>
                 <ul class="dropdown-menu">
                     <li><a href="#" data-term-id="<?php echo esc_attr($term_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-post-type="<?php echo esc_attr($post_type); ?>" data-playlist-type="<?php echo esc_attr($playlist_type); ?>" class="set-item-playlist"><i class="jws-icon-trash"></i><?php echo esc_html__('Remove','jws_streamvid'); ?></a></li>
-                    <li><a href="#" data-term-id="<?php echo esc_attr($term_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" class="set-thumbnail"><i class="jws-icon-image"></i><?php echo esc_html__('Set as thumbnail','jws_streamvid'); ?></a></li>
                     <li><a href="#" data-modal-jws="#save-to-playlist" data-post-id="<?php echo esc_attr($post_id); ?>" data-post-type="<?php echo esc_attr($post_type); ?>" data-playlist-type="<?php echo esc_attr($playlist_type); ?>"><i class="jws-icon-queue"></i><?php echo esc_html__('Save to an other playlist','jws_streamvid'); ?></a></li>
                 </ul>
             </div>
@@ -947,7 +818,7 @@ public function get_save_to_playlist_single() {
                 $url_playlist = Jws_Streamvid_Profile::get_url('playlist');
                 foreach($terms as $term) {
                     $status = get_term_meta( $term->term_id, 'status', true);
-                    $thumbnail = get_term_meta( $term->term_id, 'playlist_image', true);
+                    $thumbnail = $this->cover_image_id( $term->term_id, $playlist_type );
                     $url =  add_query_arg( 
                      array(  
                        'playlist' => $term->term_id,

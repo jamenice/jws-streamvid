@@ -26,8 +26,9 @@ $has_term = has_term( $term->term_id ,$playlist_type, $post_id );
         <div class="playlist-background">
             <div class="ratio_16x9">
             <?php 
-                $image = jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full'));
-                echo !empty($image) ? $image : '';
+                if ( $thumbnail ) {
+                    echo jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from jws_image_advanced().
+                }
             ?>
             </div>
         </div>
