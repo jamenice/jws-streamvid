@@ -148,6 +148,39 @@
 	 * (jwsThemeModule.show_notification, Toastify) and leave the page.
 	 * Without the theme's toast they stay where they are.
 	 */
+	/*
+	 * Cloudflare Email Obfuscation (Scrape Shield) turns every address in the
+	 * HTML it serves into a.__cf_email__ with the address encoded in
+	 * data-cfemail (and mailto links into /cdn-cgi/l/email-protection#...),
+	 * then decodes them once, on page load. A tab loaded in place comes
+	 * through Cloudflare too: decode its addresses the same way, or they stay
+	 * "[email protected]".
+	 */
+	function cfDecode( hex ) {
+		var key = parseInt( hex.substr( 0, 2 ), 16 );
+		var bytes = [];
+
+		for ( var i = 2; i < hex.length; i += 2 ) {
+			bytes.push( parseInt( hex.substr( i, 2 ), 16 ) ^ key );
+		}
+		if ( window.TextDecoder ) {
+			return new window.TextDecoder().decode( new Uint8Array( bytes ) );
+		}
+		return String.fromCharCode.apply( null, bytes );
+	}
+
+	function decodeEmails( scope ) {
+		Array.prototype.forEach.call( scope.querySelectorAll( '.__cf_email__[data-cfemail]' ), function ( el ) {
+			el.parentNode.replaceChild( document.createTextNode( cfDecode( el.getAttribute( 'data-cfemail' ) ) ), el );
+		} );
+		Array.prototype.forEach.call( scope.querySelectorAll( 'a[href*="/cdn-cgi/l/email-protection#"]' ), function ( link ) {
+			var hex = link.getAttribute( 'href' ).split( '#' )[ 1 ];
+			if ( hex ) {
+				link.setAttribute( 'href', 'mailto:' + cfDecode( hex ) );
+			}
+		} );
+	}
+
 	function toastNotices( scope ) {
 		var theme = window.jwsThemeModule;
 
@@ -491,6 +524,9 @@
 				focusable.focus( { preventScroll: true } );
 			}
 		}
+
+		// The whole block: the account card (the member's email) is swapped too, not only the tab.
+		decodeEmails( root );
 
 		toastNotices( fresh );
 
