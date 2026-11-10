@@ -72,7 +72,8 @@
 	padding: 16px;
 	border: 1px solid var(--border-color);
 	border-radius: 18px;
-	background: var(--background-item);
+	background: rgba(0, 3, 28, 0.4);
+	backdrop-filter: blur(30px);
 }
 
 .jws-pv3__content {
@@ -116,6 +117,8 @@
 	flex: 0 0 auto;
 	border-radius: 50%;
 	object-fit: cover;
+	width: 60px;
+	height: 60px;
 }
 
 .jws-pv3__me-text {
@@ -144,7 +147,7 @@
 	gap: 10px;
 	padding: 10px 12px;
 	border-radius: 12px;
-	background: var(--input-background2);
+	background: var(--input-background);
 }
 
 .jws-pv3__plan-text {
@@ -163,8 +166,9 @@
 }
 
 :is(.button-default, .button-custom).jws-pv3__upgrade {
-	min-height: 36px;
-	padding: 0 12px;
+	min-height: 40px;
+	padding: 0 12px !important;
+	font-size: var(--font-size-sm) !important;
 }
 
 .jws-pv3__viewing {
@@ -229,7 +233,7 @@
 
 .jws-pv3__link:hover,
 .jws-pv3__link:focus-visible {
-	background: var(--input-background2);
+	background: var(--input-background);
 	color: var(--heading);
 }
 
@@ -560,7 +564,6 @@
 
 .jws-lib__group-title {
 	margin: 0 0 14px;
-	color: var(--body);
 }
 
 /*
@@ -700,9 +703,7 @@
 }
 
 /* Select mode */
-.jws-lib__toggle:checked~.jws-lib__head .jws-lib__actions {
-	visibility: hidden;
-}
+
 
 .jws-lib__toggle:checked~.jws-lib__groups .jws-lib__x {
 	display: none;
@@ -751,6 +752,7 @@
 	border-radius: 14px;
 	background: var(--background-item);
 	box-shadow: 0 -8px 24px color-mix(in srgb, var(--dark) 35%, transparent);
+	animation: fadeInUp 0.3s both;
 }
 
 .jws-lib__count {
@@ -773,8 +775,6 @@
 	align-items: center;
 	gap: 12px;
 	padding: 64px 24px;
-	border: 1px dashed var(--border-color2);
-	border-radius: 18px;
 	text-align: center;
 }
 
@@ -1702,18 +1702,16 @@
 	}
 
 	.jws-pv3__link {
-		min-height: 52px;
+		min-height: 40px;
 		padding: 8px 12px;
 		border: 1px solid var(--border-color);
 		border-radius: 12px;
-		background: var(--input-background2);
+		background: var(--input-background);
 		white-space: normal;
 	}
 
 	.jws-pv3__logout {
 		justify-content: center;
-		border: 1px solid var(--border-color2);
-		border-radius: 12px;
 		background: transparent;
 	}
 
@@ -1811,7 +1809,7 @@
 	.jws-lib__toggle:checked~.jws-lib__bar {
 		position: fixed;
 		inset: auto 0 0;
-		z-index: 100;
+		z-index: 11000;
 		padding: 12px 16px 20px;
 		border-radius: 0;
 	}
@@ -1883,7 +1881,7 @@
 		height: 56px;
 	}
 
-	.jws-set__me > :is(.button-default, .button-custom) {
+	.jws-set__me> :is(.button-default, .button-custom) {
 		grid-column: 1 / -1;
 		justify-self: start;
 	}

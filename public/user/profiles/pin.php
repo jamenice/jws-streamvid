@@ -71,7 +71,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 			<summary><?php esc_html_e( 'Forgot PIN? Reset it with your account password', 'jws_streamvid' ); ?></summary>
 
 			<?php if ( $jws_pf_no_pass ) : ?>
-				<p class="jws-pf-help">
+				<p class="jws-pf-help fs-small">
 					<?php esc_html_e( 'Your account has no password yet, because you sign in with a phone number or a social account. Set a password in Settings first.', 'jws_streamvid' ); ?>
 				</p>
 			<?php else : ?>

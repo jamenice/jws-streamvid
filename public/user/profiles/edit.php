@@ -120,7 +120,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 					<input id="jws-pf-kid" type="checkbox" role="switch" name="is_kid" value="1" <?php checked( $jws_pf_kid ); ?>>
 					<label for="jws-pf-kid">
 						<span class="jws-pf-toggle__title h6"><?php esc_html_e( 'Kids profile', 'jws_streamvid' ); ?></span>
-						<span class="jws-pf-help">
+						<span class="jws-pf-help fs-small">
 							<?php
 							printf(
 								/* translators: %s: highest rating a Kids profile can watch, such as "PG and below" */
@@ -135,7 +135,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 
 			<fieldset class="jws-pf-field jws-pf-maturity">
 				<legend class="h6"><?php esc_html_e( 'Maturity rating', 'jws_streamvid' ); ?></legend>
-				<p class="jws-pf-help"><?php esc_html_e( 'This profile only shows titles at or below this rating.', 'jws_streamvid' ); ?></p>
+				<p class="jws-pf-help fs-small"><?php esc_html_e( 'This profile only shows titles at or below this rating.', 'jws_streamvid' ); ?></p>
 				<div class="jws-pf-choices">
 					<?php foreach ( Jws_Profiles::MATURITY_LEVELS as $jws_pf_age ) : ?>
 						<label class="jws-pf-choice<?php echo $jws_pf_age > $jws_pf_kids_max ? ' is-adult-only' : ''; ?>">
@@ -160,7 +160,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 		<div class="jws-pf-group jws-pf-lock<?php echo $jws_pf_has_pin ? ' has-pin' : ''; ?><?php echo $jws_pf_err_pin ? ' is-open' : ''; ?>" id="pin">
 			<?php if ( $jws_pf_no_pass ) : ?>
 				<p class="jws-pf-toggle__title h6"><?php esc_html_e( 'Profile Lock', 'jws_streamvid' ); ?></p>
-				<p class="jws-pf-help">
+				<p class="jws-pf-help fs-small">
 					<?php esc_html_e( 'Your account has no password yet, because you sign in with a phone number or a social account. Set a password in Settings first.', 'jws_streamvid' ); ?>
 				</p>
 			<?php else : ?>
@@ -169,7 +169,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 					<input id="jws-pf-lock" type="checkbox" role="switch" name="lock_pin" value="1" <?php checked( $jws_pf_lock ); ?>>
 					<label for="jws-pf-lock">
 						<span class="jws-pf-toggle__title h6"><?php esc_html_e( 'Profile Lock', 'jws_streamvid' ); ?></span>
-						<span class="jws-pf-help"><?php esc_html_e( 'Ask for a 4-digit PIN before anyone opens this profile, including Kids profiles.', 'jws_streamvid' ); ?></span>
+						<span class="jws-pf-help fs-small"><?php esc_html_e( 'Ask for a 4-digit PIN before anyone opens this profile, including Kids profiles.', 'jws_streamvid' ); ?></span>
 					</label>
 				</div>
 
@@ -183,7 +183,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 						<?php // For password managers: the account this password belongs to, so they leave the profile name alone. Not sent. ?>
 						<input type="text" autocomplete="username" value="<?php echo esc_attr( wp_get_current_user()->user_login ); ?>" hidden aria-hidden="true" tabindex="-1">
 						<input id="jws-pf-pass" class="jws-pf-input" name="account_password" type="password" autocomplete="current-password">
-						<p class="jws-pf-help"><?php esc_html_e( 'Needed to set, change or turn off the PIN.', 'jws_streamvid' ); ?></p>
+						<p class="jws-pf-help fs-small"><?php esc_html_e( 'Needed to set, change or turn off the PIN.', 'jws_streamvid' ); ?></p>
 					</div>
 					<?php if ( $jws_pf_err_pin ) : ?>
 						<p id="jws-pf-pin-error" class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_err_pin ); ?></p>

@@ -167,7 +167,7 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 				</span>
 				<h5><?php echo esc_html( $jws_lib_copy[1] ); ?></h5>
 				<p><?php echo esc_html( $jws_lib_copy[2] ); ?></p>
-				<a class="button-default" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Browse titles', 'jws_streamvid' ); ?></a>
+
 			</div>
 		<?php endif; ?>
 	</form>

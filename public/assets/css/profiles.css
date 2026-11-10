@@ -77,7 +77,7 @@ html.jws-pfm-busy {
 	transition-delay: 0.15s;
 }
 
-.jws-pfm__body > .jws-pf {
+.jws-pfm__body>.jws-pf {
 	box-sizing: border-box;
 	width: 100%;
 }
@@ -221,7 +221,7 @@ html.jws-pfm-busy {
 }
 
 .jws-pf__lead,
-.jws-pf-help {
+.jws-pf-help fs-small {
 	margin: 0 0 16px;
 	color: var(--body2);
 }
@@ -479,10 +479,7 @@ html.jws-pfm-busy {
 	position: relative;
 	max-width: 440px;
 	margin: 0 auto;
-	padding: clamp(24px, 4vw, 40px);
-	border: 1px solid var(--border-color);
 	border-radius: 20px;
-	background: var(--background-item);
 }
 
 .jws-pf-close {
@@ -549,7 +546,6 @@ html.jws-pfm-busy {
 /* PIN as four boxes (profiles-modal.js); the real field is a hidden input beside them. */
 .jws-pf-otp {
 	display: flex;
-	justify-content: center;
 	gap: 12px;
 }
 
@@ -643,14 +639,13 @@ html.jws-pfm-busy {
 	color: var(--heading);
 }
 
-.jws-pf-input {
+.jws-pf-field .jws-pf-input {
 	width: 100%;
 	min-height: 48px;
 	box-sizing: border-box;
 	padding: 0 14px;
-	border: 1px solid var(--border-color2);
 	border-radius: 8px;
-	background: var(--input-background);
+	background: var(--input-background2);
 	color: var(--heading);
 	font: inherit;
 }
@@ -861,13 +856,13 @@ html.jws-pfm-busy {
 	color: var(--heading);
 }
 
-.jws-pf-toggle .jws-pf-help,
-.jws-pf-group>.jws-pf-help {
+.jws-pf-toggle .jws-pf-help fs-small,
+.jws-pf-group>.jws-pf-help fs-small {
 	margin: 0;
 }
 
 /* Maturity: one chip per level, on as few rows as fit. */
-.jws-pf-maturity .jws-pf-help {
+.jws-pf-maturity .jws-pf-help fs-small {
 	margin: 0;
 }
 
@@ -957,7 +952,7 @@ html.jws-pfm-busy {
 	display: flex;
 }
 
-.jws-pf-lock__pass .jws-pf-help {
+.jws-pf-lock__pass .jws-pf-help fs-small {
 	margin: 0;
 }
 
@@ -974,8 +969,7 @@ html.jws-pfm-busy {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px;
-	margin: 0 -16px;
-	padding: 14px 16px;
+	padding: 14px 0px;
 	border-top: 1px solid var(--border-color);
 	background: var(--background-body);
 }
@@ -1007,10 +1001,6 @@ html.jws-pfm-busy {
 
 .jws-pf-confirm summary::-webkit-details-marker {
 	display: none;
-}
-
-.jws-pf-confirm summary:hover {
-	text-decoration: underline;
 }
 
 .jws-pf-confirm[open] summary {
@@ -1137,12 +1127,11 @@ html.jws-pfm-busy {
 }
 
 .jws-am__me-meta {
-	color: var(--body2);
+	color: var(--body);
 	font-size: var(--font-size-sm);
 }
 
-.jws-am__profiles,
-.jws-am__group {
+.jws-am__profiles {
 	padding: 8px 0;
 	border-top: 1px solid var(--border-color);
 }
@@ -1210,7 +1199,6 @@ html.jws-pfm-busy {
 	min-height: 40px;
 	padding: 0 10px;
 	border-radius: 8px;
-	color: var(--body);
 	text-decoration: none;
 }
 
@@ -1271,15 +1259,16 @@ html.jws-pfm-busy {
 		margin: 0;
 		overflow-y: auto;
 		border-radius: 20px 20px 0 0;
-		transform: translateY(100%);
+		transform: translateY(20%);
 		visibility: hidden;
-		transition: transform 0.25s ease, visibility 0s linear 0.25s;
+		transition: 0.3s all;
+		opacity: 0;
 	}
 
 	.jws-pv3-js .jws-pv3__side.is-open {
 		transform: none;
 		visibility: visible;
-		transition: transform 0.25s ease;
+		opacity: 1;
 	}
 
 	/* Up to 1024px the theme sets .jws_sticky_move to position: unset, top: 0 with !important; the sheet stays at the bottom. */
@@ -1486,7 +1475,8 @@ html.jws-pfm-busy {
  * theme; account-menu.js closes it on a second tap). A tap also sets :hover,
  * which kept the menu showing after it was closed.
  */
-@media (hover: none), (max-width: 767px) {
+@media (hover: none),
+(max-width: 767px) {
 	.jws_account:not(.open):hover .dropdown-menu.jws-am-dropdown {
 		opacity: 0;
 		pointer-events: none;
@@ -1500,6 +1490,7 @@ html.jws-pfm-busy {
  * (--font-size-sm, 12px on phones) and less padding, and cards less padding.
  */
 @media (max-width: 767px) {
+
 	/* body: the theme's .button-default .button-default loads later with the same weight. */
 	body .jws-pv3 :is(.button-default, .button-custom),
 	body .jws-pf :is(.button-default, .button-custom) {
@@ -1557,7 +1548,7 @@ html.jws-pfm-busy {
 
 .jws-am .jws-am__lock {
 	padding: 3px;
-	font-size: 11px;
+	font-size: 11px !important;
 }
 
 .jws-am__item--manage [class^="jws-icon-"],
