@@ -1033,6 +1033,8 @@ class Jws_Profiles_Front {
 
 		$items['profiles'] = array(
 			'title'    => esc_html__( 'Profiles', 'jws_streamvid' ),
+			// None here, like the other tabs: Version 2 draws it from the theme's CSS (a.item-profiles:before
+			// in less/single/profile.less), Version 3 from its own icon map (v3/layout.php).
 			'icon'     => '',
 			'callback' => function () {
 				jws_streamvid_load_template( 'user/profile/profiles.php' );
