@@ -107,7 +107,7 @@ $jws_dev_icon = function ( $device ) {
 		<?php if ( $jws_dev_others ) : ?>
 			<form method="post" class="jws-dev__form">
 				<?php wp_nonce_field( 'jws_devices', '_jws_devices_nonce' ); ?>
-				<ul class="jws-coin__list">
+				<ul class="jws-coin__list jws-dev__list jws-scrollbar">
 					<?php foreach ( $jws_dev_others as $jws_dev_item ) : ?>
 						<li class="jws-dev__row">
 							<span class="jws-dev__icon"><i class="<?php echo esc_attr( $jws_dev_icon( $jws_dev_item ) ); ?>" aria-hidden="true"></i></span>

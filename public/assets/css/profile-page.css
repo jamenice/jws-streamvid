@@ -1945,3 +1945,10 @@
 	background: var(--input-background2);
 	color: var(--heading);
 }
+
+/* Devices tab: a long list of other devices scrolls inside (about six rows), "Sign out of all" stays under it. */
+.jws-pv3 ul.jws-dev__list {
+	max-height: min(440px, 60vh);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
