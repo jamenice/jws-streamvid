@@ -250,6 +250,11 @@
                            if(term_id == term_current_id || typeof term_current_id === "undefined")  {
                             // The playlist's list: in .profile-main on V1/V2, .jws-pv3__content on V3. The add-item popup has a list of its own outside both.
                             $('.profile-main .videos-advanced-content, .jws-pv3__content .videos-advanced-content').html(response.data.output);
+                            // The cover (newest title's image, Play All) and "N videos" follow the change.
+                            if (typeof response.data.cover !== 'undefined') {
+                              $('.playlist-single .playlist-background').html(response.data.cover);
+                              $('.playlist-single .playlist-meta > span').last().replaceWith(response.data.count_label);
+                            }
                            }
                            jwsThemeModule.show_notification(response.data.message,'success');
                        

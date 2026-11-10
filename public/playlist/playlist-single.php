@@ -24,8 +24,6 @@ if(!empty($playlist_type)) {
 if(isset($term)) :
 
 $status = get_term_meta( $id , 'status', true);
-// Cover: the newest title's image (playlists have no image of their own).
-$thumbnail = jws_streamvid()->get()->playlist->cover_image_id( $id, $playlist_type );
 
 $count = $term->count;
 $query = jws_streamvid()->get()->playlist->playlist_query($id,$playlist_type,$post_type); 
@@ -38,20 +36,7 @@ $playlist_all = jws_streamvid()->get()->playlist->playlist_url_all($id,$playlist
     <div class="col-xl-3 col-lg-3">
         <div class="jws_sticky_move">    
             <div class="playlist-background ratio_16x9">
-                <a href="<?php echo esc_url($playlist_all); ?>">      
-                    <?php 
-                        // No placeholder when no title has an image.
-                        if ( $thumbnail ) {
-                            echo jws_image_advanced(array('attach_id' => $thumbnail, 'thumb_size' => 'full')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from jws_image_advanced().
-                        }
-                   
-                      // Nothing to play in an empty playlist.
-                      if ( $count ) {
-                          printf( '<div class="content-hover"><div><i class="jws-icon-play-circle"></i>%s</div></div>',
-                          esc_html__('Play All','jws_streamvid')); 
-                      }
-                   ?> 
-               </a>  
+                <?php echo jws_streamvid()->get()->playlist->cover_html( $id, $playlist_type, $post_type ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in cover_html(). ?>
             </div>
         </div>        
     </div>
@@ -73,7 +58,7 @@ $playlist_all = jws_streamvid()->get()->playlist->playlist_url_all($id,$playlist
             <?php 
                 $icon_class = $status == 'private' ? 'jws-icon-lock-key-fill' : 'jws-icon-globe-hemisphere-west-fill';
                 echo '<span><i class="'.esc_attr($icon_class).'"></i>'.esc_html($status).'</span>';
-                printf( _n( '<span>%s video</span>', '<span>%s videos</span>', $count , 'jws_streamvid' ), number_format_i18n( $count ) );
+                echo jws_streamvid()->get()->playlist->count_html( $count ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- number only.
             ?>
         </div>
       

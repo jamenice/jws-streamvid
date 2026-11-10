@@ -467,6 +467,19 @@ class Jws_Streamvid_Playlist {
         wp_reset_postdata();
         
         $output = ob_get_clean();
+
+        if ( '' === trim( $output ) ) {
+            $output = sprintf(
+                '<p class="not-found">%s</p>',
+                esc_html__( 'The playlist has no videos.', 'jws_streamvid' )
+            );
+        }
+
+        // The playlist page swaps these in: its cover and "N videos" follow the change.
+        clean_term_cache( $term_id, $playlist_type );
+        $term        = get_term( $term_id, $playlist_type );
+        $cover       = $this->cover_html( $term_id, $playlist_type, $post_type );
+        $count_label = $this->count_html( $term->count );
         
         if(has_term( $term_id,$playlist_type, $post_id )){
             $message = sprintf(
@@ -482,7 +495,7 @@ class Jws_Streamvid_Playlist {
             $type = 'remove';           
         }
 
-        wp_send_json_success( compact( 'output', 'message' , 'type' ) );
+        wp_send_json_success( compact( 'output', 'message' , 'type', 'cover', 'count_label' ) );
      
     }
     
@@ -688,6 +701,40 @@ class Jws_Streamvid_Playlist {
         ) );
 
         return $ids ? (int) get_post_thumbnail_id( $ids[0] ) : 0;
+    }
+
+    /**
+     * The playlist page's cover: the link that plays the playlist, the cover
+     * image (cover_image_id(), none when no title has one) and "Play All"
+     * when there is something to play. Printed by playlist-single.php and
+     * sent after a title is added or removed, so the page can swap it in.
+     *
+     * @return string HTML.
+     */
+    public function cover_html( $term_id, $taxonomy, $post_type ) {
+
+        $term  = get_term( $term_id, $taxonomy );
+        $count = ( $term && ! is_wp_error( $term ) ) ? (int) $term->count : 0;
+        $image = $this->cover_image_id( $term_id, $taxonomy );
+
+        $html = '<a href="' . esc_url( $this->playlist_url_all( $term_id, $taxonomy, $post_type ) ) . '">';
+
+        if ( $image ) {
+            $html .= jws_image_advanced( array( 'attach_id' => $image, 'thumb_size' => 'full' ) );
+        }
+        if ( $count ) {
+            $html .= sprintf(
+                '<div class="content-hover"><div><i class="jws-icon-play-circle"></i>%s</div></div>',
+                esc_html__( 'Play All', 'jws_streamvid' )
+            );
+        }
+
+        return $html . '</a>';
+    }
+
+    /** "N videos" on the playlist page, as one span. */
+    public function count_html( $count ) {
+        return sprintf( _n( '<span>%s video</span>', '<span>%s videos</span>', (int) $count, 'jws_streamvid' ), number_format_i18n( (int) $count ) );
     }
 
     public static  function the_playlist_control($args) {
