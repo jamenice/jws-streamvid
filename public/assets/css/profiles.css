@@ -1573,3 +1573,29 @@ html.jws-pfm-busy {
 .jws-kids-bar__dismiss [class^="jws-icon-"] {
 	font-size: 16px;
 }
+
+/* Header avatar: a crown for paid members (jws_streamvid_has_premium(), theme account widget). */
+.jws_account .user-avatar.is-premium {
+	position: relative;
+}
+
+.jws_account .user-avatar.is-premium img {
+	box-shadow: 0 0 0 2px var(--main);
+}
+
+.jws_account .user-avatar__badge {
+	position: absolute;
+	inset-inline-end: -5px;
+	bottom: -4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border: 2px solid var(--background-body);
+	border-radius: 50%;
+	background: var(--main);
+	color: var(--btn-color);
+	font-size: 10px;
+	line-height: 1;
+}

@@ -1075,6 +1075,37 @@ if ( ! function_exists( 'jws_streamvid_profile_avatar' ) ) {
 		return Jws_Profiles_Front::avatar_img( Jws_Profiles::current_profile(), $size, 'avatar jws-pf-avatar' );
 	}
 }
+if ( ! function_exists( 'jws_streamvid_has_premium' ) ) {
+	/**
+	 * Whether the account is on a paid plan (Paid Memberships Pro): a level
+	 * whose settings have a price. The header shows a crown on its avatar then.
+	 * The level's own settings count, not what this member paid, so a paid
+	 * plan given by an admin or a 100% discount code is premium too.
+	 *
+	 * @param int $user_id Account; the logged-in one by default.
+	 */
+	function jws_streamvid_has_premium( $user_id = 0 ) {
+
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		if ( $user_id <= 0 || ! function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
+			return false;
+		}
+
+		$level   = pmpro_getMembershipLevelForUser( $user_id );
+		$plan    = ( $level && function_exists( 'pmpro_getLevel' ) ) ? pmpro_getLevel( $level->id ) : $level;
+		$premium = $plan && ( ! function_exists( 'pmpro_isLevelFree' ) || ! pmpro_isLevelFree( $plan ) );
+
+		/**
+		 * Filters whether an account counts as premium (crown on the header avatar).
+		 *
+		 * @param bool        $premium Paid level.
+		 * @param int         $user_id Account.
+		 * @param object|bool $level   Its membership level, false when none.
+		 */
+		return (bool) apply_filters( 'jws_streamvid_has_premium', $premium, $user_id, $level );
+	}
+}
 add_filter( 'jws_login_response', array( 'Jws_Profiles_Front', 'login_response' ), 10, 2 );
 add_action( 'wp_footer', array( 'Jws_Profiles_Front', 'login_loader' ), 30 );
 add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'guard_account' ), 7 );
