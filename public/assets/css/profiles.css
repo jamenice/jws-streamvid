@@ -3318,11 +3318,13 @@ html.jws-pfm-busy {
 		gap: 10px;
 	}
 
+	/* The balance takes a row of its own at any phone width... */
 	.jws-coin__balance {
+		flex-basis: 100%;
 		padding: 16px;
 	}
 
-	/* The two counters share a row under the balance. */
+	/* ...and the two counters share the row under it. */
 	.jws-coin__top .jws-coin__stat {
 		flex: 1 1 0;
 		min-width: 0;
