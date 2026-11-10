@@ -1,21 +1,27 @@
 <?php
 
 /**
- * Front end of viewer profiles: the "Who's watching?" screens, the forms
- * behind them, and the profile part of the header account menu.
+ * Front end of viewer profiles: the "Who's watching?" modal, the forms
+ * behind it, and the profile part of the header account menu.
  *
- * Screens live under one URL, /whos-watching/ by default:
+ * Every screen is shown in one modal (public/assets/js/profiles-modal.js);
+ * there are no pages. Each screen still has a URL, /whos-watching/ by
+ * default, which the modal loads with the header "X-Jws-Profiles: 1":
  *
  *     /whos-watching/            choose a profile (?manage=1 to edit them)
  *     /whos-watching/pin/{id}/   enter a profile's PIN
  *     /whos-watching/add/        add a profile
  *     /whos-watching/edit/{id}/  edit a profile, its PIN, or delete it
  *
- * Every action is a plain form POST to the screen it is on, checked in the
- * order nonce, logged-in user, sanitize, then handed to Jws_Profiles, which
- * owns all validation and the SQL. A success redirects (post/redirect/get);
- * an error renders the same screen again with the message and the values
- * typed. Nothing here needs JavaScript.
+ * Such a request gets JSON: the screen's markup ({html}) or where to go
+ * next ({go}). Opening one of these URLs directly goes back to the page it
+ * came from (?back=, else the home page) and opens the modal there.
+ *
+ * Every action is a form POST to the screen it is on, checked in the order
+ * nonce, logged-in user, sanitize, then handed to Jws_Profiles, which owns
+ * all validation and the SQL. A success answers with where to go next; an
+ * error renders the same screen again with the message and the values
+ * typed.
  *
  * @package    Jws_Streamvid
  * @subpackage Jws_Streamvid/includes
@@ -45,6 +51,9 @@ class Jws_Profiles_Front {
 
 	/** Values from the form posted in this request, for refilling it. */
 	private static $posted = array();
+
+	/** Set by the gate: the "Who's watching?" URL the modal opens on this page. */
+	private static $gate_url = '';
 
 	/* ------------------------------------------------------------------ *
 	 * URLs and routing
@@ -130,12 +139,67 @@ class Jws_Profiles_Front {
 
 		$back = isset( $_REQUEST['back'] ) ? esc_url_raw( wp_unslash( $_REQUEST['back'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		return wp_validate_redirect( $back, home_url( '/' ) );
+		// wp_validate_redirect() returns '' for '', not the fallback.
+		return '' === $back ? home_url( '/' ) : wp_validate_redirect( $back, home_url( '/' ) );
+	}
+
+	/** Whether this request comes from the modal (header "X-Jws-Profiles: 1"). */
+	public static function is_modal_request() {
+
+		$asked = isset( $_SERVER['HTTP_X_JWS_PROFILES'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_JWS_PROFILES'] ) ) : '';
+
+		return '1' === $asked;
+	}
+
+	/** Sends the browser to $url: as {go} to the modal, as a redirect otherwise. Ends the request. */
+	private static function go( $url ) {
+
+		if ( self::is_modal_request() ) {
+			wp_send_json( array( 'go' => wp_validate_redirect( $url, home_url( '/' ) ) ) );
+		}
+
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/** The screen's markup as JSON, for the modal. Ends the request. */
+	private static function send_screen( $screen ) {
+
+		ob_start();
+		echo '<div class="jws-pf jws-pf--' . esc_attr( $screen ) . '"><div class="jws-pf__wrap">';
+		jws_streamvid_load_template( 'user/profiles/' . $screen . '.php', false );
+		echo '</div></div>';
+
+		wp_send_json(
+			array(
+				'screen' => $screen,
+				'html'   => ob_get_clean(),
+			)
+		);
+	}
+
+	/** This screen's URL without ?back=, for the modal to open after a direct visit. */
+	private static function screen_url( $screen ) {
+
+		$args = array();
+
+		foreach ( array( 'manage', 'notice' ) as $key ) {
+			if ( isset( $_GET[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$args[ $key ] = sanitize_key( wp_unslash( $_GET[ $key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			}
+		}
+
+		return self::url( $screen, self::requested_id(), $args );
+	}
+
+	/** "Who's watching?" URL the modal opens by itself on this page (the gate), or ''. */
+	public static function gate_url() {
+		return self::$gate_url;
 	}
 
 	/**
-	 * Runs the profile screens, or sends a viewer who has not picked a
-	 * profile yet to "Who's watching?".
+	 * Answers the modal's screen requests, or, on a page where the viewer has
+	 * not picked a profile yet, has the modal open there by itself.
 	 */
 	public static function route() {
 
@@ -148,14 +212,15 @@ class Jws_Profiles_Front {
 
 		nocache_headers();
 
+		// The screens are not posts, so WordPress has marked the request a 404.
+		status_header( 200 );
+
 		if ( ! Jws_Profiles::enabled() ) {
-			wp_safe_redirect( home_url( '/' ) );
-			exit;
+			self::go( home_url( '/' ) );
 		}
 
 		if ( ! is_user_logged_in() ) {
-			wp_safe_redirect( wp_login_url( self::url() ) );
-			exit;
+			self::go( wp_login_url( self::url() ) );
 		}
 
 		if ( isset( $_SERVER['REQUEST_METHOD'] ) && 'POST' === $_SERVER['REQUEST_METHOD'] ) {
@@ -165,25 +230,28 @@ class Jws_Profiles_Front {
 		$user_id = get_current_user_id();
 
 		if ( in_array( $screen, array( 'pin', 'edit' ), true ) && ! Jws_Profiles::get( $user_id, self::requested_id() ) ) {
-			wp_safe_redirect( self::url() );
-			exit;
+			self::go( self::url() );
 		}
 
 		if ( in_array( $screen, array( 'add', 'edit' ), true ) && self::current_is_kid() ) {
-			wp_safe_redirect( self::url( 'choose', 0, array( 'notice' => 'kids' ) ) );
-			exit;
+			self::go( self::url( 'choose', 0, array( 'notice' => 'kids' ) ) );
 		}
 
 		if ( 'add' === $screen && ! Jws_Profiles::can_create( $user_id ) && empty( self::$errors ) ) {
-			wp_safe_redirect( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'limit' ) ) );
-			exit;
+			self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'limit' ) ) );
 		}
 
-		status_header( 200 );
+		if ( self::is_modal_request() ) {
+			self::send_screen( $screen );
+		}
+
+		// No pages: a direct visit goes back where it came from and the modal opens this screen there.
+		self::go( self::back_url() . '#jws-profiles=' . rawurlencode( wp_make_link_relative( self::screen_url( $screen ) ) ) );
 	}
 
 	/**
-	 * Accounts with two or more profiles pick one before browsing. Only
+	 * Accounts with two or more profiles pick one before browsing, in the
+	 * modal over the page. Only
 	 * pages where the profile changes what is shown ask: home, search,
 	 * titles and their archives. Account, checkout and payment pages never
 	 * do, so a payment return or a login redirect is not interrupted.
@@ -211,8 +279,8 @@ class Jws_Profiles_Front {
 		$path = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 		$here = ( is_ssl() ? 'https://' : 'http://' ) . $host . $path;
 
-		wp_safe_redirect( self::url( 'choose', 0, array( 'back' => $here ) ) );
-		exit;
+		// The page loads as usual; the modal opens over it and stays until a profile is picked.
+		self::$gate_url = self::url( 'choose', 0, array( 'back' => $here ) );
 	}
 
 	private static function is_browse_page() {
@@ -274,16 +342,14 @@ class Jws_Profiles_Front {
 				if ( is_wp_error( $result ) ) {
 					// Switching from a menu without a PIN field: ask for the PIN on its own screen.
 					if ( 'profile_pin_required' === $result->get_error_code() && 'pin' !== $screen ) {
-						wp_safe_redirect( self::url( 'pin', $profile_id, array( 'back' => self::back_url() ) ) );
-						exit;
+						self::go( self::url( 'pin', $profile_id, array( 'back' => self::back_url() ) ) );
 					}
 					self::$errors[''] = $result->get_error_message();
 					return;
 				}
 
 				// A Kids profile starts on the Kids Home Page (Theme Options), not where the adult was.
-				wp_safe_redirect( $result->is_kid ? Jws_Profiles_Settings::kids_home_url() : self::back_url() );
-				exit;
+				self::go( $result->is_kid ? Jws_Profiles_Settings::kids_home_url() : self::back_url() );
 
 			case 'save':
 				$data = array(
@@ -309,8 +375,7 @@ class Jws_Profiles_Front {
 					return;
 				}
 
-				wp_safe_redirect( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
-				exit;
+				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
 
 			case 'delete':
 				$result = Jws_Profiles::delete( $user_id, $profile_id );
@@ -320,8 +385,7 @@ class Jws_Profiles_Front {
 					return;
 				}
 
-				wp_safe_redirect( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'deleted' ) ) );
-				exit;
+				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'deleted' ) ) );
 
 			case 'pin':
 				$remove   = ! empty( $_POST['remove_pin'] );
@@ -344,21 +408,18 @@ class Jws_Profiles_Front {
 
 				// Reset from the PIN screen: carry on to that screen; otherwise back to the profile's settings.
 				if ( 'pin' === $screen ) {
-					wp_safe_redirect( $remove
+					self::go( $remove
 						? self::url( 'choose', 0, array( 'notice' => $notice, 'back' => self::back_url() ) )
 						: self::url( 'pin', $profile_id, array( 'notice' => $notice, 'back' => self::back_url() ) ) );
-					exit;
 				}
 
-				wp_safe_redirect( self::url( 'edit', $profile_id, array( 'notice' => $notice ) ) );
-				exit;
+				self::go( self::url( 'edit', $profile_id, array( 'notice' => $notice ) ) );
 
 			case 'keep':
 				$keep = isset( $_POST['keep'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['keep'] ) ) : array();
 				Jws_Profiles::set_active( $user_id, $keep );
 
-				wp_safe_redirect( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
-				exit;
+				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
 		}
 		// phpcs:enable
 
@@ -464,35 +525,8 @@ class Jws_Profiles_Front {
 	 * Page output
 	 * ------------------------------------------------------------------ */
 
-	public static function template( $template ) {
-
-		if ( ! self::screen() ) {
-			return $template;
-		}
-
-		$file = trailingslashit( JWS_STREAMVID_PATH_PUBLIC ) . 'user/profiles/screen.php';
-
-		return file_exists( $file ) ? $file : $template;
-	}
-
-	public static function document_title( $title ) {
-
-		$titles = array(
-			'choose' => __( "Who's watching?", 'jws_streamvid' ),
-			'pin'    => __( 'Profile Lock', 'jws_streamvid' ),
-			'add'    => __( 'Add Profile', 'jws_streamvid' ),
-			'edit'   => __( 'Edit Profile', 'jws_streamvid' ),
-		);
-		$screen = self::screen();
-
-		return $screen ? $titles[ $screen ] . ' – ' . get_bloginfo( 'name' ) : $title;
-	}
-
 	public static function body_class( $classes ) {
 
-		if ( self::screen() ) {
-			$classes[] = 'jws-profiles-screen';
-		}
 		if ( self::current_is_kid() ) {
 			$classes[] = 'jws-kids-mode';
 		}
@@ -517,6 +551,37 @@ class Jws_Profiles_Front {
 			array(),
 			file_exists( $css ) ? (string) filemtime( $css ) : JWS_STREAMVID_VERSION
 		);
+
+		// The "Who's watching?" modal: wherever a signed-in member can switch or manage profiles.
+		if ( is_user_logged_in() && Jws_Profiles::enabled() ) {
+			$modal = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/profiles-modal.js';
+
+			wp_enqueue_script(
+				'jws-profiles-modal',
+				JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/profiles-modal.js',
+				array(),
+				file_exists( $modal ) ? (string) filemtime( $modal ) : JWS_STREAMVID_VERSION,
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
+			);
+
+			wp_localize_script(
+				'jws-profiles-modal',
+				'jwsProfilesModal',
+				array(
+					'screen'   => self::url(),
+					'queryVar' => get_option( 'permalink_structure' ) ? '' : self::QUERY_VAR,
+					'gate'     => self::gate_url(),
+					'i18n'     => array(
+						'dialog' => __( 'Profiles', 'jws_streamvid' ),
+						'close'  => __( 'Close', 'jws_streamvid' ),
+						'error'  => __( 'Something went wrong. Try again.', 'jws_streamvid' ),
+					),
+				)
+			);
+		}
 
 		if ( $v3 ) {
 			$js = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/profiles.js';
@@ -611,29 +676,15 @@ class Jws_Profiles_Front {
 
 		return $items;
 	}
-
-	/** Keeps search engines off the profile screens. */
-	public static function robots( $robots ) {
-
-		if ( self::screen() ) {
-			$robots['noindex']  = true;
-			$robots['nofollow'] = true;
-		}
-
-		return $robots;
-	}
 }
 
 add_action( 'init', array( 'Jws_Profiles_Front', 'add_rewrites' ) );
 add_filter( 'query_vars', array( 'Jws_Profiles_Front', 'query_vars' ) );
 add_action( 'wp_loaded', array( 'Jws_Profiles_Front', 'maybe_flush' ) );
 add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'route' ), 1 );
-add_filter( 'template_include', array( 'Jws_Profiles_Front', 'template' ), 99 );
 add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'fragment' ), 19 );
-add_filter( 'pre_get_document_title', array( 'Jws_Profiles_Front', 'document_title' ), 20 );
 add_filter( 'body_class', array( 'Jws_Profiles_Front', 'body_class' ) );
 add_action( 'wp_enqueue_scripts', array( 'Jws_Profiles_Front', 'enqueue' ), 20 );
-add_filter( 'wp_robots', array( 'Jws_Profiles_Front', 'robots' ) );
 add_filter( 'streamvid_profile_default_menu_items', array( 'Jws_Profiles_Front', 'profile_tab' ) );
 
 if ( ! function_exists( 'jws_streamvid_account_menu' ) ) {

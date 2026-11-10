@@ -1,0 +1,355 @@
+/**
+ * "Who's watching?" modal: every profile screen (choose, PIN, manage, add,
+ * edit) in one full-screen dialog over the page. Each screen is loaded from
+ * its URL with the header "X-Jws-Profiles: 1" (Jws_Profiles_Front::route).
+ *
+ * - A link to a screen anywhere on the page (header menu, profile sidebar,
+ *   Kids bar, Profiles tab) opens it here. Forms in the modal, and the
+ *   header menu's switch forms, post here.
+ * - The server answers {html} (show that screen) or {go} (another screen,
+ *   or a page: the page then loads, as after switching profiles).
+ * - The gate (an account with 2+ profiles that has not picked one) opens
+ *   the modal at once, and it cannot be closed until a profile is picked.
+ * - #jws-profiles=<screen URL> in the address opens it on load: a direct
+ *   visit to a screen URL comes back to the page with that.
+ * - After a profile was saved, deleted or locked, closing reloads the page
+ *   so the menu and lists show the change.
+ */
+( function () {
+	'use strict';
+
+	var config = window.jwsProfilesModal;
+
+	if ( ! config || ! config.screen || ! window.fetch || ! window.URL || ! window.FormData ) {
+		return;
+	}
+
+	var screenBase = new URL( config.screen, window.location.href );
+	var i18n = config.i18n || {};
+	var modal = null;
+	var body = null;
+	var closeButton = null;
+	var forced = false;
+	var dirty = false;
+	var current = '';
+	var back = '';
+	var lastFocus = null;
+	var controller = null;
+	var lastSubmitter = null;
+
+	function here() {
+		var url = new URL( window.location.href );
+
+		url.hash = '';
+		return url.href;
+	}
+
+	function isScreen( url ) {
+		if ( url.origin !== screenBase.origin ) {
+			return false;
+		}
+		// Plain permalinks: ?jws_profiles=choose; pretty ones: /whos-watching/...
+		if ( config.queryVar ) {
+			return url.searchParams.has( config.queryVar );
+		}
+		return 0 === url.pathname.indexOf( screenBase.pathname );
+	}
+
+	// Every screen carries the page to return to after switching profiles.
+	function withBack( url ) {
+		if ( back && ! url.searchParams.has( 'back' ) ) {
+			url.searchParams.set( 'back', back );
+		}
+		return url;
+	}
+
+	function build() {
+		modal = document.createElement( 'div' );
+		modal.className = 'jws-pfm';
+		modal.hidden = true;
+		modal.setAttribute( 'role', 'dialog' );
+		modal.setAttribute( 'aria-modal', 'true' );
+		modal.setAttribute( 'aria-label', i18n.dialog || '' );
+
+		closeButton = document.createElement( 'button' );
+		closeButton.type = 'button';
+		closeButton.className = 'jws-pfm__close';
+		closeButton.innerHTML = '<i class="jws-icon-x" aria-hidden="true"></i><span class="screen-reader-text"></span>';
+		closeButton.lastChild.textContent = i18n.close || '';
+		closeButton.addEventListener( 'click', close );
+
+		body = document.createElement( 'div' );
+		body.className = 'jws-pfm__body';
+
+		modal.appendChild( closeButton );
+		modal.appendChild( body );
+		document.body.appendChild( modal );
+	}
+
+	function reveal( isForced ) {
+		if ( ! modal ) {
+			build();
+		}
+		if ( ! modal.hidden ) {
+			return;
+		}
+		lastFocus = document.activeElement;
+		forced = !! isForced;
+		dirty = false;
+		modal.classList.toggle( 'jws-pfm--gate', forced );
+		modal.hidden = false;
+		document.documentElement.classList.add( 'jws-pfm-open' );
+		closeButton.focus( { preventScroll: true } );
+	}
+
+	function close() {
+		if ( forced || ! modal || modal.hidden ) {
+			return;
+		}
+		if ( controller ) {
+			controller.abort();
+		}
+		if ( dirty ) {
+			window.location.reload();
+			return;
+		}
+		modal.hidden = true;
+		body.innerHTML = '';
+		current = '';
+		document.documentElement.classList.remove( 'jws-pfm-open' );
+		if ( lastFocus && lastFocus.focus ) {
+			lastFocus.focus();
+		}
+	}
+
+	function show( html ) {
+		reveal( forced );
+		body.innerHTML = html;
+		modal.scrollTop = 0;
+
+		var title = body.querySelector( '#jws-pf-title' );
+
+		if ( title ) {
+			modal.setAttribute( 'aria-labelledby', 'jws-pf-title' );
+			modal.removeAttribute( 'aria-label' );
+			title.setAttribute( 'tabindex', '-1' );
+		}
+
+		var target = body.querySelector( '[autofocus]' ) || title || closeButton;
+
+		target.focus( { preventScroll: true } );
+	}
+
+	function fail() {
+		reveal( forced );
+
+		var old = body.querySelector( '.jws-pfm__error' );
+		var message = document.createElement( 'p' );
+		var wrap = body.querySelector( '.jws-pf__wrap' ) || body;
+
+		if ( old ) {
+			old.parentNode.removeChild( old );
+		}
+		message.className = 'jws-pf-msg jws-pf-msg--error jws-pfm__error';
+		message.setAttribute( 'role', 'alert' );
+		message.textContent = i18n.error || '';
+		wrap.insertBefore( message, wrap.firstChild );
+	}
+
+	// Where the server sends us: another screen loads here; a page loads in the window.
+	function follow( url, action ) {
+		var next = new URL( url, window.location.href );
+
+		if ( isScreen( next ) ) {
+			if ( action && 'switch' !== action ) {
+				dirty = true;
+			}
+			return load( next.href );
+		}
+
+		var page = new URL( next.href );
+
+		page.hash = '';
+		if ( page.href === here() ) {
+			window.location.reload();
+		} else {
+			window.location.assign( next.href );
+		}
+		return null;
+	}
+
+	/*
+	 * Fetches a screen (GET) or posts a form to it. init: method, body and
+	 * action (the form's jws_profiles_action).
+	 */
+	function load( url, init ) {
+		var target = withBack( new URL( url, window.location.href ) );
+		var mine = window.AbortController ? new window.AbortController() : null;
+
+		init = init || {};
+
+		if ( controller ) {
+			controller.abort();
+		}
+		controller = mine;
+
+		if ( modal ) {
+			modal.classList.add( 'is-loading' );
+		}
+		document.documentElement.classList.add( 'jws-pfm-busy' );
+
+		return window.fetch( target.href, {
+			method: init.method || 'GET',
+			body: init.body,
+			credentials: 'same-origin',
+			headers: { 'X-Jws-Profiles': '1' },
+			signal: mine ? mine.signal : undefined,
+		} ).then( function ( response ) {
+			if ( -1 === ( response.headers.get( 'content-type' ) || '' ).indexOf( 'json' ) ) {
+				throw new Error( 'jws-profiles: not JSON' );
+			}
+			return response.json();
+		} ).then( function ( data ) {
+			if ( data && data.go ) {
+				return follow( data.go, init.action );
+			}
+			if ( data && 'string' === typeof data.html ) {
+				current = target.href;
+				show( data.html );
+				return null;
+			}
+			throw new Error( 'jws-profiles: unexpected answer' );
+		} ).catch( function ( error ) {
+			if ( error && 'AbortError' === error.name ) {
+				return;
+			}
+			fail();
+		} ).then( function () {
+			if ( controller === mine ) {
+				controller = null;
+				if ( modal ) {
+					modal.classList.remove( 'is-loading' );
+				}
+				document.documentElement.classList.remove( 'jws-pfm-busy' );
+			}
+		} );
+	}
+
+	function open( url, isForced ) {
+		var target = new URL( url, window.location.href );
+
+		back = target.searchParams.get( 'back' ) || here();
+		reveal( isForced );
+		return load( target.href );
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		var submit = event.target.closest && event.target.closest( 'button, input[type="submit"]' );
+
+		if ( submit && submit.form ) {
+			lastSubmitter = submit;
+		}
+
+		if ( event.defaultPrevented || 0 !== event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ) {
+			return;
+		}
+
+		var link = event.target.closest && event.target.closest( 'a[href]' );
+
+		if ( ! link || ( link.target && '_self' !== link.target ) ) {
+			return;
+		}
+
+		var url = new URL( link.href, window.location.href );
+
+		if ( ! isScreen( url ) ) {
+			return;
+		}
+
+		event.preventDefault();
+
+		if ( modal && ! modal.hidden ) {
+			load( url.href );
+		} else {
+			open( url.href, false );
+		}
+	} );
+
+	document.addEventListener( 'submit', function ( event ) {
+		var form = event.target;
+		var inModal = !! ( modal && modal.contains( form ) );
+
+		if ( event.defaultPrevented || 'post' !== ( form.getAttribute( 'method' ) || 'get' ).toLowerCase() ) {
+			return;
+		}
+
+		// Forms in a screen post to that screen; the header menu's forms name theirs.
+		var action = form.getAttribute( 'action' ) ? new URL( form.action, window.location.href ) : ( inModal && current ? new URL( current ) : null );
+
+		if ( ! action || ! isScreen( action ) ) {
+			return;
+		}
+
+		var data = new window.FormData( form );
+		var submitter = event.submitter || ( lastSubmitter && lastSubmitter.form === form ? lastSubmitter : null );
+
+		if ( submitter && submitter.name ) {
+			data.append( submitter.name, submitter.value );
+		}
+
+		event.preventDefault();
+		lastSubmitter = null;
+
+		if ( ! inModal ) {
+			back = data.get( 'back' ) || here();
+		}
+
+		load( action.href, { method: 'POST', body: data, action: data.get( 'jws_profiles_action' ) } );
+	} );
+
+	document.addEventListener( 'keydown', function ( event ) {
+		if ( ! modal || modal.hidden ) {
+			return;
+		}
+
+		if ( 'Escape' === event.key ) {
+			close();
+			return;
+		}
+
+		// Keep keyboard focus inside the dialog.
+		if ( 'Tab' === event.key ) {
+			var items = Array.prototype.filter.call(
+				modal.querySelectorAll( 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])' ),
+				function ( item ) {
+					return item.offsetWidth || item.offsetHeight || item === document.activeElement;
+				}
+			);
+
+			if ( ! items.length ) {
+				return;
+			}
+
+			var first = items[ 0 ];
+			var last = items[ items.length - 1 ];
+
+			if ( event.shiftKey && ( document.activeElement === first || ! modal.contains( document.activeElement ) ) ) {
+				event.preventDefault();
+				last.focus();
+			} else if ( ! event.shiftKey && ( document.activeElement === last || ! modal.contains( document.activeElement ) ) ) {
+				event.preventDefault();
+				first.focus();
+			}
+		}
+	} );
+
+	// The gate first; else a screen named in the address (a direct visit to a screen URL comes back here).
+	var named = window.location.hash.match( /^#jws-profiles=(.+)$/ );
+
+	if ( config.gate ) {
+		open( config.gate, true );
+	} else if ( named ) {
+		window.history.replaceState( window.history.state, '', here() );
+		open( decodeURIComponent( named[ 1 ] ), false );
+	}
+}() );

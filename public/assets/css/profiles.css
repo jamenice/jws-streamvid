@@ -35,6 +35,115 @@
 	margin: 0 auto;
 }
 
+/*
+ * "Who's watching?" modal (profiles-modal.js): every profile screen in one
+ * full-screen dialog over the page. The gate hides the close button.
+ */
+html.jws-pfm-open {
+	overflow: hidden;
+}
+
+html.jws-pfm-busy {
+	cursor: progress;
+}
+
+.jws-pfm {
+	position: fixed;
+	inset: 0;
+	z-index: 100002;
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	background: var(--background-body);
+	animation: jws-pfm-in 0.2s ease;
+}
+
+.jws-pfm[hidden] {
+	display: none;
+}
+
+.jws-pfm__body {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	justify-content: center;
+	transition: opacity 0.2s;
+}
+
+.jws-pfm.is-loading .jws-pfm__body {
+	opacity: 0.5;
+	pointer-events: none;
+	transition-delay: 0.15s;
+}
+
+.jws-pfm__body > .jws-pf {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+/* First load: nothing to show yet. */
+.jws-pfm__body:empty::after {
+	content: "";
+	width: 40px;
+	height: 40px;
+	margin: auto;
+	border: 3px solid var(--border-color);
+	border-top-color: var(--main);
+	border-radius: 50%;
+	animation: jws-pfm-spin 0.8s linear infinite;
+}
+
+.jws-pfm__close {
+	position: fixed;
+	top: 16px;
+	inset-inline-end: 16px;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--background-item);
+	color: var(--heading);
+	cursor: pointer;
+}
+
+.jws-pfm__close:hover,
+.jws-pfm__close:focus-visible {
+	color: var(--main);
+}
+
+.jws-pfm--gate .jws-pfm__close {
+	display: none;
+}
+
+.jws-pfm #jws-pf-title:focus {
+	outline: none;
+}
+
+@keyframes jws-pfm-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes jws-pfm-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.jws-pfm,
+	.jws-pfm__body:empty::after {
+		animation: none;
+	}
+}
+
 .jws-pf__title {
 	margin: 0 0 32px;
 	color: var(--heading);
@@ -2865,7 +2974,8 @@
 }
 
 .jws-pv3__close [class^="jws-icon-"],
-.jws-pf-close [class^="jws-icon-"] {
+.jws-pf-close [class^="jws-icon-"],
+.jws-pfm__close [class^="jws-icon-"] {
 	font-size: 22px;
 }
 
