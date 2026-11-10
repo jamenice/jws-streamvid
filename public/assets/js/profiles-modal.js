@@ -36,6 +36,35 @@
 	var lastFocus = null;
 	var controller = null;
 	var lastSubmitter = null;
+	var leaving = false;
+	var picked = null;
+
+	/*
+	 * Switching profiles: the chosen tile (or the header menu button, or the
+	 * PIN screen's Continue) shows a spinner until the next page is up.
+	 */
+	function pick( form, submitter ) {
+		var target = form.closest( '.jws-pf-tile' ) || submitter || form.querySelector( '[type="submit"]' );
+
+		unpick();
+		if ( target ) {
+			target.classList.add( 'is-loading' );
+			picked = target;
+		}
+		if ( modal && modal.contains( form ) ) {
+			modal.classList.add( 'jws-pfm--picking' );
+		}
+	}
+
+	function unpick() {
+		if ( picked ) {
+			picked.classList.remove( 'is-loading' );
+			picked = null;
+		}
+		if ( modal ) {
+			modal.classList.remove( 'jws-pfm--picking' );
+		}
+	}
 
 	function here() {
 		var url = new URL( window.location.href );
@@ -266,6 +295,7 @@
 	}, true );
 
 	function show( html ) {
+		unpick();
 		reveal( forced );
 		body.innerHTML = html;
 		pinBoxes( body );
@@ -285,6 +315,8 @@
 	}
 
 	function fail() {
+		unpick();
+
 		// Opened right after sign-in (jwsOpenProfiles): carry on to the page, which asks again if it should.
 		if ( forced && 'function' === typeof config.fallback ) {
 			config.fallback();
@@ -319,6 +351,7 @@
 
 		var page = new URL( next.href );
 
+		leaving = true;
 		page.hash = '';
 		if ( page.href === here() ) {
 			window.location.reload();
@@ -375,7 +408,7 @@
 			}
 			fail();
 		} ).then( function () {
-			if ( controller === mine ) {
+			if ( controller === mine && ! leaving ) {
 				controller = null;
 				if ( modal ) {
 					modal.classList.remove( 'is-loading' );
@@ -453,6 +486,9 @@
 		if ( ! inModal ) {
 			back = data.get( 'back' ) || here();
 		}
+		if ( 'switch' === data.get( 'jws_profiles_action' ) ) {
+			pick( form, submitter );
+		}
 
 		load( action.href, { method: 'POST', body: data, action: data.get( 'jws_profiles_action' ) } );
 	} );
@@ -520,6 +556,17 @@
 				event.preventDefault();
 				first.focus();
 			}
+		}
+	} );
+
+	window.addEventListener( 'pageshow', function ( event ) {
+		if ( event.persisted ) {
+			leaving = false;
+			unpick();
+			if ( modal ) {
+				modal.classList.remove( 'is-loading' );
+			}
+			document.documentElement.classList.remove( 'jws-pfm-busy' );
 		}
 	} );
 

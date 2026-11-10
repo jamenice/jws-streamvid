@@ -138,10 +138,75 @@ html.jws-pfm-busy {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	.jws-pfm,
 	.jws-pfm__body:empty::after {
 		animation: none;
 	}
+}
+
+/*
+ * Switching profiles (profiles-modal.js): a spinner on the chosen tile, the
+ * header menu button or the PIN screen's Continue until the next page shows.
+ */
+.jws-pfm.jws-pfm--picking .jws-pfm__body {
+	opacity: 1;
+}
+
+.jws-pfm--picking .jws-pf-tile:not(.is-loading) {
+	opacity: 0.35;
+	transition: opacity 0.2s;
+}
+
+.jws-pf-tile.is-loading .jws-pf-tile__art::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background: color-mix(in srgb, var(--background-body) 50%, transparent);
+}
+
+.jws-pf-tile.is-loading .jws-pf-tile__art::after,
+.jws-am__switch-btn.is-loading::after,
+.jws-pfm .button-default.is-loading::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 3;
+	box-sizing: border-box;
+	width: 40px;
+	height: 40px;
+	margin: -20px 0 0 -20px;
+	border: 3px solid color-mix(in srgb, var(--light) 30%, transparent);
+	border-top-color: var(--light);
+	border-radius: 50%;
+	animation: jws-pfm-spin 0.8s linear infinite;
+}
+
+.jws-am__switch-btn.is-loading::after {
+	top: 6px;
+	width: 36px;
+	height: 36px;
+	margin: 0 0 0 -18px;
+}
+
+.jws-am__switch-btn.is-loading img {
+	opacity: 0.35;
+}
+
+.jws-pfm .button-default.is-loading {
+	position: relative;
+	color: transparent;
+	pointer-events: none;
+}
+
+.jws-pfm .button-default.is-loading::after {
+	width: 22px;
+	height: 22px;
+	margin: -11px 0 0 -11px;
+	border-color: color-mix(in srgb, var(--btn-color) 35%, transparent);
+	border-top-color: var(--btn-color);
 }
 
 .jws-pf__title {
