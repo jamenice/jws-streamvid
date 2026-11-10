@@ -16,66 +16,111 @@ if ( ! defined( 'ABSPATH' ) ) {
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
 jQuery(document).ready(function($) {
- $(".download-invoice-woo").on("click", function (e) {
-            e.preventDefault();
 
-            var postId = $(this).data("invoice");
+	var failed = <?php echo wp_json_encode( esc_html__( 'The invoice could not be created. Please try again.', 'jws_streamvid' ) ); ?>;
 
-            $.ajax({
-                url: jws_script.ajax_url,
-                type: "POST",
-                data: {
-                    action: "get_invoice_html_woo",
-                    order_id: postId
-                },
-                success: function (response) {
+	/* The theme's toast when it is on the page, a plain alert otherwise. */
+	function notify(message) {
+		var theme = window.jwsThemeModule;
 
-                    if (response.success) {
+		if (theme && "function" === typeof theme.show_notification && "function" === typeof window.Toastify) {
+			theme.show_notification($("<div>").text(message).html(), "error");
+		} else {
+			window.alert(message);
+		}
+	}
 
-                        $("#hidden-invoice-wrapper").html(response.data.html).show();
+	/* The WooCommerce handler answers with a bare string, ours with { message }. */
+	function errorText(response) {
+		var data = response && response.data;
 
+		if (data && "object" === typeof data && data.message) {
+			return data.message;
+		}
 
-                        html2canvas(document.querySelector("#hidden-invoice-wrapper"), { scale: 2 }).then(async function (canvas) {
-                            const imgData = canvas.toDataURL("image/png", 1.0);
+		return "string" === typeof data && data ? data : failed;
+	}
 
-                            const { PDFDocument } = PDFLib;
-                            const pdfDoc = await PDFDocument.create();
+	$(".download-invoice-woo").on("click", function (e) {
+		e.preventDefault();
 
+		var $button = $(this);
+		var postId = $button.data("invoice");
 
-                            const pageWidth = 595.28;
-                            const pageHeight = 841.89;
+		if ($button.attr("aria-busy")) {
+			return;
+		}
 
-                            const page = pdfDoc.addPage([pageWidth, pageHeight]);
-                            const pngImage = await pdfDoc.embedPng(imgData);
+		$button.attr("aria-busy", "true").prop("disabled", true);
 
+		function done() {
+			$("#hidden-invoice-wrapper").hide().empty();
+			$button.removeAttr("aria-busy").prop("disabled", false);
+		}
 
-                            const imgWidth = pageWidth;
-                            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+		$.ajax({
+			url: jws_script.ajax_url,
+			type: "POST",
+			data: {
+				action: "get_invoice_html_woo",
+				order_id: postId
+			},
+			success: function (response) {
 
-                            page.drawImage(pngImage, {
-                                x: 0,
-                                y: pageHeight - imgHeight,
-                                width: imgWidth,
-                                height: imgHeight
-                            });
+				if (!response || !response.success || !response.data || !response.data.html) {
+					done();
+					notify(errorText(response));
+					return;
+				}
 
-                            const pdfBytes = await pdfDoc.save();
-                            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-                            const link = document.createElement("a");
-                            link.href = URL.createObjectURL(blob);
-                            link.download = "invoice-" + postId + ".pdf";
-                            link.click();
+				if ("function" !== typeof window.html2canvas || !window.PDFLib) {
+					done();
+					notify(failed);
+					return;
+				}
 
-                            $("#hidden-invoice-wrapper").hide();
-                        });
-                    } else {
-                        alert(response.data.message);
-                    }
-                },
-                error: function () {
-                    alert("Error loading invoice");
-                }
-            });
-        });
+				$("#hidden-invoice-wrapper").html(response.data.html).show();
+
+				html2canvas(document.querySelector("#hidden-invoice-wrapper"), { scale: 2 }).then(async function (canvas) {
+					const imgData = canvas.toDataURL("image/png", 1.0);
+
+					const { PDFDocument } = PDFLib;
+					const pdfDoc = await PDFDocument.create();
+
+					const pageWidth = 595.28;
+					const pageHeight = 841.89;
+
+					const page = pdfDoc.addPage([pageWidth, pageHeight]);
+					const pngImage = await pdfDoc.embedPng(imgData);
+
+					const imgWidth = pageWidth;
+					const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+					page.drawImage(pngImage, {
+						x: 0,
+						y: pageHeight - imgHeight,
+						width: imgWidth,
+						height: imgHeight
+					});
+
+					const pdfBytes = await pdfDoc.save();
+					const blob = new Blob([pdfBytes], { type: "application/pdf" });
+					const link = document.createElement("a");
+					link.href = URL.createObjectURL(blob);
+					link.download = "invoice-" + postId + ".pdf";
+					link.click();
+
+					done();
+				}).catch(function () {
+					done();
+					notify(failed);
+				});
+			},
+			error: function () {
+				done();
+				notify(failed);
+			}
+		});
+	});
 });
 </script>

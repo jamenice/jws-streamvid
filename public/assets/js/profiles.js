@@ -333,8 +333,19 @@
 		return loadedStyles.has( href );
 	}
 
+	/*
+	 * Cloudflare Rocket Loader renames every script type to
+	 * "<hash>-text/javascript" so the browser skips it until Rocket Loader
+	 * runs it. That only happens on a full page load: in a tab loaded in
+	 * place the scripts would never run (the Invoice button stayed dead), so
+	 * the prefix is dropped and they run like any other script.
+	 */
+	function scriptType( script ) {
+		return ( script.getAttribute( 'type' ) || '' ).toLowerCase().replace( /^[0-9a-f]+-(?=text\/javascript$|application\/javascript$|module$)/, '' );
+	}
+
 	function isJs( script ) {
-		var type = ( script.getAttribute( 'type' ) || '' ).toLowerCase();
+		var type = scriptType( script );
 		return '' === type || 'module' === type || 'text/javascript' === type || 'application/javascript' === type;
 	}
 
@@ -357,6 +368,10 @@
 			Array.prototype.forEach.call( old.attributes, function ( attr ) {
 				script.setAttribute( attr.name, attr.value );
 			} );
+
+			if ( old.hasAttribute( 'type' ) ) {
+				script.setAttribute( 'type', scriptType( old ) );
+			}
 
 			if ( old.src ) {
 				loadedScripts.add( old.src );
