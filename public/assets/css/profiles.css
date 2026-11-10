@@ -3284,6 +3284,88 @@ html.jws-pfm-busy {
 	}
 }
 
+/*
+ * Phones: profile screens are tighter. The theme's buttons are 16px with
+ * 15px 31px padding; here they take the theme's small text size
+ * (--font-size-sm, 12px on phones) and less padding, and cards less padding.
+ */
+@media (max-width: 767px) {
+	/* body: the theme's .button-default .button-default loads later with the same weight. */
+	body .jws-pv3 :is(.button-default, .button-custom),
+	body .jws-pf :is(.button-default, .button-custom) {
+		padding: 10px 16px;
+		font-size: var(--font-size-sm);
+		line-height: var(--line-height-sm);
+	}
+
+	.jws-vid .jws-lib__actions :is(.button-default, .button-custom) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		white-space: nowrap;
+	}
+
+	.jws-pv3__sections {
+		min-height: 36px;
+		padding: 0 12px;
+	}
+
+	.jws-vid__stats .jws-coin__stat {
+		padding: 10px 12px;
+	}
+
+	.jws-coin__top {
+		gap: 10px;
+	}
+
+	.jws-coin__balance {
+		padding: 16px;
+	}
+
+	/* The two counters share a row under the balance. */
+	.jws-coin__top .jws-coin__stat {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 12px 14px;
+	}
+
+	.jws-sub__plan {
+		gap: 14px;
+		padding: 16px;
+	}
+
+	.jws-set__card {
+		gap: 12px;
+		padding: 16px;
+	}
+
+	/* Avatar beside the name, Edit on its own line under them. */
+	.jws-set__me {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 12px;
+	}
+
+	.jws-set__avatar {
+		width: 56px;
+		height: 56px;
+	}
+
+	.jws-set__me > :is(.button-default, .button-custom) {
+		grid-column: 1 / -1;
+		justify-self: start;
+	}
+
+	.jws-pf-list__item {
+		gap: 10px 14px;
+		padding: 12px 14px;
+	}
+
+	.jws-dev__limit {
+		padding: 14px 16px;
+	}
+}
+
 /* Tablets show the toolbar too: keep the end of the dropdown clear of it. */
 @media (min-width: 768px) and (max-width: 1024px) {
 	.has-tool-bar .jws_account .dropdown-menu.jws-am-dropdown {

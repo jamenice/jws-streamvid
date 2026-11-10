@@ -88,7 +88,7 @@ $jws_sub_status = array(
 			<div class="jws-sub__plan-head">
 				<div class="jws-sub__plan-text">
 					<span class="jws-sub__eyebrow"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-					<span class="jws-sub__name h4">
+					<span class="jws-sub__name h5">
 						<?php echo esc_html( $jws_sub_level->name ); ?>
 						<span class="jws-buy__chip jws-buy__chip--active"><?php esc_html_e( 'Active', 'jws_streamvid' ); ?></span>
 					</span>
@@ -115,7 +115,7 @@ $jws_sub_status = array(
 			<div class="jws-sub__plan-head">
 				<div class="jws-sub__plan-text">
 					<span class="jws-sub__eyebrow"><?php esc_html_e( 'Current plan', 'jws_streamvid' ); ?></span>
-					<span class="jws-sub__name h4"><?php echo $jws_sub_level ? esc_html( $jws_sub_level->name ) : esc_html__( 'Free Plan', 'jws_streamvid' ); ?></span>
+					<span class="jws-sub__name h5"><?php echo $jws_sub_level ? esc_html( $jws_sub_level->name ) : esc_html__( 'Free Plan', 'jws_streamvid' ); ?></span>
 					<span class="jws-sub__cost"><?php esc_html_e( 'Upgrade to watch premium titles, add more profiles and sign in on more devices.', 'jws_streamvid' ); ?></span>
 				</div>
 				<div class="jws-sub__actions">
