@@ -132,6 +132,10 @@ $jws_v3_path     = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $
 $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v3_path;
 ?>
 <div class="jws-pv3" data-jws-base="<?php echo esc_url( Jws_Streamvid_Profile::get_url() ); ?>">
+	<?php
+	// On phones the menu is a hidden "Sections" sheet from the first paint; profiles.js (deferred) wires it up. Without JavaScript the menu shows above the tab.
+	wp_print_inline_script_tag( "document.documentElement.classList.add('jws-pv3-js');" );
+	?>
 
 	<div class="jws-pv3__bar">
 		<h5 class="jws-pv3__title"><?php echo esc_html( $jws_v3_title ); ?></h5>
