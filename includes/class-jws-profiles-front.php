@@ -767,6 +767,22 @@ class Jws_Profiles_Front {
 			file_exists( $css ) ? (string) filemtime( $css ) : JWS_STREAMVID_VERSION
 		);
 
+		// Header account menu on phones: placed under the avatar, also with a sticky header.
+		if ( is_user_logged_in() ) {
+			$menu = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/account-menu.js';
+
+			wp_enqueue_script(
+				'jws-account-menu',
+				JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/account-menu.js',
+				array(),
+				file_exists( $menu ) ? (string) filemtime( $menu ) : JWS_STREAMVID_VERSION,
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
+			);
+		}
+
 		// The "Who's watching?" modal: wherever a signed-in member can switch or manage profiles.
 		if ( is_user_logged_in() && Jws_Profiles::enabled() ) {
 			$modal = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/profiles-modal.js';

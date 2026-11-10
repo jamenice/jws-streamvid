@@ -3247,24 +3247,22 @@ html.jws-pfm-busy {
 		display: none;
 	}
 
+	/*
+	 * Phones: the menu drops from the top, under the avatar, almost as wide
+	 * as the screen. account-menu.js sets --jws-am-top (just below the
+	 * avatar, corrected when a sticky header is the containing block) and
+	 * --jws-am-max (down to the theme's bottom toolbar, when there is one).
+	 */
 	.jws_account .dropdown-menu.jws-am-dropdown {
 		position: fixed;
-		top: auto;
-		inset-inline: 0;
-		bottom: 0;
+		top: var(--jws-am-top, 72px);
+		bottom: auto;
+		inset-inline: 12px;
 		width: auto;
 		max-width: none;
-		max-height: 85vh;
-		border-radius: 20px 20px 0 0;
-	}
-
-	/*
-	 * The theme's bottom toolbar (.jws-toolbar-wap: fixed, z-index 350, 45px
-	 * plus 10px padding) is above the header, so the sheet opens on top of it.
-	 */
-	.has-tool-bar .jws_account .dropdown-menu.jws-am-dropdown {
-		bottom: 55px;
-		max-height: calc(85vh - 55px);
+		max-height: var(--jws-am-max, calc(100dvh - 150px));
+		/* The theme animates "all": only fade and slide, so the panel does not travel in from the old top. */
+		transition-property: opacity, transform;
 	}
 }
 
