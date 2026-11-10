@@ -1926,3 +1926,24 @@
 	color: var(--main);
 	font-size: 20px;
 }
+
+/* Playlist screen (playlist-single.php): back to the playlist list, beside the name. */
+.playlist-header .playlist-back {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	margin-inline-end: 10px;
+	border-radius: 50%;
+	background: var(--background-item);
+	color: var(--heading);
+	vertical-align: middle;
+	text-decoration: none;
+}
+
+.playlist-header .playlist-back:hover,
+.playlist-header .playlist-back:focus-visible {
+	background: var(--input-background2);
+	color: var(--heading);
+}

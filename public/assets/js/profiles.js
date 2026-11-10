@@ -210,9 +210,10 @@
 		return same;
 	}
 
-	// The playlist editor (?playlist=) prints its own popups and binds them on load, so it opens as a full page.
-	function needsFullLoad( url ) {
-		return url.searchParams.has( 'playlist' );
+	// Pages that must load in full. None now: the playlist screen (?playlist=) brings its own popups and
+	// pages/profile.js binds them on document, so it loads in place like the other tabs.
+	function needsFullLoad() {
+		return false;
 	}
 
 	function linkTarget( link ) {
@@ -576,6 +577,19 @@
 			}
 		} );
 	}
+
+	/*
+	 * Other scripts (pages/profile.js after saving a playlist) load a profile
+	 * page in place too. Resolves when the tab is in.
+	 */
+	window.jwsPv3Visit = function ( url, opts ) {
+		var target = new URL( url, window.location.href );
+		if ( ! inProfile( target ) ) {
+			window.location.assign( target.href );
+			return Promise.resolve();
+		}
+		return visit( target.href, Object.assign( { history: 'push' }, opts || {} ) );
+	};
 
 	document.addEventListener( 'click', function ( event ) {
 		var submit = event.target.closest && event.target.closest( 'button, input[type="submit"]' );

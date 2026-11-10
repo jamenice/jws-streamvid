@@ -127,6 +127,13 @@ class Jws_Streamvid_Playlist {
         
     }
     
+    /**
+     * Set by playlist-single.php, which prints the playlist's own popups (edit,
+     * delete, add videos, save to another) with the screen, so a profile tab
+     * that opens the playlist in place has them. The footer then skips them.
+     */
+    public static $single_modals = false;
+
     public function create_edit_playlist(){
         $errors = new WP_Error();
         
@@ -162,9 +169,18 @@ class Jws_Streamvid_Playlist {
             wp_send_json_error( $term );
         }
         
-        $message = esc_html__( 'Playlist has been created successfully', 'jws_streamvid' );
-        
-        wp_send_json_success( compact( 'term', 'message') );
+        $message = $args['term_id']
+            ? esc_html__( 'Playlist has been updated successfully', 'jws_streamvid' )
+            : esc_html__( 'Playlist has been created successfully', 'jws_streamvid' );
+
+        // Where the profile page goes next: the list of this playlist's type.
+        $list_url = add_query_arg(
+            'ptype',
+            sanitize_key( isset( $args['playlist_type'] ) ? $args['playlist_type'] : 'videos_playlist' ),
+            Jws_Streamvid_Profile::get_url( 'playlist' )
+        );
+
+        wp_send_json_success( compact( 'term', 'message', 'list_url' ) );
       
 	}
     

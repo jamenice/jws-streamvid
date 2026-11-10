@@ -42,6 +42,11 @@ $playlist_all = jws_streamvid()->get()->playlist->playlist_url_all($id,$playlist
     </div>
     <div class="col-xl-9 col-lg-9">
         <div class="playlist-header">
+            <?php $back_url = add_query_arg( 'ptype', sanitize_key( $playlist_type ), Jws_Streamvid_Profile::get_url( 'playlist' ) ); ?>
+            <a class="playlist-back" href="<?php echo esc_url( $back_url ); ?>">
+                <i class="jws-icon-arrow-left" aria-hidden="true"></i>
+                <span class="screen-reader-text"><?php echo esc_html__( 'Back to playlists', 'jws_streamvid' ); ?></span>
+            </a>
             <h5><?php echo esc_html( $term->name ); ?></h5>
             <?php if(jws_streamvid()->get()->profile->_profile_is_owner()) : ?>
             <div class="playlist-control jws-dropdown-ui">
@@ -130,5 +135,16 @@ $playlist_all = jws_streamvid()->get()->playlist->playlist_url_all($id,$playlist
         
         </div>
     </div>
+
+<?php
+// The playlist's own popups come with the screen, so a profile tab that opens it in place (profiles.js) has them.
+if ( is_user_logged_in() ) {
+    Jws_Streamvid_Playlist::$single_modals = true;
+    jws_streamvid_load_template( 'playlist/edit-playlist.php', false );
+    jws_streamvid_load_template( 'playlist/delete-playlist.php', false, array( 'term_id' => $id ) );
+    jws_streamvid_load_template( 'playlist/other-playlist.php', false, array( 'term_id' => $id ) );
+    jws_streamvid_load_template( 'playlist/search-item.php', false, array( 'term_id' => $id ) );
+}
+?>
 
 <?php endif; ?>

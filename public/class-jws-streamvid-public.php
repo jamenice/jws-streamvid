@@ -637,7 +637,8 @@ class Jws_Streamvid_Public {
         
         if( is_user_logged_in() ){
             jws_streamvid_load_template("playlist/create-playlist.php", false);
-            if(isset($_GET['playlist']) && !empty($_GET['playlist'])) { 
+            // playlist-single.php prints these itself (Jws_Streamvid_Playlist::$single_modals).
+            if(isset($_GET['playlist']) && !empty($_GET['playlist']) && ! Jws_Streamvid_Playlist::$single_modals) { 
               jws_streamvid_load_template("playlist/edit-playlist.php", false);  
               jws_streamvid_load_template("playlist/delete-playlist.php" , false , array('term_id'=>$_GET['playlist']));
               jws_streamvid_load_template("playlist/other-playlist.php" , false , array('term_id'=>$_GET['playlist']));

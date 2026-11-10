@@ -45,7 +45,8 @@
 
         function delete_playlist() { 
             
-            $('form.form-delete-playlist').on('submit' , function(e) { 
+            // Delegated: on profile V3 the playlist screen (and this form) can arrive later, loaded in place.
+            $(document).on('submit' , 'form.form-delete-playlist' , function(e) { 
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
@@ -65,7 +66,7 @@
                         if(response.success) {
                             jwsThemeModule.show_notification(response.data.message,'success');
                            	if( response.data.redirect_url ){
-                    			window.location.href = response.data.redirect_url;
+                    			goToProfilePage(response.data.redirect_url);
                     		}
                         }else {
                            jwsThemeModule.show_notification(response.data[0].message,'error');
@@ -83,6 +84,26 @@
         delete_playlist();
         
         
+        /*
+         * After a playlist is saved or deleted: on profile V3 the tab loads in
+         * place (profiles.js), as from the side menu; elsewhere the page loads.
+         */
+        function goToProfilePage(url, opts) {
+            if ($.magnificPopup && $.magnificPopup.instance && $.magnificPopup.instance.isOpen) {
+                $.magnificPopup.close();
+            }
+            if (typeof window.jwsPv3Visit === 'function' && document.querySelector('.jws-pv3[data-jws-base]')) {
+                window.jwsPv3Visit(url, opts);
+            } else if (url === window.location.href) {
+                window.location.reload();
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        // The title "Save to another playlist" was opened for, so a playlist created there can refresh the list.
+        var lastSaveArgs = null;
+
         function create_edit_playlist() {
       
             
@@ -107,11 +128,18 @@
                             success: function(response) {
                                 if(response.success) {
                                    jwsThemeModule.show_notification(response.data.message,'success');
-                                   location.reload();
-                                   if(save) {
-                                      callback_search_playlist(post_id); 
-                                      $('.add-other-playlist').click(); 
-                                    }
+                                   if(save && lastSaveArgs) {
+                                      // "Save to another playlist": the new one shows in the list, no reload.
+                                      form[0].reset();
+                                      callback_search_playlist(lastSaveArgs.post_id, lastSaveArgs.playlist_type, lastSaveArgs.post_type);
+                                      $('.add-other-playlist').click();
+                                   } else if(formData.get('term_id') && formData.get('term_id') !== '0') {
+                                      // Edited: the same playlist screen again, with the new name and privacy.
+                                      goToProfilePage(window.location.href, { history: 'replace', scroll: false });
+                                   } else {
+                                      // Created: the list of its type.
+                                      goToProfilePage(response.data.list_url || window.location.href);
+                                   }
                                 }else {
                                    jwsThemeModule.show_notification(response.data[0].message,'error');
                                 }
@@ -163,7 +191,8 @@
         
         function add_item_playlist() { 
             
-          $('#add-item-playlist form').on('submit' , function(e) { 
+          // Delegated: the popup comes with the playlist screen, which profile V3 can load in place.
+          $(document).on('submit' , '#add-item-playlist form' , function(e) { 
                    e.preventDefault();
                    var form = $(this); 
                    var formData = new FormData(this);
@@ -194,7 +223,7 @@
                 });
           }); 
             
-           $('[modal="#add-item-playlist"]').on('click' , function(e) {
+           $(document).on('click' , '[modal="#add-item-playlist"]' , function(e) {
  
                e.preventDefault();
                var $buttton = $(this).attr('modal');
@@ -280,7 +309,8 @@
         add_item_playlist();
         
         function save_to_playlist() {
-             var $modal = $('#save-to-playlist');  
+             // Looked up each time: the popup comes with the playlist screen, which profile V3 loads in place.
+             var $modal = function () { return $('#save-to-playlist'); };  
           
              $(document).on('click','[data-modal-jws="#save-to-playlist"]', function(e) {  
                         
@@ -289,6 +319,7 @@
                        var post_id = button.data('post-id');
                        var playlist_type = button.data('playlist-type'); 
                        var post_type = button.data('post-type'); 
+                       lastSaveArgs = { post_id: post_id, playlist_type: playlist_type, post_type: post_type };
                         if(!$('.other-crelate form').length) {
                             var form_clone = $('#create-playlist .form-set-playlist').clone();   
                             form_clone.find('[name="post_id"]').val(post_id);
@@ -307,9 +338,9 @@
              $(document).on('click','.add-other-playlist', function(e) {  
    
                 
-                $modal.find('.other-crelate').slideToggle();
+                $modal().find('.other-crelate').slideToggle();
                 
-                $modal.find('.form-body-top').slideToggle();
+                $modal().find('.form-body-top').slideToggle();
                 
              });
            
