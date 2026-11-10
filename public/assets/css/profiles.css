@@ -3257,6 +3257,22 @@ html.jws-pfm-busy {
 		max-height: 85vh;
 		border-radius: 20px 20px 0 0;
 	}
+
+	/*
+	 * The theme's bottom toolbar (.jws-toolbar-wap: fixed, z-index 350, 45px
+	 * plus 10px padding) is above the header, so the sheet opens on top of it.
+	 */
+	.has-tool-bar .jws_account .dropdown-menu.jws-am-dropdown {
+		bottom: 55px;
+		max-height: calc(85vh - 55px);
+	}
+}
+
+/* Tablets show the toolbar too: keep the end of the dropdown clear of it. */
+@media (min-width: 768px) and (max-width: 1024px) {
+	.has-tool-bar .jws_account .dropdown-menu.jws-am-dropdown {
+		max-height: calc(100vh - 155px);
+	}
 }
 
 /* ------------------------------------------------------------------ *
