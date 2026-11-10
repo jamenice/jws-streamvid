@@ -119,8 +119,7 @@ if ( $jws_am_kid ) {
 	<?php if ( $jws_am_on && ( $jws_am_others || ! $jws_am_kid ) ) : ?>
 		<div class="jws-am__profiles">
 			<?php if ( $jws_am_others ) : ?>
-				<p class="jws-am__label"><?php esc_html_e( 'Switch profile', 'jws_streamvid' ); ?></p>
-				<ul class="jws-am__switch">
+				<ul class="jws-am__switch" aria-label="<?php esc_attr_e( 'Switch profile', 'jws_streamvid' ); ?>">
 					<?php foreach ( $jws_am_others as $jws_am_p ) : ?>
 						<li>
 							<form method="post" action="<?php echo esc_url( Jws_Profiles_Front::url() ); ?>">
@@ -151,10 +150,7 @@ if ( $jws_am_kid ) {
 	<?php foreach ( $jws_am_groups as $jws_am_key => $jws_am_group ) : ?>
 		<?php if ( ! $jws_am_group['items'] ) { continue; } ?>
 		<div class="jws-am__group">
-			<?php if ( ! $jws_am_kid ) : ?>
-				<p class="jws-am__label"><?php echo esc_html( $jws_am_group['label'] ); ?></p>
-			<?php endif; ?>
-			<ul class="jws-am__list">
+			<ul class="jws-am__list" aria-label="<?php echo esc_attr( $jws_am_group['label'] ); ?>">
 				<?php foreach ( $jws_am_group['items'] as $jws_am_id => $jws_am_item ) : ?>
 					<li>
 						<a class="jws-am__item item-<?php echo esc_attr( $jws_am_id ); ?>" href="<?php echo esc_url( $jws_am_item['href'] ); ?>"<?php echo $jws_am_item['popup'] ? ' data-modal-jws="' . esc_attr( $jws_am_item['popup'] ) . '"' : ''; ?>>

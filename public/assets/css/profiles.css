@@ -1042,15 +1042,6 @@ html.jws-pfm-busy {
 	border-top: 1px solid var(--border-color);
 }
 
-.jws-am__label {
-	margin: 4px 10px 6px;
-	color: var(--body2);
-	font-size: var(--jws-pf-fs-xs);
-	font-weight: 700;
-	letter-spacing: 1px;
-	text-transform: uppercase;
-}
-
 .jws-am__switch {
 	display: flex;
 	flex-wrap: wrap;
