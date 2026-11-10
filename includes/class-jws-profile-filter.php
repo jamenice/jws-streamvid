@@ -148,6 +148,37 @@ class Jws_Profile_Filter {
 	}
 
 	/* ------------------------------------------------------------------ *
+	 * For code that picks titles without WP_Query (raw SQL, hand-picked
+	 * lists), as filters so the theme works without this plugin:
+	 *
+	 *   apply_filters( 'jws_profile_visible_post_types', $types )
+	 *   apply_filters( 'jws_profile_hidden_post_ids', array() )
+	 *   apply_filters( 'jws_profile_visible_ids', $ids )
+	 * ------------------------------------------------------------------ */
+
+	/** $types without the ones the profile in use never sees (Kids: videos, live streams). */
+	public static function visible_post_types( $types ) {
+
+		$restriction = self::restriction();
+		$types       = (array) $types;
+
+		return $restriction && $restriction['kids'] ? array_values( array_diff( $types, self::kids_hidden_types() ) ) : $types;
+	}
+
+	/** IDs of the titles the profile in use may not see, added to $ids. */
+	public static function hidden_post_ids( $ids ) {
+
+		$hidden = array_keys( self::blocked_map() );
+
+		return $hidden ? array_merge( (array) $ids, $hidden ) : (array) $ids;
+	}
+
+	/** $ids without the titles the profile in use may not see, in the same order. */
+	public static function visible_ids( $ids ) {
+		return array_values( array_filter( (array) $ids, array( __CLASS__, 'can_view' ) ) );
+	}
+
+	/* ------------------------------------------------------------------ *
 	 * Hooks
 	 * ------------------------------------------------------------------ */
 
@@ -594,3 +625,6 @@ add_filter( 'posts_where', array( 'Jws_Profile_Filter', 'hide_types_where' ), 10
 add_action( 'template_redirect', array( 'Jws_Profile_Filter', 'guard_request' ), 5 );
 add_action( 'admin_init', array( 'Jws_Profile_Filter', 'guard_ajax' ), 1 );
 add_action( 'jws_profiles_switched', array( 'Jws_Profile_Filter', 'reset' ) );
+add_filter( 'jws_profile_visible_post_types', array( 'Jws_Profile_Filter', 'visible_post_types' ) );
+add_filter( 'jws_profile_hidden_post_ids', array( 'Jws_Profile_Filter', 'hidden_post_ids' ) );
+add_filter( 'jws_profile_visible_ids', array( 'Jws_Profile_Filter', 'visible_ids' ) );
