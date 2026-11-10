@@ -141,6 +141,12 @@
 	}
 
 	function fail() {
+		// Opened right after sign-in (jwsOpenProfiles): carry on to the page, which asks again if it should.
+		if ( forced && 'function' === typeof config.fallback ) {
+			config.fallback();
+			return;
+		}
+
 		reveal( forced );
 
 		var old = body.querySelector( '.jws-pfm__error' );

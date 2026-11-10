@@ -662,16 +662,7 @@ class Jws_Profiles_Front {
 			wp_localize_script(
 				'jws-profiles-modal',
 				'jwsProfilesModal',
-				array(
-					'screen'   => self::url(),
-					'queryVar' => get_option( 'permalink_structure' ) ? '' : self::QUERY_VAR,
-					'gate'     => self::gate_url(),
-					'i18n'     => array(
-						'dialog' => __( 'Profiles', 'jws_streamvid' ),
-						'close'  => __( 'Close', 'jws_streamvid' ),
-						'error'  => __( 'Something went wrong. Try again.', 'jws_streamvid' ),
-					),
-				)
+				self::modal_config( self::gate_url() )
 			);
 		}
 
@@ -750,6 +741,135 @@ class Jws_Profiles_Front {
 		exit;
 	}
 
+	/** Settings for profiles-modal.js (window.jwsProfilesModal). */
+	private static function modal_config( $gate = '' ) {
+
+		return array(
+			'screen'   => self::url(),
+			'queryVar' => get_option( 'permalink_structure' ) ? '' : self::QUERY_VAR,
+			'gate'     => $gate,
+			'i18n'     => array(
+				'dialog' => __( 'Profiles', 'jws_streamvid' ),
+				'close'  => __( 'Close', 'jws_streamvid' ),
+				'error'  => __( 'Something went wrong. Try again.', 'jws_streamvid' ),
+			),
+		);
+	}
+
+	/**
+	 * A sign-in from the theme's form (jws_login_ajax): when this account is
+	 * asked "Who's watching?", the answer carries `profiles`, the screen URL
+	 * coming back to the page the form goes to. The page then opens the
+	 * modal at once (jwsOpenProfiles, below) and goes there once a profile
+	 * is picked, instead of loading that page first and asking on it.
+	 *
+	 * @param array   $data code, message, redirect.
+	 * @param WP_User $user Who signed in.
+	 */
+	public static function login_response( $data, $user ) {
+
+		if ( ! is_array( $data ) || ! $user instanceof WP_User || ! Jws_Profiles::enabled() ) {
+			return $data;
+		}
+
+		if ( Jws_Profiles::count( $user->ID ) < 2 && ! Jws_Profiles_Settings::gate_always() ) {
+			return $data;
+		}
+
+		$target = ! empty( $data['redirect'] ) ? (string) $data['redirect'] : (string) wp_get_referer();
+		$target = '' !== $target ? wp_validate_redirect( $target, home_url( '/' ) ) : home_url( '/' );
+
+		// A sign-in on the way to paying goes straight back to it.
+		if ( self::is_payment_url( $target ) ) {
+			return $data;
+		}
+
+		// The theme adds redirect=true when it goes to `redirect` itself.
+		$back = ! empty( $data['redirect'] ) ? add_query_arg( 'redirect', 'true', $target ) : $target;
+
+		$data['profiles'] = self::url( 'choose', 0, array( 'back' => $back ) );
+
+		return $data;
+	}
+
+	/** Whether $url is a cart, checkout or payment page (the URL form of is_payment_page()). */
+	private static function is_payment_url( $url ) {
+
+		$ids = array();
+
+		if ( function_exists( 'wc_get_page_id' ) ) {
+			$ids[] = wc_get_page_id( 'checkout' );
+			$ids[] = wc_get_page_id( 'cart' );
+		}
+		if ( ! empty( $GLOBALS['pmpro_pages'] ) && is_array( $GLOBALS['pmpro_pages'] ) ) {
+			$ids = array_merge( $ids, array_values( array_intersect_key( $GLOBALS['pmpro_pages'], array_flip( array( 'checkout', 'confirmation', 'billing', 'cancel', 'invoice' ) ) ) ) );
+		}
+
+		$path    = trailingslashit( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+		$payment = false;
+
+		foreach ( array_filter( array_map( 'intval', $ids ), function ( $id ) { return $id > 0; } ) as $id ) {
+			$page = trailingslashit( (string) wp_parse_url( (string) get_permalink( $id ), PHP_URL_PATH ) );
+
+			// The page itself or one of its endpoints (checkout/order-received/123/).
+			if ( '/' !== $page && 0 === strpos( $path, $page ) ) {
+				$payment = true;
+				break;
+			}
+		}
+
+		/**
+		 * Filters whether a sign-in going to $url skips "Who's watching?" (cart, checkout, payment).
+		 *
+		 * @param bool   $payment True for cart, checkout and payment pages.
+		 * @param string $url     Where the sign-in goes.
+		 */
+		return (bool) apply_filters( 'jws_profiles_is_payment_url', $payment, $url );
+	}
+
+	/**
+	 * For visitors not signed in yet: window.jwsOpenProfiles( url, fallback ),
+	 * which the theme's sign-in form calls with `profiles` (login_response()).
+	 * It loads the modal's styles and script only then, and opens it as the
+	 * gate; fallback (go to the page as before) runs if they cannot load.
+	 */
+	public static function login_loader() {
+
+		if ( is_user_logged_in() || ! Jws_Profiles::enabled() ) {
+			return;
+		}
+
+		$css  = JWS_STREAMVID_PATH_PUBLIC . '/assets/css/profiles.css';
+		$js   = JWS_STREAMVID_PATH_PUBLIC . '/assets/js/profiles-modal.js';
+		$data = array(
+			'css'    => add_query_arg( 'ver', file_exists( $css ) ? filemtime( $css ) : JWS_STREAMVID_VERSION, JWS_STREAMVID_URL_PUBLIC_ASSETS . '/css/profiles.css' ),
+			'js'     => add_query_arg( 'ver', file_exists( $js ) ? filemtime( $js ) : JWS_STREAMVID_VERSION, JWS_STREAMVID_URL_PUBLIC_ASSETS . '/js/profiles-modal.js' ),
+			'config' => self::modal_config(),
+		);
+
+		$script = 'window.jwsOpenProfiles = function ( url, fallback ) {
+	var a = ' . wp_json_encode( $data ) . ', done = false;
+	var giveUp = function () { if ( ! done ) { done = true; fallback(); } };
+	var timer = setTimeout( giveUp, 10000 );
+	var run = function () {
+		window.jwsProfilesModal = Object.assign( {}, a.config, { gate: url, fallback: giveUp } );
+		var s = document.createElement( "script" );
+		s.src = a.js;
+		s.onload = function () { clearTimeout( timer ); };
+		s.onerror = function () { clearTimeout( timer ); giveUp(); };
+		document.body.appendChild( s );
+	};
+	var l = document.createElement( "link" );
+	l.rel = "stylesheet";
+	l.href = a.css;
+	l.onload = run;
+	l.onerror = run;
+	document.head.appendChild( l );
+};';
+
+		wp_print_inline_script_tag( $script, array( 'id' => 'jws-profiles-login' ) );
+	}
+
 	/** Adds the Profiles tab to the profile page menu; the Profile Menu sorter can move or hide it. */
 	public static function profile_tab( $items ) {
 
@@ -799,3 +919,5 @@ if ( ! function_exists( 'jws_streamvid_profile_avatar' ) ) {
 		return Jws_Profiles_Front::avatar_img( Jws_Profiles::current_profile(), $size, 'avatar jws-pf-avatar' );
 	}
 }
+add_filter( 'jws_login_response', array( 'Jws_Profiles_Front', 'login_response' ), 10, 2 );
+add_action( 'wp_footer', array( 'Jws_Profiles_Front', 'login_loader' ), 30 );
