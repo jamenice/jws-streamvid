@@ -478,6 +478,20 @@
 			}
 		}
 
+		// Same place on the page as before the load ("Show more").
+		if ( 'number' === typeof opts.keepY && Math.abs( window.pageYOffset - opts.keepY ) > 1 ) {
+			window.scrollTo( 0, opts.keepY );
+		}
+
+		// The first title that was not there before ("Show more"), without scrolling to it.
+		if ( 'number' === typeof opts.focusItem ) {
+			var item = fresh.querySelectorAll( '.jws-lib__item' )[ opts.focusItem ];
+			var focusable = item && item.querySelector( 'a[href], button' );
+			if ( focusable ) {
+				focusable.focus( { preventScroll: true } );
+			}
+		}
+
 		toastNotices( fresh );
 
 		// Focus goes to the tab title, or to a notice left in the page when the toast is not there.
@@ -615,6 +629,23 @@
 		}
 
 		event.preventDefault();
+
+		/*
+		 * "Show more" (library tabs): the same tab with more titles. The reader
+		 * stays where they are and focus moves to the first new title; the
+		 * address is replaced, so Back does not step through each "Show more".
+		 */
+		if ( link.hasAttribute( 'data-jws-more' ) ) {
+			visit( url.href, {
+				history: 'replace',
+				scroll: false,
+				focus: false,
+				keepY: window.pageYOffset,
+				focusItem: parseInt( link.getAttribute( 'data-jws-more' ), 10 ) || 0,
+			} );
+			return;
+		}
+
 		markActive( link );
 		shutSheet( false );
 		visit( url.href, { history: 'push', scroll: true } );

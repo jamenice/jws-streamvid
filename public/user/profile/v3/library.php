@@ -140,7 +140,8 @@ $jws_lib_copy = $jws_lib_text[ $jws_lib_tab ];
 
 			<?php if ( $jws_lib_total > $jws_lib_shown ) : ?>
 				<div class="jws-lib__more">
-					<a class="button-custom" href="<?php echo esc_url( add_query_arg( array( 'type' => 'all' === $jws_lib_type ? false : $jws_lib_type, 'shown' => $jws_lib_shown + Jws_Profile_Library::PER_PAGE ), $jws_lib_page ) ); ?>">
+					<?php // data-jws-more: titles shown now; profiles.js keeps the reader's place and focuses the first new one. ?>
+					<a class="button-custom" data-jws-more="<?php echo (int) $jws_lib_shown; ?>" href="<?php echo esc_url( add_query_arg( array( 'type' => 'all' === $jws_lib_type ? false : $jws_lib_type, 'shown' => $jws_lib_shown + Jws_Profile_Library::PER_PAGE ), $jws_lib_page ) ); ?>">
 						<?php esc_html_e( 'Show more', 'jws_streamvid' ); ?>
 					</a>
 				</div>
