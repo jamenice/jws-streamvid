@@ -23,6 +23,12 @@ $jws_pf_profile = $jws_pf_is_add ? null : Jws_Profiles::get( $jws_pf_user, Jws_P
 $jws_pf_main    = $jws_pf_profile && $jws_pf_profile->is_main;
 $jws_pf_has_pin = $jws_pf_profile && $jws_pf_profile->has_pin;
 
+// A profile with Profile Lock that is not the one in use opens for editing only after its PIN (or the account password).
+if ( $jws_pf_profile && Jws_Profiles_Front::needs_unlock( $jws_pf_user, $jws_pf_profile ) ) {
+	jws_streamvid_load_template( 'user/profiles/unlock.php', false, array( 'profile' => $jws_pf_profile ) );
+	return;
+}
+
 $jws_pf_name     = Jws_Profiles_Front::posted( 'name', $jws_pf_profile ? $jws_pf_profile->name : '' );
 $jws_pf_avatar   = Jws_Profiles_Front::posted( 'avatar', $jws_pf_profile ? $jws_pf_profile->avatar : Jws_Profiles::suggest_avatar( $jws_pf_user ) );
 $jws_pf_kid      = (bool) Jws_Profiles_Front::posted( 'is_kid', $jws_pf_profile ? $jws_pf_profile->is_kid : false );

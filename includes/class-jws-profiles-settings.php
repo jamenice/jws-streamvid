@@ -57,6 +57,11 @@ class Jws_Profiles_Settings {
 		return 'always' === self::get( 'profiles_gate', 'multi' );
 	}
 
+	/** Whether only the main profile may open account pages and change the account. */
+	public static function account_main_only() {
+		return (bool) self::get( 'profiles_account_main', false );
+	}
+
 	/** Whether "Who's watching?" opens on any page right after sign-in, not only on browse pages. */
 	public static function gate_on_login() {
 		return (bool) self::get( 'profiles_gate_login', false );

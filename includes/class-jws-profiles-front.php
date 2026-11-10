@@ -233,8 +233,8 @@ class Jws_Profiles_Front {
 			self::go( self::url() );
 		}
 
-		if ( in_array( $screen, array( 'add', 'edit' ), true ) && self::current_is_kid() ) {
-			self::go( self::url( 'choose', 0, array( 'notice' => 'kids' ) ) );
+		if ( in_array( $screen, array( 'add', 'edit' ), true ) && ! self::can_manage_account() ) {
+			self::go( self::url( 'choose', 0, array( 'notice' => self::current_is_kid() ? 'kids' : 'main_only' ) ) );
 		}
 
 		if ( 'add' === $screen && ! Jws_Profiles::can_create( $user_id ) && empty( self::$errors ) ) {
@@ -347,13 +347,26 @@ class Jws_Profiles_Front {
 		$profile_id = isset( $_POST['profile_id'] ) ? absint( wp_unslash( $_POST['profile_id'] ) ) : 0;
 
 		/*
-		 * A Kids profile cannot change profiles. Resetting a PIN stays open
-		 * ("Forgot PIN?" on the PIN screen) because it needs the account
-		 * password, which is the real gate.
+		 * Only a profile that may manage the account changes profiles: never a
+		 * Kids profile, and only the main one when Theme Options says so.
+		 * Resetting a PIN from the PIN screen ("Forgot PIN?") stays open
+		 * because it needs the account password, which is the real gate.
 		 */
-		if ( in_array( $action, array( 'save', 'delete', 'keep' ), true ) && self::current_is_kid() ) {
-			self::$errors[''] = __( 'Switch to an adult profile to manage profiles.', 'jws_streamvid' );
+		$manages = in_array( $action, array( 'save', 'delete', 'keep', 'unlock' ), true ) || ( 'pin' === $action && 'pin' !== $screen );
+
+		if ( $manages && ! self::can_manage_account() ) {
+			self::$errors[''] = self::current_is_kid()
+				? __( 'Switch to an adult profile to manage profiles.', 'jws_streamvid' )
+				: __( 'Switch to the main profile to manage profiles.', 'jws_streamvid' );
 			return;
+		}
+
+		// A profile with Profile Lock is changed or deleted only after its PIN (or the account password).
+		if ( ( $profile_id && in_array( $action, array( 'save', 'delete' ), true ) ) || ( 'pin' === $action && 'edit' === $screen ) ) {
+			if ( self::needs_unlock( $user_id, Jws_Profiles::get( $user_id, $profile_id ) ) ) {
+				self::$errors[''] = __( 'Enter this profile\'s PIN first.', 'jws_streamvid' );
+				return;
+			}
 		}
 
 		switch ( $action ) {
@@ -416,6 +429,23 @@ class Jws_Profiles_Front {
 				}
 
 				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
+
+			case 'unlock':
+				$pin      = isset( $_POST['pin'] ) ? preg_replace( '/\D/', '', sanitize_text_field( wp_unslash( $_POST['pin'] ) ) ) : '';
+				$password = isset( $_POST['account_password'] ) ? (string) wp_unslash( $_POST['account_password'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- passwords are compared, never stored or printed.
+
+				// The account password, or the profile's PIN (which counts wrong tries and locks out like switching does).
+				$result = '' !== $password
+					? Jws_Profiles::check_account_password( $user_id, $password )
+					: Jws_Profiles::verify_pin( $user_id, $profile_id, $pin );
+
+				if ( is_wp_error( $result ) ) {
+					self::$errors['unlock'] = $result->get_error_message();
+					return;
+				}
+
+				self::unlock( $user_id, $profile_id );
+				self::go( self::url( 'edit', $profile_id ) );
 
 			case 'delete':
 				$result = Jws_Profiles::delete( $user_id, $profile_id );
@@ -561,6 +591,7 @@ class Jws_Profiles_Front {
 			'pin_failed'  => __( 'The profile is saved, but Profile Lock did not change. Try again.', 'jws_streamvid' ),
 			'limit'       => __( 'Your plan has no room for another profile.', 'jws_streamvid' ),
 			'kids'        => __( 'Switch to an adult profile to manage profiles.', 'jws_streamvid' ),
+			'main_only'   => __( 'Switch to the main profile to manage profiles.', 'jws_streamvid' ),
 		);
 
 		return isset( $messages[ $notice ] ) ? $messages[ $notice ] : '';
@@ -606,6 +637,98 @@ class Jws_Profiles_Front {
 		);
 
 		return isset( $labels[ (int) $age ] ) ? $labels[ (int) $age ] : $labels[18];
+	}
+
+	/** Profile page tabs that change the account: Settings, Devices, Subscription and Profiles. */
+	const ACCOUNT_TABS = array( 'dashboard', 'profile', 'devices_manager', 'membership', 'subscriptions', 'profiles' );
+
+	/** How long a locked profile stays open for editing after its PIN. */
+	const UNLOCK_TTL = 15 * MINUTE_IN_SECONDS;
+
+	/**
+	 * Whether the profile in use may manage the account (its settings,
+	 * devices, plan and profiles): never a Kids profile; with Theme Options
+	 * "Only the main profile manages the account", only the main profile.
+	 */
+	public static function can_manage_account() {
+
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		if ( ! Jws_Profiles::enabled() ) {
+			return true;
+		}
+
+		$profile = Jws_Profiles::current_profile();
+
+		if ( $profile && $profile->is_kid ) {
+			return false;
+		}
+
+		return ! Jws_Profiles_Settings::account_main_only() || ! $profile || $profile->is_main;
+	}
+
+	/**
+	 * Whether editing or deleting $profile first needs its PIN: it has
+	 * Profile Lock, it is not the profile in use, and it was not unlocked in
+	 * this sign-in session during the last UNLOCK_TTL.
+	 */
+	public static function needs_unlock( $user_id, $profile ) {
+
+		if ( ! $profile || ! $profile->has_pin ) {
+			return false;
+		}
+
+		$current = Jws_Profiles::current_profile( $user_id );
+
+		if ( $current && (int) $current->id === (int) $profile->id ) {
+			return false;
+		}
+
+		$token = wp_get_session_token();
+
+		return '' === $token || get_transient( self::unlock_key( $user_id, $profile->id ) ) !== wp_hash( $token );
+	}
+
+	private static function unlock( $user_id, $profile_id ) {
+		set_transient( self::unlock_key( $user_id, $profile_id ), wp_hash( wp_get_session_token() ), self::UNLOCK_TTL );
+	}
+
+	private static function unlock_key( $user_id, $profile_id ) {
+		return 'jws_pf_unlock_' . (int) $user_id . '_' . (int) $profile_id;
+	}
+
+	/**
+	 * With "Only the main profile manages the account": another profile is
+	 * sent from the account tabs of the profile page (and the membership
+	 * billing and cancel pages) to History. Kids mode covers Kids profiles.
+	 */
+	public static function guard_account() {
+
+		if ( ! is_user_logged_in() || self::screen() || self::current_is_kid() || self::can_manage_account() ) {
+			return;
+		}
+
+		global $wp_query;
+
+		$blocked = false;
+
+		if ( is_author() && (int) get_queried_object_id() === get_current_user_id() ) {
+			foreach ( array( 'dashboard', 'membership', 'profiles' ) as $tab ) {
+				if ( isset( $wp_query->query_vars[ $tab ] ) ) {
+					$blocked = true;
+				}
+			}
+		} elseif ( is_page() ) {
+			$pages   = array_filter( array( (int) get_option( 'pmpro_billing_page_id' ), (int) get_option( 'pmpro_cancel_page_id' ) ) );
+			$blocked = $pages && is_page( $pages );
+		}
+
+		if ( $blocked ) {
+			$history = jws_streamvid()->get()->profile->get_endpoint( get_current_user_id(), 'history', '' );
+			wp_safe_redirect( add_query_arg( 'jws_lib', 'main_only', $history ) );
+			exit;
+		}
 	}
 
 	public static function current_is_kid() {
@@ -923,3 +1046,4 @@ if ( ! function_exists( 'jws_streamvid_profile_avatar' ) ) {
 }
 add_filter( 'jws_login_response', array( 'Jws_Profiles_Front', 'login_response' ), 10, 2 );
 add_action( 'wp_footer', array( 'Jws_Profiles_Front', 'login_loader' ), 30 );
+add_action( 'template_redirect', array( 'Jws_Profiles_Front', 'guard_account' ), 7 );

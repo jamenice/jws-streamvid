@@ -13,10 +13,11 @@ $jws_pf_user     = get_current_user_id();
 $jws_pf_profiles = Jws_Profiles::get_all( $jws_pf_user );
 $jws_pf_active   = Jws_Profiles::active_ids( $jws_pf_user );
 $jws_pf_kid      = Jws_Profiles_Front::current_is_kid();
-$jws_pf_manage   = ! empty( $_GET['manage'] ) && ! $jws_pf_kid; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$jws_pf_admin    = Jws_Profiles_Front::can_manage_account(); // Not a Kids profile; the main one only, when Theme Options says so.
+$jws_pf_manage   = ! empty( $_GET['manage'] ) && $jws_pf_admin; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $jws_pf_back     = Jws_Profiles_Front::back_url();
 $jws_pf_limit    = Jws_Profiles::get_limit( $jws_pf_user );
-$jws_pf_can_add  = ! $jws_pf_kid && Jws_Profiles::can_create( $jws_pf_user );
+$jws_pf_can_add  = $jws_pf_admin && Jws_Profiles::can_create( $jws_pf_user );
 $jws_pf_over     = count( $jws_pf_profiles ) > $jws_pf_limit;
 $jws_pf_notice   = Jws_Profiles_Front::notice();
 $jws_pf_error    = Jws_Profiles_Front::error();
@@ -138,7 +139,7 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 	<div class="jws-pf-actions">
 		<?php if ( $jws_pf_manage ) : ?>
 			<a class="button-default" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Done', 'jws_streamvid' ); ?></a>
-		<?php elseif ( ! $jws_pf_kid ) : ?>
+		<?php elseif ( $jws_pf_admin ) : ?>
 			<a class="button-custom" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1, 'back' => $jws_pf_back ) ) ); ?>"><?php esc_html_e( 'Manage Profiles', 'jws_streamvid' ); ?></a>
 		<?php endif; ?>
 	</div>

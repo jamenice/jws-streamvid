@@ -23,6 +23,7 @@ $jws_v3_owner   = jws_streamvid_check_owner();
 $jws_v3_current = $jws_v3_profile->get_currents_menu();
 $jws_v3_items   = $jws_v3_profile->the_menu_items_position();
 $jws_v3_kids    = class_exists( 'Jws_Kids_Mode' ) && Jws_Kids_Mode::is_active();
+$jws_v3_manage  = ! class_exists( 'Jws_Profiles_Front' ) || Jws_Profiles_Front::can_manage_account();
 
 // Visitors see the creator's public videos only.
 if ( ! $jws_v3_owner ) :
@@ -90,6 +91,11 @@ $jws_v3_title         = '';
 foreach ( $jws_v3_items as $jws_v3_id => $jws_v3_menu ) {
 
 	if ( $jws_v3_kids && ! in_array( $jws_v3_id, Jws_Kids_Mode::PROFILE_TABS, true ) ) {
+		continue;
+	}
+
+	// "Only the main profile manages the account": other profiles do not get the account tabs.
+	if ( ! $jws_v3_manage && in_array( $jws_v3_id, Jws_Profiles_Front::ACCOUNT_TABS, true ) ) {
 		continue;
 	}
 

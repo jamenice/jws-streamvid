@@ -263,7 +263,7 @@ class Jws_Profile_Library {
 
 		$user_id = get_current_user_id();
 
-		if ( ! $user_id || (int) get_queried_object_id() !== $user_id || Jws_Kids_Mode::is_active() || ! function_exists( 'jws_remove_user_devices' ) ) {
+		if ( ! $user_id || (int) get_queried_object_id() !== $user_id || ! Jws_Profiles_Front::can_manage_account() || ! function_exists( 'jws_remove_user_devices' ) ) {
 			return;
 		}
 
@@ -309,6 +309,9 @@ class Jws_Profile_Library {
 		if ( 'expired' === $code ) {
 			return __( 'This form has expired. Reload the page and try again.', 'jws_streamvid' );
 		}
+		if ( 'main_only' === $code ) {
+			return __( 'Switch to the main profile to manage the account.', 'jws_streamvid' );
+		}
 
 		return '';
 	}
@@ -318,7 +321,7 @@ class Jws_Profile_Library {
 
 		$code = isset( $_GET['jws_lib'] ) ? sanitize_key( wp_unslash( $_GET['jws_lib'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		return 'expired' === $code ? 'error' : 'success';
+		return in_array( $code, array( 'expired', 'main_only' ), true ) ? 'error' : 'success';
 	}
 
 	/** Prints the V3 tab when the site uses Version 3; returns whether it did. */

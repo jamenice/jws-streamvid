@@ -299,13 +299,22 @@ class Jws_Profile_Filter {
 			return;
 		}
 
+		$action = sanitize_key( wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// Account changes: never from a Kids profile, and only from the main one when Theme Options says so.
+		if ( is_user_logged_in() && in_array( $action, self::account_actions(), true ) && ! Jws_Profiles_Front::can_manage_account() ) {
+			self::deny(
+				Jws_Profiles_Front::current_is_kid()
+					? __( 'This is not available on a Kids profile.', 'jws_streamvid' )
+					: __( 'Switch to the main profile to change the account.', 'jws_streamvid' )
+			);
+		}
+
 		$restriction = self::restriction();
 
 		if ( ! $restriction ) {
 			return;
 		}
-
-		$action = sanitize_key( wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		if ( $restriction['kids'] && in_array( $action, self::kids_blocked_actions(), true ) ) {
 			self::deny( __( 'This is not available on a Kids profile.', 'jws_streamvid' ) );
@@ -565,6 +574,27 @@ class Jws_Profile_Filter {
 				'jws_livekit_viewer_token'  => 'id',
 				'jws_drama_purchase_panel'  => 'episode_id',
 				'jws_drama_unlock'          => 'episode_id',
+			)
+		);
+	}
+
+	/** AJAX actions that change the account: its email, phone, password, details and devices. */
+	private static function account_actions() {
+
+		/**
+		 * Filters the AJAX actions only a profile that manages the account may make.
+		 *
+		 * @param string[] $actions Action names, without the wp_ajax_ prefix.
+		 */
+		return (array) apply_filters(
+			'jws_profile_account_actions',
+			array(
+				'edit_profile',
+				'edit_personal',
+				'jws_send_email_change_code',
+				'jws_send_phone_change_code',
+				'jws_remove_user_device',
+				'jws_remove_all_other_devices',
 			)
 		);
 	}

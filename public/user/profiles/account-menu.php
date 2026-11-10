@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $jws_am_user     = get_current_user_id();
 $jws_am_current  = Jws_Profiles::current_profile( $jws_am_user );
 $jws_am_kid      = $jws_am_current && $jws_am_current->is_kid;
+$jws_am_manage   = Jws_Profiles_Front::can_manage_account();
 $jws_am_active   = Jws_Profiles::active_ids( $jws_am_user );
 $jws_am_profile  = jws_streamvid()->get()->profile;
 $jws_am_items    = $jws_am_profile->get_menu_menu_header_items();
@@ -88,6 +89,10 @@ if ( $jws_am_kid ) {
 		if ( in_array( $jws_am_id, array( 'author', 'logout' ), true ) ) {
 			continue;
 		}
+		// "Only the main profile manages the account": no Settings or Subscription for the others.
+		if ( ! $jws_am_manage && in_array( $jws_am_id, Jws_Profiles_Front::ACCOUNT_TABS, true ) ) {
+			continue;
+		}
 		$jws_am_group = isset( $jws_am_group_of[ $jws_am_id ] ) ? $jws_am_group_of[ $jws_am_id ] : 'account';
 
 		$jws_am_groups[ $jws_am_group ]['items'][ $jws_am_id ] = array(
@@ -116,7 +121,7 @@ if ( $jws_am_kid ) {
 		</span>
 	</a>
 
-	<?php if ( $jws_am_on && ( $jws_am_others || ! $jws_am_kid ) ) : ?>
+	<?php if ( $jws_am_on && ( $jws_am_others || $jws_am_manage ) ) : ?>
 		<div class="jws-am__profiles">
 			<?php if ( $jws_am_others ) : ?>
 				<ul class="jws-am__switch" aria-label="<?php esc_attr_e( 'Switch profile', 'jws_streamvid' ); ?>">
@@ -138,7 +143,7 @@ if ( $jws_am_kid ) {
 					<?php endforeach; ?>
 				</ul>
 			<?php endif; ?>
-			<?php if ( ! $jws_am_kid ) : ?>
+			<?php if ( $jws_am_manage ) : ?>
 				<a class="jws-am__item jws-am__item--manage" href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1, 'back' => $jws_am_here ) ) ); ?>">
 					<i class="jws-icon-pencil-line" aria-hidden="true"></i>
 					<span><?php esc_html_e( 'Manage Profiles', 'jws_streamvid' ); ?></span>
