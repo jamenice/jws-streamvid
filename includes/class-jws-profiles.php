@@ -195,6 +195,15 @@ class Jws_Profiles {
 	}
 
 	/**
+	 * Drops the remembered profile in use, so the next current_id() asks the
+	 * cookie and the jws_profiles_current_id filter again. For clients that
+	 * change the answer of that filter during a request (the app API).
+	 */
+	public static function forget_current( $user_id = 0 ) {
+		unset( self::$current[ $user_id ? (int) $user_id : get_current_user_id() ] );
+	}
+
+	/**
 	 * Whether this browser picked a profile during the current login session,
 	 * and that profile can still be used. "Who's watching?" asks until it has.
 	 */
