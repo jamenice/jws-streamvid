@@ -318,7 +318,8 @@ var ArchiveGlobal;
                                 $sel.val(taxVal.indexOf(',') !== -1 ? '' : taxVal);
                             });
 
-                            $('select:not(.jws-no-select2)').select2({
+                            // Selects in Magnific Popup modals stay native (select2's list opens under the popup).
+                            $('select:not(.jws-no-select2)').not('.mfp-hide select, .mfp-content select').select2({
                                 dropdownAutoWidth: true,
                                 minimumResultsForSearch: 10
                             });

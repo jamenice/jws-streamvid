@@ -359,7 +359,8 @@
                             form_clone.find('[name="post_id"]').val(post_id);
                             $('.other-crelate').html(form_clone);
                             $('.other-crelate').find('.select2').remove();
-                            $('.other-crelate').find('select').select2({
+                            // Native inside a Magnific Popup modal: select2's list would open under the popup.
+                            $('.other-crelate').find('select').not('.mfp-hide select, .mfp-content select').select2({
             					dropdownAutoWidth: true,
                                 minimumResultsForSearch: 10
             				});

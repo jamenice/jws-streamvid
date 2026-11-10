@@ -397,11 +397,14 @@
 	// The theme turns selects into select2 on page load (jwsThemeModule.select2_global): the same selects and options, for one tab only.
 	var SELECT2 = 'select:not([aria-labelledby]):not(#pmpro-admin-membership-access):not(.jws-no-select2)';
 
+	// Selects in Magnific Popup modals stay native, as in the theme: select2's list opens under the popup.
+	var IN_MODAL = '.mfp-hide select, .mfp-content select';
+
 	function enhance( scope ) {
 		var $ = window.jQuery;
 
 		if ( $ && $.fn.select2 ) {
-			$( scope ).find( SELECT2 ).select2( {
+			$( scope ).find( SELECT2 ).not( IN_MODAL ).select2( {
 				dropdownAutoWidth: true,
 				minimumResultsForSearch: 10,
 			} );

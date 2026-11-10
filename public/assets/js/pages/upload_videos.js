@@ -193,8 +193,10 @@
                             $('.edit-video').removeClass('choosed');
                             btn.addClass('choosed');
                             container.html(response.data);
+                            // The edit form is in a Magnific Popup modal: its selects stay native,
+                            // because select2's list would open under the popup.
                             if ($.fn.select2) {
-                                container.find('select').select2({
+                                container.find('select').not('.mfp-hide select, .mfp-content select').select2({
                                     dropdownAutoWidth: true,
                                     minimumResultsForSearch: 10
                                 });
