@@ -757,8 +757,9 @@ class Jws_Profiles_Front {
 	}
 
 	/**
-	 * A sign-in from the theme's form (jws_login_ajax): when this account is
-	 * asked "Who's watching?", the answer carries `profiles`, the screen URL
+	 * A sign-in from the theme's form (jws_login_ajax), with Theme Options
+	 * "Ask right after sign-in" on: when this account is asked
+	 * "Who's watching?", the answer carries `profiles`, the screen URL
 	 * coming back to the page the form goes to. The page then opens the
 	 * modal at once (jwsOpenProfiles, below) and goes there once a profile
 	 * is picked, instead of loading that page first and asking on it.
@@ -768,7 +769,8 @@ class Jws_Profiles_Front {
 	 */
 	public static function login_response( $data, $user ) {
 
-		if ( ! is_array( $data ) || ! $user instanceof WP_User || ! Jws_Profiles::enabled() ) {
+		// Off: the sign-in goes straight on; home, search and title pages ask later.
+		if ( ! is_array( $data ) || ! $user instanceof WP_User || ! Jws_Profiles::enabled() || ! Jws_Profiles_Settings::gate_on_login() ) {
 			return $data;
 		}
 
