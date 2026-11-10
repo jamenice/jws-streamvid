@@ -3266,6 +3266,19 @@ html.jws-pfm-busy {
 	}
 }
 
+/*
+ * Phones and touch screens: the menu opens on tap only (.open, set by the
+ * theme; account-menu.js closes it on a second tap). A tap also sets :hover,
+ * which kept the menu showing after it was closed.
+ */
+@media (hover: none), (max-width: 767px) {
+	.jws_account:not(.open):hover .dropdown-menu.jws-am-dropdown {
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(10px);
+	}
+}
+
 /* Tablets show the toolbar too: keep the end of the dropdown clear of it. */
 @media (min-width: 768px) and (max-width: 1024px) {
 	.has-tool-bar .jws_account .dropdown-menu.jws-am-dropdown {

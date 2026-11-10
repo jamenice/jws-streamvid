@@ -1,6 +1,7 @@
 /**
  * Header account menu on phones (.jws_account .jws-am-dropdown): a panel
- * under the avatar, almost as wide as the screen, as on desktop.
+ * under the avatar, almost as wide as the screen, as on desktop. Opened and
+ * closed by tapping the avatar.
  *
  * The panel is position: fixed, so it stays put while the page scrolls under
  * it. A sticky header (.is-sticky, moved with transform) becomes the
@@ -67,12 +68,33 @@
 		}
 	}
 
-	// After the theme toggles .open on its own click handler.
+	/*
+	 * Phones and touch screens open the menu by tap only (profiles.css turns
+	 * hover off there), and a second tap on the avatar closes it. The theme's
+	 * handler (main.js dropdown_ui) always leaves it open, so the state before
+	 * the tap is read in the capture phase and applied after that handler.
+	 */
+	var touch = window.matchMedia ? window.matchMedia( '(hover: none), (max-width: ' + PHONE + 'px)' ) : null;
+
 	document.addEventListener( 'click', function ( event ) {
-		if ( event.target.closest && event.target.closest( '.jws_account' ) ) {
-			window.setTimeout( place, 0 );
+		var button = event.target.closest && event.target.closest( '.jws_account .dr-button' );
+		var account = button && button.closest( '.jws_account' );
+
+		if ( ! account || ! account.querySelector( '.jws-am-dropdown' ) ) {
+			return;
 		}
-	} );
+
+		var wasOpen = account.classList.contains( 'open' );
+
+		window.setTimeout( function () {
+			if ( wasOpen && touch && touch.matches ) {
+				account.classList.remove( 'open' );
+				button.blur();
+				return;
+			}
+			place();
+		}, 0 );
+	}, true );
 
 	// A sticky header slides in and out while scrolling; the address bar changes the height.
 	window.addEventListener( 'scroll', placeIfOpen, { passive: true } );
