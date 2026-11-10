@@ -37,9 +37,11 @@ $jws_coin_format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format
 
 	<div class="jws-coin__top">
 		<section class="jws-coin__balance">
-			<span class="jws-coin__icon" aria-hidden="true"><?php echo Jws_Drama_Settings::coin_icon_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from the drama settings, escaped there. ?></span>
 			<span class="jws-coin__balance-text">
-				<span class="jws-coin__label"><?php esc_html_e( 'Your balance', 'jws_streamvid' ); ?></span>
+				<span class="jws-coin__label jws-coin__label--balance">
+					<span class="jws-coin__icon" aria-hidden="true"><?php echo Jws_Drama_Settings::coin_icon_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup from the drama settings, escaped there. ?></span>
+					<?php esc_html_e( 'Your balance', 'jws_streamvid' ); ?>
+				</span>
 				<span class="jws-coin__value h4 sv-coin-balance-number"><?php echo esc_html( number_format_i18n( Jws_Drama_Wallet::balance( $jws_coin_user ) ) ); ?></span>
 			</span>
 			<button type="button" class="button-default" data-jws-coin-modal>

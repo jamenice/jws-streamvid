@@ -2237,12 +2237,20 @@ html.jws-pfm-busy {
 	background: var(--input-background);
 }
 
+/* The coin sits in the "Your balance" line, the size of an icon. */
+.jws-coin__label--balance {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
 .jws-coin__icon {
-	display: flex;
+	display: inline-flex;
+	flex: 0 0 auto;
 	align-items: center;
 	justify-content: center;
-	width: 56px;
-	height: 56px;
+	width: 20px;
+	height: 20px;
 }
 
 .jws-coin__icon img,
