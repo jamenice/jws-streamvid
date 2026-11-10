@@ -1147,6 +1147,11 @@ html.jws-pfm-busy {
 	border-top: 1px solid var(--border-color);
 }
 
+/* Room between the name row's hover background and the line under it. */
+.jws-am__me {
+	margin-bottom: 8px;
+}
+
 .jws-am__switch {
 	display: flex;
 	flex-wrap: wrap;

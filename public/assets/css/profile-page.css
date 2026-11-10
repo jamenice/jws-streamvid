@@ -239,10 +239,18 @@
 	color: var(--btn-color);
 }
 
+/* The line above Log out sits in the menu's 18px gap, outside the link, so its hover background is the size of the other links'. */
 .jws-pv3__logout {
-	padding-top: 12px;
+	position: relative;
+}
+
+.jws-pv3__logout::before {
+	content: "";
+	position: absolute;
+	top: -10px;
+	inset-inline: 0;
 	border-top: 1px solid var(--border-color);
-	border-radius: 0;
+	pointer-events: none;
 }
 
 .jws-pv3 a:focus-visible,
@@ -1707,6 +1715,11 @@
 		border: 1px solid var(--border-color2);
 		border-radius: 12px;
 		background: transparent;
+	}
+
+	/* A bordered button of its own on phones: no line above it. */
+	.jws-pv3__logout::before {
+		content: none;
 	}
 
 	/* Tabs run edge to edge and scroll sideways. */
