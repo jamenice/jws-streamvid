@@ -122,9 +122,153 @@
 		}
 	}
 
+	/*
+	 * PIN fields as four boxes, one digit each. The real field (name pin or
+	 * new_pin) stays in the form as a hidden input holding the digits, so
+	 * the server gets what it got before. Typing moves on, Backspace moves
+	 * back, a pasted PIN fills the boxes; the PIN that opens a profile sends
+	 * itself once complete.
+	 */
+	function pinBoxes( scope ) {
+		Array.prototype.forEach.call( scope.querySelectorAll( 'input[name="pin"], input[name="new_pin"]' ), function ( field ) {
+			var group = document.createElement( 'div' );
+			var boxes = [];
+			var autoSend = 'pin' === field.name;
+			var label = scope.querySelector( 'label[for="' + field.id + '"]' );
+
+			group.className = 'jws-pf-otp' + ( field.classList.contains( 'has-error' ) || 'true' === field.getAttribute( 'aria-invalid' ) ? ' has-error' : '' );
+			group.setAttribute( 'role', 'group' );
+			if ( label ) {
+				label.id = label.id || field.id + '-label';
+				group.setAttribute( 'aria-labelledby', label.id );
+				label.removeAttribute( 'for' );
+			}
+			if ( field.getAttribute( 'aria-describedby' ) ) {
+				group.setAttribute( 'aria-describedby', field.getAttribute( 'aria-describedby' ) );
+			}
+
+			function sync() {
+				field.value = boxes.map( function ( box ) {
+					return box.value;
+				} ).join( '' );
+				group.classList.toggle( 'has-value', '' !== field.value );
+				group.classList.remove( 'has-error' );
+			}
+
+			// Puts digits into the boxes from box `from` on; returns the box after the last one filled.
+			function fill( from, digits ) {
+				var at = from;
+
+				digits.split( '' ).forEach( function ( digit ) {
+					if ( at < boxes.length ) {
+						boxes[ at ].value = digit;
+						at++;
+					}
+				} );
+				sync();
+				return Math.min( at, boxes.length - 1 );
+			}
+
+			function done() {
+				if ( autoSend && 4 === field.value.length && field.form ) {
+					if ( field.form.requestSubmit ) {
+						field.form.requestSubmit();
+					} else {
+						field.form.submit();
+					}
+				}
+			}
+
+			for ( var i = 0; i < 4; i++ ) {
+				var box = document.createElement( 'input' );
+
+				box.type = 'password';
+				box.className = 'jws-pf-otp__box h4';
+				box.inputMode = 'numeric';
+				box.autocomplete = 'off';
+				box.setAttribute( 'aria-label', ( i + 1 ) + ' / 4' );
+				box.dataset.index = i;
+				boxes.push( box );
+				group.appendChild( box );
+			}
+
+			group.addEventListener( 'input', function ( event ) {
+				var box = event.target;
+				var index = +box.dataset.index;
+				var digits = box.value.replace( /\D/g, '' );
+
+				box.value = '';
+				if ( digits ) {
+					boxes[ fill( index, digits ) ].focus();
+				} else {
+					sync();
+				}
+				done();
+			} );
+
+			group.addEventListener( 'keydown', function ( event ) {
+				var index = +event.target.dataset.index;
+
+				if ( 'Backspace' === event.key && '' === event.target.value && index > 0 ) {
+					event.preventDefault();
+					boxes[ index - 1 ].value = '';
+					boxes[ index - 1 ].focus();
+					sync();
+				} else if ( 'ArrowLeft' === event.key && index > 0 ) {
+					event.preventDefault();
+					boxes[ index - 1 ].focus();
+				} else if ( 'ArrowRight' === event.key && index < 3 ) {
+					event.preventDefault();
+					boxes[ index + 1 ].focus();
+				}
+			} );
+
+			group.addEventListener( 'paste', function ( event ) {
+				var text = ( event.clipboardData || window.clipboardData ).getData( 'text' ).replace( /\D/g, '' );
+
+				if ( text ) {
+					event.preventDefault();
+					boxes[ fill( +event.target.dataset.index, text ) ].focus();
+					done();
+				}
+			} );
+
+			group.addEventListener( 'focusin', function ( event ) {
+				event.target.select();
+			} );
+
+			if ( field.hasAttribute( 'autofocus' ) ) {
+				boxes[ 0 ].setAttribute( 'autofocus', '' );
+			}
+			field.removeAttribute( 'autofocus' );
+			field.type = 'hidden';
+			field.parentNode.insertBefore( group, field );
+		} );
+	}
+
+	// A PIN box group left half-filled (or empty where the PIN is required) stops its form.
+	document.addEventListener( 'submit', function ( event ) {
+		var form = event.target;
+		var field = modal && modal.contains( form ) && form.querySelector( 'input[type="hidden"][name="pin"], input[type="hidden"][name="new_pin"]' );
+		var group = field && field.previousElementSibling;
+
+		if ( ! field || ! group || ! group.classList.contains( 'jws-pf-otp' ) ) {
+			return;
+		}
+
+		var length = field.value.length;
+
+		if ( ( length > 0 && length < 4 ) || ( 0 === length && field.required ) ) {
+			event.preventDefault();
+			group.classList.add( 'has-error' );
+			group.querySelectorAll( '.jws-pf-otp__box' )[ Math.min( length, 3 ) ].focus();
+		}
+	}, true );
+
 	function show( html ) {
 		reveal( forced );
 		body.innerHTML = html;
+		pinBoxes( body );
 		modal.scrollTop = 0;
 
 		var title = body.querySelector( '#jws-pf-title' );

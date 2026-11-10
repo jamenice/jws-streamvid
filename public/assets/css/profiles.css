@@ -484,6 +484,49 @@ html.jws-pfm-busy {
 	border-color: var(--jws-pf-danger);
 }
 
+/* PIN as four boxes (profiles-modal.js); the real field is a hidden input beside them. */
+.jws-pf-otp {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+}
+
+/* Scoped: the theme's input[type="password"] rule would win over a single class. */
+.jws-pf-otp .jws-pf-otp__box {
+	width: 56px;
+	height: 64px;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	border: 2px solid var(--border-color2);
+	border-radius: 12px;
+	background: var(--input-background);
+	color: var(--heading);
+	caret-color: var(--main);
+	text-align: center;
+}
+
+.jws-pf-otp .jws-pf-otp__box:focus {
+	outline: none;
+	border-color: var(--main);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--main) 35%, transparent);
+}
+
+.jws-pf-otp.has-error .jws-pf-otp__box {
+	border-color: var(--jws-pf-danger);
+}
+
+/* In a form (new PIN), the boxes sit at the start and a little smaller. */
+.jws-pf-form .jws-pf-otp {
+	justify-content: flex-start;
+	gap: 10px;
+}
+
+.jws-pf-form .jws-pf-otp .jws-pf-otp__box {
+	width: 48px;
+	height: 56px;
+}
+
 .jws-pf-forgot {
 	margin-top: 20px;
 	padding-top: 16px;
@@ -846,7 +889,7 @@ html.jws-pfm-busy {
 	flex: 1 1 220px;
 }
 
-.jws-pf-lock:has(#jws-pf-new-pin:not(:placeholder-shown)) .jws-pf-lock__pass,
+.jws-pf-lock:has(.jws-pf-otp.has-value) .jws-pf-lock__pass,
 .jws-pf-lock.has-pin:not(:has(#jws-pf-lock:checked)) .jws-pf-lock__pass,
 .jws-pf-lock.is-open .jws-pf-lock__pass {
 	display: flex;
