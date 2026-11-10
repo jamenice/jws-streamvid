@@ -3,69 +3,53 @@
  * under the avatar, almost as wide as the screen, as on desktop. Opened and
  * closed by tapping the avatar.
  *
- * The panel is position: fixed, so it stays put while the page scrolls under
- * it. A sticky header (.is-sticky, moved with transform) becomes the
- * containing block of a fixed child, so its offset is measured and taken
- * off. The height stops at the theme's bottom
- * toolbar (.jws-toolbar-wap) when the page has one.
+ * The panel is absolute inside .jws_account (profiles.css), so it scrolls
+ * with the header, and with a sticky header it slides with it: nothing runs
+ * while the page scrolls. Its place and size are set when it opens and when
+ * the screen size changes. The height stops at the theme's bottom toolbar
+ * (.jws-toolbar-wap) when the page has one.
  */
 ( function () {
 	'use strict';
 
 	var PHONE = 767;
+	var EDGE = 12;
 	var GAP = 6;
-
-	function menus() {
-		return document.querySelectorAll( '.jws_account .jws-am-dropdown' );
-	}
-
-	/**
-	 * Where a fixed box at top: 0 actually lands next to the menu: 0 when the
-	 * viewport is the containing block, the sticky header's top when that is.
-	 * Measured with an empty probe, so the menu's own transitions do not count.
-	 */
-	function origin( parent ) {
-		var probe = document.createElement( 'span' );
-		probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;';
-		parent.appendChild( probe );
-		var top = probe.getBoundingClientRect().top;
-		parent.removeChild( probe );
-		return top;
-	}
+	var VARS = [ '--jws-am-top', '--jws-am-left', '--jws-am-right', '--jws-am-width', '--jws-am-max' ];
 
 	function place() {
 		var phone = window.innerWidth <= PHONE;
 
-		Array.prototype.forEach.call( menus(), function ( menu ) {
+		Array.prototype.forEach.call( document.querySelectorAll( '.jws_account .jws-am-dropdown' ), function ( menu ) {
 			if ( ! phone ) {
-				menu.style.removeProperty( '--jws-am-top' );
-				menu.style.removeProperty( '--jws-am-max' );
+				VARS.forEach( function ( name ) {
+					menu.style.removeProperty( name );
+				} );
 				return;
 			}
 
 			var account = menu.closest( '.jws_account' );
-			var anchor = ( account && account.querySelector( '.dr-button' ) ) || account || menu.parentNode;
-			var want = Math.round( anchor.getBoundingClientRect().bottom + GAP );
+			var anchor = account.querySelector( '.dr-button' ) || account;
+			var box = account.getBoundingClientRect();
+			var below = anchor.getBoundingClientRect().bottom;
+			var width = document.documentElement.clientWidth - EDGE * 2;
 
-			menu.style.setProperty( '--jws-am-top', Math.round( want - origin( menu.parentNode ) ) + 'px' );
+			menu.style.setProperty( '--jws-am-top', Math.round( below - box.top + GAP ) + 'px' );
+			menu.style.setProperty( '--jws-am-left', Math.round( EDGE - box.left ) + 'px' );
+			menu.style.setProperty( '--jws-am-right', 'auto' );
+			menu.style.setProperty( '--jws-am-width', Math.round( width ) + 'px' );
 
 			var limit = window.innerHeight;
 			var bar = document.querySelector( '.jws-toolbar-wap' );
 			if ( bar && document.body.classList.contains( 'has-tool-bar' ) ) {
 				var barTop = bar.getBoundingClientRect().top;
-				if ( barTop > want && barTop < limit ) {
+				if ( barTop > below && barTop < limit ) {
 					limit = barTop;
 				}
 			}
 
-			menu.style.setProperty( '--jws-am-max', Math.max( 160, Math.round( limit - want - GAP * 2 ) ) + 'px' );
+			menu.style.setProperty( '--jws-am-max', Math.max( 160, Math.round( limit - below - GAP * 3 ) ) + 'px' );
 		} );
-	}
-
-	function placeIfOpen() {
-		if ( document.querySelector( '.jws_account.open .jws-am-dropdown' ) ) {
-			place();
-		}
 	}
 
 	/*
@@ -86,18 +70,18 @@
 
 		var wasOpen = account.classList.contains( 'open' );
 
+		if ( ! wasOpen ) {
+			place(); // Before it shows, so it does not appear at the old place first.
+		}
+
 		window.setTimeout( function () {
 			if ( wasOpen && touch && touch.matches ) {
 				account.classList.remove( 'open' );
 				button.blur();
-				return;
 			}
-			place();
 		}, 0 );
 	}, true );
 
-	// A sticky header slides in and out while scrolling; the address bar changes the height.
-	window.addEventListener( 'scroll', placeIfOpen, { passive: true } );
 	window.addEventListener( 'resize', place );
 
 	if ( 'loading' === document.readyState ) {

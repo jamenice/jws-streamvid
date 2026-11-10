@@ -3249,19 +3249,24 @@ html.jws-pfm-busy {
 
 	/*
 	 * Phones: the menu drops from the top, under the avatar, almost as wide
-	 * as the screen. account-menu.js sets --jws-am-top (just below the
-	 * avatar, corrected when a sticky header is the containing block) and
-	 * --jws-am-max (down to the theme's bottom toolbar, when there is one).
+	 * as the screen. It is absolute inside .jws_account, so it moves with the
+	 * header (also a sticky one) without any script while the page scrolls.
+	 * account-menu.js sets, when it opens and on resize: --jws-am-top (below
+	 * the avatar), --jws-am-left and --jws-am-width (12px from both screen
+	 * edges) and --jws-am-max (down to the theme's bottom toolbar).
 	 */
 	.jws_account .dropdown-menu.jws-am-dropdown {
-		position: fixed;
-		top: var(--jws-am-top, 72px);
+		position: absolute;
+		top: var(--jws-am-top, calc(100% + 6px));
 		bottom: auto;
-		inset-inline: 12px;
-		width: auto;
+		inset-inline: auto;
+		left: var(--jws-am-left, auto);
+		right: var(--jws-am-right, 0);
+		width: var(--jws-am-width, calc(100vw - 24px));
 		max-width: none;
 		max-height: var(--jws-am-max, calc(100dvh - 150px));
-		/* The theme animates "all": only fade and slide, so the panel does not travel in from the old top. */
+		overscroll-behavior: contain;
+		/* The theme animates "all": only fade and slide. */
 		transition-property: opacity, transform;
 	}
 }
