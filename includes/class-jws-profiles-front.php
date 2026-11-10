@@ -250,11 +250,12 @@ class Jws_Profiles_Front {
 	}
 
 	/**
-	 * Accounts with two or more profiles pick one before browsing, in the
-	 * modal over the page. Only
+	 * Accounts with two or more profiles (or every account, Theme Options)
+	 * pick one before browsing, in the modal over the page. By default only
 	 * pages where the profile changes what is shown ask: home, search,
-	 * titles and their archives. Account, checkout and payment pages never
-	 * do, so a payment return or a login redirect is not interrupted.
+	 * titles and their archives. With "Ask right after sign-in" on, any page
+	 * asks until a profile is picked. Cart, checkout and payment pages never
+	 * do, so a payment or its return is not interrupted.
 	 */
 	private static function maybe_gate() {
 
@@ -264,7 +265,7 @@ class Jws_Profiles_Front {
 		if ( wp_doing_ajax() || is_feed() || is_embed() || is_robots() || is_preview() || isset( $_GET['elementor-preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return;
 		}
-		if ( ! self::is_browse_page() ) {
+		if ( self::is_payment_page() || ! ( self::is_browse_page() || Jws_Profiles_Settings::gate_on_login() ) ) {
 			return;
 		}
 
@@ -281,6 +282,28 @@ class Jws_Profiles_Front {
 
 		// The page loads as usual; the modal opens over it and stays until a profile is picked.
 		self::$gate_url = self::url( 'choose', 0, array( 'back' => $here ) );
+	}
+
+	/** Cart, checkout and payment pages (WooCommerce, Paid Memberships Pro): never interrupted by the modal. */
+	private static function is_payment_page() {
+
+		$payment = false;
+
+		if ( function_exists( 'is_checkout' ) && ( is_checkout() || is_cart() || is_wc_endpoint_url( 'order-received' ) || is_wc_endpoint_url( 'order-pay' ) ) ) {
+			$payment = true;
+		}
+
+		if ( ! $payment && ! empty( $GLOBALS['pmpro_pages'] ) && is_array( $GLOBALS['pmpro_pages'] ) ) {
+			$pages = array_filter( array_map( 'absint', array_intersect_key( $GLOBALS['pmpro_pages'], array_flip( array( 'checkout', 'confirmation', 'billing', 'cancel', 'invoice' ) ) ) ) );
+			$payment = $pages && is_page( array_values( $pages ) );
+		}
+
+		/**
+		 * Filters whether this page is part of paying, where "Who's watching?" never opens.
+		 *
+		 * @param bool $payment True on cart, checkout and payment pages.
+		 */
+		return (bool) apply_filters( 'jws_profiles_is_payment_page', $payment );
 	}
 
 	private static function is_browse_page() {

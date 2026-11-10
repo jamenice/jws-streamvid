@@ -57,6 +57,11 @@ class Jws_Profiles_Settings {
 		return 'always' === self::get( 'profiles_gate', 'multi' );
 	}
 
+	/** Whether "Who's watching?" opens on any page right after sign-in, not only on browse pages. */
+	public static function gate_on_login() {
+		return (bool) self::get( 'profiles_gate_login', false );
+	}
+
 	public static function new_avatar_rule( $rule ) {
 		return 'first' === self::get( 'profiles_avatar_new', $rule ) ? 'first' : 'random';
 	}
