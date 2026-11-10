@@ -294,11 +294,55 @@
 		}
 	}, true );
 
+	/*
+	 * Notices a screen arrives with ("Profile saved.", data-jws-toast) show as
+	 * the theme's toast, like the profile page's. Without Toastify they stay
+	 * where they are. Field errors (role="alert") always stay by their field.
+	 */
+	// Screen readers hear the notice that left the screen for the toast.
+	function announce( text ) {
+		var live = document.getElementById( 'jws-pfm-live' );
+
+		if ( ! live ) {
+			live = document.createElement( 'div' );
+			live.id = 'jws-pfm-live';
+			live.className = 'screen-reader-text';
+			live.setAttribute( 'role', 'status' );
+			live.setAttribute( 'aria-live', 'polite' );
+			document.body.appendChild( live );
+		}
+		live.textContent = '';
+		window.setTimeout( function () {
+			live.textContent = text;
+		}, 50 );
+	}
+
+	function toastNotices( scope ) {
+		var theme = window.jwsThemeModule;
+
+		if ( ! theme || 'function' !== typeof theme.show_notification || 'function' !== typeof window.Toastify ) {
+			return;
+		}
+
+		Array.prototype.forEach.call( scope.querySelectorAll( '[data-jws-toast]' ), function ( notice ) {
+			var text = notice.textContent.trim();
+
+			if ( text ) {
+				var safe = document.createElement( 'div' );
+				safe.textContent = text;
+				theme.show_notification( safe.innerHTML, 'error' === notice.getAttribute( 'data-jws-toast' ) ? 'error' : 'success' );
+				announce( text );
+			}
+			notice.parentNode.removeChild( notice );
+		} );
+	}
+
 	function show( html ) {
 		unpick();
 		reveal( forced );
 		body.innerHTML = html;
 		pinBoxes( body );
+		toastNotices( body );
 		modal.scrollTop = 0;
 
 		var title = body.querySelector( '#jws-pf-title' );

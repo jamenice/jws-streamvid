@@ -29,7 +29,7 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 	</h3>
 
 	<?php if ( $jws_pf_notice ) : ?>
-		<p class="jws-pf-msg" role="status"><?php echo esc_html( $jws_pf_notice ); ?></p>
+		<p class="jws-pf-msg" role="status" data-jws-toast="success"><?php echo esc_html( $jws_pf_notice ); ?></p>
 	<?php endif; ?>
 	<?php if ( $jws_pf_error ) : ?>
 		<p class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_error ); ?></p>

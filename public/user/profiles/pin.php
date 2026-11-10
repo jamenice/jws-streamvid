@@ -36,7 +36,7 @@ $jws_pf_no_pass = function_exists( 'jws_streamvid_password_unknown' ) && jws_str
 		<p class="jws-pf__lead"><?php esc_html_e( 'Enter your PIN to access this profile.', 'jws_streamvid' ); ?></p>
 
 		<?php if ( $jws_pf_notice ) : ?>
-			<p class="jws-pf-msg" role="status"><?php echo esc_html( $jws_pf_notice ); ?></p>
+			<p class="jws-pf-msg" role="status" data-jws-toast="success"><?php echo esc_html( $jws_pf_notice ); ?></p>
 		<?php endif; ?>
 
 		<form method="post" class="jws-pf-pin__form">

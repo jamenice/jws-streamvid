@@ -69,7 +69,7 @@ $jws_pf_no_pass  = function_exists( 'jws_streamvid_password_unknown' ) && jws_st
 	<?php endif; ?>
 
 	<?php if ( $jws_pf_notice ) : ?>
-		<p class="jws-pf-msg<?php echo $jws_pf_bad_lock ? ' jws-pf-msg--error' : ''; ?>" role="status"><?php echo esc_html( $jws_pf_notice ); ?></p>
+		<p class="jws-pf-msg<?php echo $jws_pf_bad_lock ? ' jws-pf-msg--error' : ''; ?>" role="status" data-jws-toast="<?php echo $jws_pf_bad_lock ? 'error' : 'success'; ?>"><?php echo esc_html( $jws_pf_notice ); ?></p>
 	<?php endif; ?>
 	<?php if ( $jws_pf_err_form ) : ?>
 		<p class="jws-pf-msg jws-pf-msg--error" role="alert"><?php echo esc_html( $jws_pf_err_form ); ?></p>
