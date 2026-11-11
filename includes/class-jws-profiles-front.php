@@ -527,10 +527,21 @@ class Jws_Profiles_Front {
 				self::go( self::url( 'edit', $profile_id, array( 'notice' => $notice ) ) );
 
 			case 'keep':
-				$keep = isset( $_POST['keep'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['keep'] ) ) : array();
+				$keep = isset( $_POST['keep'] ) ? array_values( array_unique( array_filter( array_map( 'absint', (array) wp_unslash( $_POST['keep'] ) ) ) ) ) : array();
+				$room = self::keep_room( $user_id );
+
+				// More than the plan's places would leave the cut to display order, not to the account holder.
+				if ( count( $keep ) > $room ) {
+					self::$errors[''] = $room < 1
+						? __( 'Your plan includes only the main profile.', 'jws_streamvid' )
+						/* translators: %d: how many profiles besides the main one the plan allows */
+						: sprintf( _n( 'Choose %d profile.', 'Choose up to %d profiles.', $room, 'jws_streamvid' ), $room );
+					return;
+				}
+
 				Jws_Profiles::set_active( $user_id, $keep );
 
-				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'saved' ) ) );
+				self::go( self::url( 'choose', 0, array( 'manage' => 1, 'notice' => 'kept' ) ) );
 		}
 		// phpcs:enable
 
@@ -619,6 +630,14 @@ class Jws_Profiles_Front {
 		return array_key_exists( $key, self::$posted ) ? self::$posted[ $key ] : $default;
 	}
 
+	/**
+	 * How many profiles besides the main one an account over its limit can
+	 * keep using: the plan's places minus the main profile's.
+	 */
+	public static function keep_room( $user_id ) {
+		return max( 0, Jws_Profiles::get_limit( $user_id ) - ( Jws_Profiles::get_main( $user_id ) ? 1 : 0 ) );
+	}
+
 	/** @return string Message for ?notice=, or ''. */
 	public static function notice() {
 
@@ -626,6 +645,7 @@ class Jws_Profiles_Front {
 
 		$messages = array(
 			'saved'       => __( 'Profile saved.', 'jws_streamvid' ),
+			'kept'        => __( 'Your choice is saved.', 'jws_streamvid' ),
 			'deleted'     => __( 'Profile deleted.', 'jws_streamvid' ),
 			'pin_saved'   => __( 'Profile Lock is on.', 'jws_streamvid' ),
 			'pin_removed' => __( 'Profile Lock is off.', 'jws_streamvid' ),

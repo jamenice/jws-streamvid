@@ -157,11 +157,21 @@
 	 * the server gets what it got before. Typing moves on, Backspace moves
 	 * back, a pasted PIN fills the boxes; the PIN that opens a profile sends
 	 * itself once complete.
+	 *
+	 * The boxes are text fields that show a dot, with the digits kept here:
+	 * browsers treat any password field as an account password, ignore
+	 * autocomplete="off" on it, offer saved passwords, fill one in, and ask
+	 * to save the PIN as the site's password. The data-*ignore attributes
+	 * keep password managers (LastPass, 1Password, Bitwarden, Dashlane) out.
 	 */
+	// What a PIN box shows for a digit.
+	var MASK = '\u2022';
+
 	function pinBoxes( scope ) {
 		Array.prototype.forEach.call( scope.querySelectorAll( 'input[name="pin"], input[name="new_pin"]' ), function ( field ) {
 			var group = document.createElement( 'div' );
 			var boxes = [];
+			var digits = [ '', '', '', '' ];
 			var autoSend = 'pin' === field.name;
 			var label = scope.querySelector( 'label[for="' + field.id + '"]' );
 
@@ -177,20 +187,19 @@
 			}
 
 			function sync() {
-				field.value = boxes.map( function ( box ) {
-					return box.value;
-				} ).join( '' );
+				field.value = digits.join( '' );
 				group.classList.toggle( 'has-value', '' !== field.value );
 				group.classList.remove( 'has-error' );
 			}
 
 			// Puts digits into the boxes from box `from` on; returns the box after the last one filled.
-			function fill( from, digits ) {
+			function fill( from, text ) {
 				var at = from;
 
-				digits.split( '' ).forEach( function ( digit ) {
+				text.split( '' ).forEach( function ( digit ) {
 					if ( at < boxes.length ) {
-						boxes[ at ].value = digit;
+						digits[ at ] = digit;
+						boxes[ at ].value = MASK;
 						at++;
 					}
 				} );
@@ -211,10 +220,17 @@
 			for ( var i = 0; i < 4; i++ ) {
 				var box = document.createElement( 'input' );
 
-				box.type = 'password';
+				box.type = 'text';
 				box.className = 'jws-pf-otp__box h4';
 				box.inputMode = 'numeric';
 				box.autocomplete = 'off';
+				box.spellcheck = false;
+				box.setAttribute( 'autocapitalize', 'off' );
+				box.setAttribute( 'autocorrect', 'off' );
+				box.setAttribute( 'data-lpignore', 'true' );
+				box.setAttribute( 'data-1p-ignore', '' );
+				box.setAttribute( 'data-bwignore', '' );
+				box.setAttribute( 'data-form-type', 'other' );
 				box.setAttribute( 'aria-label', ( i + 1 ) + ' / 4' );
 				box.dataset.index = i;
 				boxes.push( box );
@@ -224,12 +240,16 @@
 			group.addEventListener( 'input', function ( event ) {
 				var box = event.target;
 				var index = +box.dataset.index;
-				var digits = box.value.replace( /\D/g, '' );
+				var typed = box.value.replace( /\D/g, '' ); // The dot is not a digit.
 
-				box.value = '';
-				if ( digits ) {
-					boxes[ fill( index, digits ) ].focus();
+				if ( typed ) {
+					boxes[ fill( index, typed ) ].focus();
 				} else {
+					// Emptied: the digit was deleted. Anything else typed (a letter) is dropped.
+					if ( '' === box.value ) {
+						digits[ index ] = '';
+					}
+					box.value = digits[ index ] ? MASK : '';
 					sync();
 				}
 				done();
@@ -240,6 +260,7 @@
 
 				if ( 'Backspace' === event.key && '' === event.target.value && index > 0 ) {
 					event.preventDefault();
+					digits[ index - 1 ] = '';
 					boxes[ index - 1 ].value = '';
 					boxes[ index - 1 ].focus();
 					sync();
@@ -343,6 +364,7 @@
 		body.innerHTML = html;
 		pinBoxes( body );
 		toastNotices( body );
+		Array.prototype.forEach.call( body.querySelectorAll( 'form[data-max]' ), limitKeep );
 		modal.scrollTop = 0;
 
 		var title = body.querySelector( '#jws-pf-title' );
@@ -556,8 +578,28 @@
 		}
 	} );
 
+	/*
+	 * "Your plan allows N profiles": once as many are ticked as the plan has
+	 * places (data-max), the rest cannot be ticked. The server checks too.
+	 */
+	function limitKeep( form ) {
+		var max = parseInt( form.getAttribute( 'data-max' ), 10 ) || 0;
+		var boxes = form.querySelectorAll( 'input[name="keep[]"]' );
+		var ticked = form.querySelectorAll( 'input[name="keep[]"]:checked' ).length;
+
+		Array.prototype.forEach.call( boxes, function ( box ) {
+			box.disabled = ! box.checked && ticked >= max;
+		} );
+	}
+
 	document.addEventListener( 'change', function ( event ) {
 		var input = event.target;
+
+		if ( 'keep[]' === input.name && input.form && input.form.hasAttribute( 'data-max' ) ) {
+			limitKeep( input.form );
+			return;
+		}
+
 		var choice = 'avatar' === input.name && input.closest( '.jws-pf-avatar-opt' );
 		var preview = choice && input.form && input.form.querySelector( '.jws-pf-avatar-btn__img' );
 		var image = choice && choice.querySelector( 'img' );

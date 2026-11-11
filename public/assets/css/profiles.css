@@ -481,6 +481,23 @@ html.jws-pfm-busy {
 	color: var(--heading);
 }
 
+/* No places left: the profiles not ticked cannot be chosen (profiles-modal.js). */
+.jws-pf-keep__list label:has(input:disabled) {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.jws-pf-keep__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+/* The box is already --background-item, the profile screens' fill for .button-custom. */
+.jws-pf-keep .button-custom {
+	background: color-mix(in srgb, var(--heading) 10%, transparent);
+}
+
 /* ------------------------------------------------------------------ *
  * PIN
  * ------------------------------------------------------------------ */
@@ -559,7 +576,7 @@ html.jws-pfm-busy {
 	gap: 12px;
 }
 
-/* Scoped: the theme's input[type="password"] rule would win over a single class. */
+/* Scoped: the theme's input[type="text"] rule would win over a single class. The boxes are text fields showing a dot (no password autofill). */
 .jws-pf-otp .jws-pf-otp__box {
 	width: 56px;
 	height: 64px;

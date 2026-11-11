@@ -123,7 +123,12 @@ $jws_pt_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_ge
 				(int) $jws_pt_limit
 			);
 			?>
-			<a href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1 ) ) ); ?>"><?php esc_html_e( 'Choose which profiles to keep', 'jws_streamvid' ); ?></a>
+			<?php if ( Jws_Profiles_Front::keep_room( $jws_pt_user ) > 0 ) : ?>
+				<a href="<?php echo esc_url( Jws_Profiles_Front::url( 'choose', 0, array( 'manage' => 1 ) ) ); ?>"><?php esc_html_e( 'Choose which profiles to keep', 'jws_streamvid' ); ?></a>
+			<?php elseif ( $jws_pt_upgrade ) : ?>
+				<?php // Nothing to choose: the plan's one place is the main profile's. ?>
+				<a href="<?php echo esc_url( get_permalink( $jws_pt_upgrade ) ); ?>"><?php esc_html_e( 'Change your plan', 'jws_streamvid' ); ?></a>
+			<?php endif; ?>
 		</p>
 	<?php endif; ?>
 

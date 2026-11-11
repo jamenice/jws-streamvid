@@ -108,9 +108,13 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 		<?php endif; ?>
 	</ul>
 
-	<?php if ( $jws_pf_manage && $jws_pf_over ) : ?>
-		<form method="post" class="jws-pf-keep">
-			<?php Jws_Profiles_Front::form_fields( 'keep' ); ?>
+	<?php
+	if ( $jws_pf_manage && $jws_pf_over ) :
+		// The main profile always keeps its place; the plan's other places are what can be chosen here.
+		$jws_pf_room    = Jws_Profiles_Front::keep_room( $jws_pf_user );
+		$jws_pf_upgrade = function_exists( 'jws_theme_get_option' ) ? (int) jws_theme_get_option( 'select-update-level' ) : 0;
+		?>
+		<div class="jws-pf-keep">
 			<h5 class="jws-pf-keep__title">
 				<?php
 				printf(
@@ -120,20 +124,51 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 				);
 				?>
 			</h5>
-			<p><?php esc_html_e( 'Choose which profiles to keep using. The others keep their history and lists, and come back when you change your plan.', 'jws_streamvid' ); ?></p>
-			<ul class="jws-pf-keep__list">
-				<?php foreach ( $jws_pf_profiles as $jws_pf_p ) : ?>
-					<?php if ( $jws_pf_p->is_main ) { continue; } ?>
-					<li>
-						<label>
-							<input type="checkbox" name="keep[]" value="<?php echo (int) $jws_pf_p->id; ?>" <?php checked( in_array( $jws_pf_p->id, $jws_pf_active, true ) ); ?>>
-							<?php echo esc_html( $jws_pf_p->name ); ?>
-						</label>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-			<button type="submit" class="button-default"><?php esc_html_e( 'Save', 'jws_streamvid' ); ?></button>
-		</form>
+
+			<?php if ( $jws_pf_room < 1 ) : ?>
+				<?php // Nothing to choose: the one place is the main profile's. ?>
+				<p><?php esc_html_e( 'Your plan includes only the main profile. The other profiles keep their history and lists, and come back when you change your plan.', 'jws_streamvid' ); ?></p>
+				<?php if ( $jws_pf_upgrade ) : ?>
+					<div class="jws-pf-keep__actions">
+						<a class="button-default" href="<?php echo esc_url( get_permalink( $jws_pf_upgrade ) ); ?>"><?php esc_html_e( 'Change your plan', 'jws_streamvid' ); ?></a>
+					</div>
+				<?php endif; ?>
+			<?php else : ?>
+				<form method="post" class="jws-pf-keep__form" data-max="<?php echo (int) $jws_pf_room; ?>">
+					<?php Jws_Profiles_Front::form_fields( 'keep' ); ?>
+					<p>
+						<?php
+						printf(
+							/* translators: %d: how many profiles besides the main one the plan allows */
+							esc_html( _n( 'The main profile is always kept. Choose %d more to keep using. The others keep their history and lists, and come back when you change your plan.', 'The main profile is always kept. Choose up to %d more to keep using. The others keep their history and lists, and come back when you change your plan.', $jws_pf_room, 'jws_streamvid' ) ),
+							(int) $jws_pf_room
+						);
+						?>
+					</p>
+					<ul class="jws-pf-keep__list">
+						<?php foreach ( $jws_pf_profiles as $jws_pf_p ) : ?>
+							<?php
+							if ( $jws_pf_p->is_main ) {
+								continue;
+							}
+							?>
+							<li>
+								<label>
+									<input type="checkbox" name="keep[]" value="<?php echo (int) $jws_pf_p->id; ?>" <?php checked( in_array( $jws_pf_p->id, $jws_pf_active, true ) ); ?>>
+									<span><?php echo esc_html( $jws_pf_p->name ); ?></span>
+								</label>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+					<div class="jws-pf-keep__actions">
+						<button type="submit" class="button-default"><?php esc_html_e( 'Keep these profiles', 'jws_streamvid' ); ?></button>
+						<?php if ( $jws_pf_upgrade ) : ?>
+							<a class="button-custom" href="<?php echo esc_url( get_permalink( $jws_pf_upgrade ) ); ?>"><?php esc_html_e( 'Change your plan', 'jws_streamvid' ); ?></a>
+						<?php endif; ?>
+					</div>
+				</form>
+			<?php endif; ?>
+		</div>
 	<?php endif; ?>
 
 	<div class="jws-pf-actions">
