@@ -121,6 +121,16 @@ html.jws-pfm-busy {
 	display: none;
 }
 
+/* Sent in place of a page while the gate waits on an account whose main profile has a PIN (waiting.php). */
+.jws-pf-waiting .container {
+	padding-block: 120px;
+	text-align: center;
+}
+
+.jws-pf-waiting h1 {
+	margin: 0 0 10px;
+}
+
 .jws-pfm #jws-pf-title:focus {
 	outline: none;
 }

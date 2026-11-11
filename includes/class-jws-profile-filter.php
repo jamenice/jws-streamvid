@@ -89,7 +89,13 @@ class Jws_Profile_Filter {
 
 			$profile = Jws_Profiles::current_profile();
 
-			if ( $profile && ( $profile->is_kid || $profile->max_maturity < Jws_Profiles::MATURITY_ALL ) ) {
+			if ( Jws_Profiles::is_pending() ) {
+				// No profile picked and the main one has a PIN: the strictest Kids rules until one is.
+				self::$restriction = array(
+					'kids' => true,
+					'max'  => min( Jws_Profiles::MATURITY_LEVELS ),
+				);
+			} elseif ( $profile && ( $profile->is_kid || $profile->max_maturity < Jws_Profiles::MATURITY_ALL ) ) {
 				self::$restriction = array(
 					'kids' => $profile->is_kid,
 					'max'  => $profile->max_maturity,
@@ -301,8 +307,14 @@ class Jws_Profile_Filter {
 
 		$action = sanitize_key( wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
+		// No profile picked yet while the main one has a PIN (Jws_Profiles::is_pending()): one answer for every refusal.
+		$choose = is_user_logged_in() && Jws_Profiles::is_pending() ? __( 'Choose a profile to continue.', 'jws_streamvid' ) : '';
+
 		// Account changes: never from a Kids profile, and only from the main one when Theme Options says so.
 		if ( is_user_logged_in() && in_array( $action, self::account_actions(), true ) && ! Jws_Profiles_Front::can_manage_account() ) {
+			if ( $choose ) {
+				self::deny( $choose );
+			}
 			self::deny(
 				Jws_Profiles_Front::current_is_kid()
 					? __( 'This is not available on a Kids profile.', 'jws_streamvid' )
@@ -317,7 +329,7 @@ class Jws_Profile_Filter {
 		}
 
 		if ( $restriction['kids'] && in_array( $action, self::kids_blocked_actions(), true ) ) {
-			self::deny( __( 'This is not available on a Kids profile.', 'jws_streamvid' ) );
+			self::deny( $choose ? $choose : __( 'This is not available on a Kids profile.', 'jws_streamvid' ) );
 		}
 
 		$fields = self::ajax_post_fields();
@@ -327,7 +339,7 @@ class Jws_Profile_Filter {
 			$post_id = absint( wp_unslash( $_REQUEST[ $fields[ $action ] ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 			if ( $post_id && ! self::can_view( $post_id ) ) {
-				self::deny( __( 'That title is not available on this profile.', 'jws_streamvid' ) );
+				self::deny( $choose ? $choose : __( 'That title is not available on this profile.', 'jws_streamvid' ) );
 			}
 		}
 	}

@@ -256,6 +256,10 @@ class Jws_Profiles_Front {
 	 * titles and their archives. With "Ask right after sign-in" on, any page
 	 * asks until a profile is picked. Cart, checkout and payment pages never
 	 * do, so a payment or its return is not interrupted.
+	 *
+	 * When the main profile has Profile Lock (Jws_Profiles::is_pending()),
+	 * every page asks, payment pages too, and the page itself is not sent:
+	 * see waiting_page().
 	 */
 	private static function maybe_gate() {
 
@@ -265,15 +269,19 @@ class Jws_Profiles_Front {
 		if ( wp_doing_ajax() || is_feed() || is_embed() || is_robots() || is_preview() || isset( $_GET['elementor-preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return;
 		}
-		if ( self::is_payment_page() || ! ( self::is_browse_page() || Jws_Profiles_Settings::gate_on_login() ) ) {
-			return;
-		}
 
 		$user_id = get_current_user_id();
+		$pending = Jws_Profiles::is_pending( $user_id );
 
-		// Theme Options can ask after every sign-in; by default only accounts with 2+ profiles are asked.
-		if ( Jws_Profiles::has_chosen( $user_id ) || ( Jws_Profiles::count( $user_id ) < 2 && ! Jws_Profiles_Settings::gate_always() ) ) {
-			return;
+		if ( ! $pending ) {
+			if ( self::is_payment_page() || ! ( self::is_browse_page() || Jws_Profiles_Settings::gate_on_login() ) ) {
+				return;
+			}
+
+			// Theme Options can ask after every sign-in; by default only accounts with 2+ profiles are asked.
+			if ( Jws_Profiles::has_chosen( $user_id ) || ( Jws_Profiles::count( $user_id ) < 2 && ! Jws_Profiles_Settings::gate_always() ) ) {
+				return;
+			}
 		}
 
 		$host = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
@@ -282,6 +290,39 @@ class Jws_Profiles_Front {
 
 		// The page loads as usual; the modal opens over it and stays until a profile is picked.
 		self::$gate_url = self::url( 'choose', 0, array( 'back' => $here ) );
+
+		if ( $pending ) {
+			self::waiting_page();
+		}
+	}
+
+	/**
+	 * Sent in place of the page while Jws_Profiles::is_pending(): the site
+	 * header and footer around an empty main area, with "Who's watching?"
+	 * open over it. Picking a profile reloads the address, which then sends
+	 * the page itself. Nothing of the page is in this answer, so removing
+	 * the dialog in the browser leaves nothing to use.
+	 *
+	 * Runs on template_redirect priority 1, before the title, Kids and
+	 * account guards, so the address stays the one the visitor asked for.
+	 */
+	private static function waiting_page() {
+
+		// The same address sends the page once a profile is picked: a page cache must never keep this answer.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		nocache_headers();
+
+		/**
+		 * Fires before the "Who's watching?" waiting page is sent.
+		 *
+		 * @param string $gate_url The "Who's watching?" screen the dialog opens.
+		 */
+		do_action( 'jws_profiles_waiting_page', self::$gate_url );
+
+		jws_streamvid_load_template( 'user/profiles/waiting.php', false, array( 'gate' => self::$gate_url ) );
+		exit;
 	}
 
 	/** Cart, checkout and payment pages (WooCommerce, Paid Memberships Pro): never interrupted by the modal. */
@@ -657,6 +698,11 @@ class Jws_Profiles_Front {
 		}
 		if ( ! Jws_Profiles::enabled() ) {
 			return true;
+		}
+
+		// No profile picked yet and the main one has a PIN: nobody manages anything until one is.
+		if ( Jws_Profiles::is_pending() ) {
+			return false;
 		}
 
 		$profile = Jws_Profiles::current_profile();

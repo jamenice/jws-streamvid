@@ -220,6 +220,45 @@ class Jws_Profiles {
 		return $profile_id && self::get( $user_id, $profile_id ) && ! self::is_locked( $user_id, $profile_id );
 	}
 
+	/**
+	 * Whether this browser is signed in but has not picked a profile yet,
+	 * while the main profile has Profile Lock.
+	 *
+	 * A request with no valid profile cookie runs as the main profile (see
+	 * current_id()). Without this check, skipping "Who's watching?" would
+	 * skip the main profile's PIN: removing the dialog with the browser's
+	 * developer tools, or deleting the profile cookie. While this is true:
+	 *
+	 * - Jws_Profiles_Front sends only "Who's watching?" in place of a page;
+	 * - Jws_Profile_Filter limits lists, titles and AJAX as for the
+	 *   strictest Kids profile;
+	 * - the account and its profiles cannot be changed.
+	 *
+	 * Without Profile Lock on the main profile, anyone at the screen can
+	 * pick it, so skipping the dialog gains nothing and the page shows as
+	 * before. Requests not signed in with the browser's login cookie (the
+	 * app API, which picks profiles with its own token) keep their own rule.
+	 */
+	public static function is_pending( $user_id = 0 ) {
+
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		if ( $user_id <= 0 || get_current_user_id() !== $user_id || ! self::enabled() || '' === wp_get_session_token() ) {
+			return false;
+		}
+
+		$main    = self::get_main( $user_id );
+		$pending = $main && $main->has_pin && ! self::has_chosen( $user_id );
+
+		/**
+		 * Filters whether this request waits for "Who's watching?".
+		 *
+		 * @param bool $pending True when the main profile has Profile Lock and no profile is picked.
+		 * @param int  $user_id Account the request is for.
+		 */
+		return (bool) apply_filters( 'jws_profiles_is_pending', $pending, $user_id );
+	}
+
 	/** @return object|null The profile in use, or null when no user is logged in. */
 	public static function current_profile( $user_id = 0 ) {
 

@@ -80,7 +80,8 @@ class Jws_Kids_Mode {
 	/** Prints the Kids bar, and for any restricted profile the "not available" notice. */
 	public static function print_bar() {
 
-		if ( Jws_Profiles_Front::screen() || ! Jws_Profile_Filter::restriction() ) {
+		// Not while "Who's watching?" waits for a profile: those Kids rules are not a Kids profile.
+		if ( Jws_Profiles_Front::screen() || ! Jws_Profile_Filter::restriction() || Jws_Profiles::is_pending() ) {
 			return;
 		}
 

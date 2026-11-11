@@ -107,6 +107,14 @@ Jws_Landing::boot();
 require_once plugin_dir_path( __FILE__ ) . 'includes/livestream/class-livestream.php';
 Jws_Livestream::boot();
 
+/**
+ * Admin login address: moves wp-login.php to a chosen address and closes
+ * /wp-admin/ to visitors who are not signed in.
+ * Settings > General > Admin login address (empty: off).
+ */
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-jws-hide-login.php';
+Jws_Hide_Login::boot();
+
 
 include_once( 'check_update.php' );
 
