@@ -1548,8 +1548,15 @@ html.jws-pfm-busy {
 	text-align: center;
 }
 
+/*
+ * 18px for the icons of these parts. Not ":is(.button-default,
+ * .button-custom) [class^="jws-icon-"]": the theme puts .button-default on
+ * <body>, so that matched every theme icon on the site (the play icon on
+ * movie cards, for one) for signed-in visitors. The list below keeps the
+ * same weight (0,2,0), so these parts look as before.
+ */
 .jws-pv3__sections [class^="jws-icon-"],
-:is(.button-default, .button-custom) [class^="jws-icon-"],
+:is(.jws-pf, .jws-pfm, .jws-am, .jws-kids-bar, .jws-pv3, .jws-pf-tab) [class^="jws-icon-"],
 .jws-lib__select [class^="jws-icon-"],
 .jws-lib__bar [class^="jws-icon-"] {
 	font-size: 18px;
