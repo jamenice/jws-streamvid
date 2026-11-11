@@ -546,7 +546,8 @@ add_action('wp_ajax_get_invoice_html_woo', function() {
             <tbody>
                 <?php foreach ( $order->get_items() as $item ) : ?>
                     <tr>
-                        <td><?php echo esc_html($item->get_name()); ?></td>
+                        <?php /* Older pay-per-view orders saved the name as "<strong>Buy: </strong> Title" (theme cart label); print it as text. */ ?>
+                        <td><?php echo esc_html( wp_strip_all_tags( $item->get_name() ) ); ?></td>
                         <td><?php echo esc_html($item->get_quantity()); ?></td>
                         <td><?php echo wc_price($item->get_subtotal() / max(1, $item->get_quantity())); ?></td>
                         <td><?php echo wc_price($item->get_total()); ?></td>
