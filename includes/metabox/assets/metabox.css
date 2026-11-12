@@ -1760,7 +1760,7 @@ body.jws-mb-modal-open {
 /* ---- Box & tabs ---------------------------------------------------------- */
 
 .jws-mb-postbox {
-	z-index: 9999;
+	z-index: 1;
 	border-radius: var(--jws-radius);
 }
 
