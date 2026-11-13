@@ -1080,6 +1080,13 @@ html.jws-pfm-busy {
 	box-shadow: 0 18px 40px color-mix(in srgb, var(--dark) 45%, transparent);
 }
 
+/* Viewer Profiles off (class set by the theme's Account widget): no profile switcher. Phones keep their own width. */
+@media (min-width: 768px) {
+	.jws_account .dropdown-menu.jws-am-dropdown.jws-am-dropdown--compact {
+		width: 260px;
+	}
+}
+
 .jws-am {
 	display: flex;
 	flex-direction: column;

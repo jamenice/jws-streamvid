@@ -467,7 +467,7 @@ class Jws_Streamvid_Live_Videos {
                         <?php if( ! empty( $tags ) ) : ?>
                         <div class="field-item golive-field">
                             <label for="golive-tags"><?php echo esc_html__( 'Tags', 'jws_streamvid' ); ?></label>
-                            <select multiple id="golive-tags" name="videos_tag[]" data-placeholder="<?php echo esc_attr__( 'Choose tags', 'jws_streamvid' ); ?>">
+                            <select multiple id="golive-tags" name="videos_tag[]">
                                 <?php
                                 foreach( $tags as $tag ) {
                                     echo '<option value="'.esc_attr( $tag->slug ).'">'.esc_html( $tag->name ).'</option>';
