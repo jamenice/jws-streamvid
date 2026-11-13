@@ -1725,8 +1725,9 @@ function get_cloudflare_signed_url($url) {
 
 
 
-function jws_pmpro_lifter_membership_content_filter( $filtered_content, $original_content ) {
-      if ( is_singular('movies') || is_singular('tv_shows') || is_singular('episodes') || is_singular('videos') ) {
+function jws_pmpro_lifter_membership_content_filter( $filtered_content, $original_content ) { 
+      // These pages lock the player instead, so the description stays readable.
+      if ( is_singular( array( 'movies', 'tv_shows', 'episodes', 'videos', 'tv_channel' ) ) ) {
         return $original_content;
     }
     return $filtered_content;
