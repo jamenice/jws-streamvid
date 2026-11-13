@@ -418,18 +418,21 @@ html.jws-pfm-busy {
 	color: var(--heading);
 }
 
-.jws-pf-tile.is-locked .jws-pf-tile__btn {
-	cursor: not-allowed;
-}
-
 .jws-pf-tile.is-locked .jws-pf-tile__img {
 	opacity: 0.4;
 	filter: grayscale(1);
 }
 
-.jws-pf-tile__note {
+/* Once under the grid when some profiles are dimmed: what dimmed means. */
+.jws-pf-note {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin: 24px 0 0;
 	color: var(--body2);
 	font-size: var(--font-size-sm);
+	text-align: center;
 }
 
 .jws-pf-tile .jws-pf-kids-badge {

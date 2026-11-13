@@ -19,6 +19,7 @@ $jws_pf_back     = Jws_Profiles_Front::back_url();
 $jws_pf_limit    = Jws_Profiles::get_limit( $jws_pf_user );
 $jws_pf_can_add  = $jws_pf_admin && Jws_Profiles::can_create( $jws_pf_user );
 $jws_pf_over     = count( $jws_pf_profiles ) > $jws_pf_limit;
+$jws_pf_dimmed   = ! $jws_pf_manage && (bool) array_filter( $jws_pf_profiles, fn( $p ) => ! in_array( $p->id, $jws_pf_active, true ) );
 $jws_pf_notice   = Jws_Profiles_Front::notice();
 $jws_pf_error    = Jws_Profiles_Front::error();
 ?>
@@ -64,11 +65,11 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 
 				<?php elseif ( $jws_pf_locked ) : ?>
 
-					<span class="jws-pf-tile__btn" aria-disabled="true">
+					<?php // A click says why it cannot be picked (profiles-modal.js); the note under the grid says it for all of them. ?>
+					<button type="button" class="jws-pf-tile__btn" aria-disabled="true" aria-describedby="jws-pf-dimmed-note" data-jws-pf-locked="<?php /* translators: %s: profile name */ echo esc_attr( sprintf( __( '%s is not included in your plan. Change your plan to use this profile.', 'jws_streamvid' ), $jws_pf_p->name ) ); ?>">
 						<span class="jws-pf-tile__art"><?php echo $jws_pf_inner . $jws_pf_badge; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above. ?></span>
 						<span class="jws-pf-tile__name"><?php echo esc_html( $jws_pf_p->name ); ?></span>
-						<span class="jws-pf-tile__note"><?php esc_html_e( 'Not on your plan', 'jws_streamvid' ); ?></span>
-					</span>
+					</button>
 
 				<?php elseif ( $jws_pf_p->has_pin ) : ?>
 
@@ -107,6 +108,13 @@ $jws_pf_error    = Jws_Profiles_Front::error();
 			</li>
 		<?php endif; ?>
 	</ul>
+
+	<?php if ( $jws_pf_dimmed ) : ?>
+		<p id="jws-pf-dimmed-note" class="jws-pf-note">
+			<i class="jws-icon-info-light" aria-hidden="true"></i>
+			<?php esc_html_e( 'Dimmed profiles are not included in your plan.', 'jws_streamvid' ); ?>
+		</p>
+	<?php endif; ?>
 
 	<?php
 	if ( $jws_pf_manage && $jws_pf_over ) :

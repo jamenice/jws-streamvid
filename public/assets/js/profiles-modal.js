@@ -358,6 +358,29 @@
 		} );
 	}
 
+	/*
+	 * A profile the plan does not include (data-jws-pf-locked): a click says
+	 * why, as the theme's toast. Screen readers hear it either way.
+	 */
+	document.addEventListener( 'click', function ( event ) {
+		var tile = event.target.closest && event.target.closest( '[data-jws-pf-locked]' );
+		var theme = window.jwsThemeModule;
+
+		if ( ! tile ) {
+			return;
+		}
+		event.preventDefault();
+
+		var text = tile.getAttribute( 'data-jws-pf-locked' );
+
+		if ( theme && 'function' === typeof theme.show_notification && 'function' === typeof window.Toastify ) {
+			var safe = document.createElement( 'div' );
+			safe.textContent = text;
+			theme.show_notification( safe.innerHTML, 'error' );
+		}
+		announce( text );
+	} );
+
 	function show( html ) {
 		unpick();
 		reveal( forced );
