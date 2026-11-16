@@ -155,6 +155,48 @@ class Jws_Payment_Items {
 		return $item;
 	}
 
+	/**
+	 * A membership level's description, as the HTML the admin wrote it in.
+	 *
+	 * The description is edited in Memberships > Settings > Levels with the
+	 * full editor, so it can hold images, paragraphs, links and lists, and
+	 * all of it is meant for the buyer. It is kept as HTML rather than
+	 * flattened to lines: flattening drops the images and turns every
+	 * paragraph into a feature.
+	 *
+	 * Read at render time rather than kept in resolve(): resolve() feeds the
+	 * order row, and a description copied into every order's meta would be
+	 * bulk with no use once the sale is made.
+	 *
+	 * @param array $item An item from resolve().
+	 * @return string Sanitised HTML; empty for anything but a membership.
+	 */
+	public static function description( array $item ) {
+
+		if ( 'membership' !== $item['type'] || ! function_exists( 'pmpro_getLevel' ) ) {
+			return '';
+		}
+
+		$level = pmpro_getLevel( (int) $item['item_id'] );
+
+		if ( ! $level || '' === trim( (string) $level->description ) ) {
+			return '';
+		}
+
+		$html = (string) apply_filters( 'pmpro_level_description', $level->description, $level ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- PMPro's own hook.
+
+		/* PMPro adds paragraphs through that filter, and takes the filter off
+		   again when Elementor or SiteOrigin is active. Without it, text the
+		   editor saved as plain lines would run together. */
+		if ( ! has_filter( 'pmpro_level_description', 'pmpro_pmpro_level_description' ) ) {
+			$html = shortcode_unautop( wpautop( $html ) );
+		}
+
+		/* Shortcodes run as on the theme's plan cards, so an image added with
+		   a caption ([caption]) shows as an image, not as bracketed text. */
+		return trim( wp_kses_post( do_shortcode( $html ) ) );
+	}
+
 	/* ---------------------------------------------------------------------- */
 	/* Buy / rent / live                                                       */
 	/* ---------------------------------------------------------------------- */

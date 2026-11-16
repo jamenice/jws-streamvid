@@ -236,6 +236,14 @@ class Jws_Streamvid {
         require_once $payment_dir . 'class-jws-payment-fulfillment.php';
         require_once $payment_dir . 'class-jws-payment-stripe.php';
         require_once $payment_dir . 'class-jws-payment-paypal.php';
+
+        /* The gateways after Stripe and PayPal: one base class, one registry
+           (Jws_Payment_Gateways::CLASSES), one file per gateway. */
+        require_once $payment_dir . 'gateways/class-jws-payment-gateway.php';
+        require_once $payment_dir . 'gateways/class-jws-payment-gateways.php';
+        Jws_Payment_Gateways::load();
+        Jws_Payment_Gateways::register();
+
         require_once $payment_dir . 'class-jws-payment-woocommerce.php';
         require_once $payment_dir . 'class-jws-payment-events.php';
         require_once $payment_dir . 'class-jws-payment-checkout.php';

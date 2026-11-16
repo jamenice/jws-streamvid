@@ -139,16 +139,16 @@
 
 		/*
 		 * The summary's renewal lines describe a plan that bills itself, which
-		 * is true of every method here except WooCommerce — that one takes a
-		 * single payment covering a single term. Swapping the lines rather than
-		 * softening them: "auto-renew, cancel anytime" next to a payment that
-		 * will never renew is the kind of wrong that is found out a month
-		 * later, when access stops without warning.
+		 * is not true of a method marked data-renews="0" (WooCommerce, and any
+		 * gateway paid one term at a time — see method_renews() on the
+		 * server). Hiding the lines rather than softening them: "auto-renew,
+		 * cancel anytime" next to a payment that will never renew is the kind
+		 * of wrong that is found out a month later, when access stops without
+		 * warning.
 		 */
-		var isWoo = 'woocommerce' === method;
+		var renews = '0' !== String(this.$root.find('.jws-checkout-method[data-method="' + method + '"]').data('renews'));
 
-		this.$root.find('.jws-checkout-notice--auto').prop('hidden', isWoo);
-		this.$root.find('.jws-checkout-notice--wc').prop('hidden', !isWoo);
+		this.$root.find('.jws-checkout-notice--auto').prop('hidden', !renews);
 
 		/* Whatever badge the chosen row is showing — its own image, or the
 		   plain card glyph when it has none — copied onto Pay Now rather
@@ -285,6 +285,14 @@
 			}
 
 			var data = event.data;
+
+			/* The shop's form is on screen inside the frame: the spinner can
+			   go now rather than at the frame's `load`, which also waits for
+			   every image and third-party script on that page. */
+			if (data && 'jws_payment_wc_ready' === data.type) {
+				$('#jws-wc-modal .jws-wc-modal-loading').prop('hidden', true);
+				return;
+			}
 
 			if (!data || 'jws_payment_wc_paid' !== data.type || !data.redirect) {
 				return;

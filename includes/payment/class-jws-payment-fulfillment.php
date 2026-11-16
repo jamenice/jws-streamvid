@@ -257,9 +257,8 @@ class Jws_Payment_Fulfillment {
 
 		$settings = Jws_Payment_Settings::all();
 		$gateway  = (string) $order->gateway;
-		$mode     = 'stripe' === $gateway
-			? ( 'live' === $settings['stripe']['mode'] ? 'live' : 'sandbox' )
-			: ( 'live' === $settings['paypal']['mode'] ? 'live' : 'sandbox' );
+		/* PMPro calls the test environment "sandbox" whatever the gateway calls it. */
+		$mode     = isset( $settings[ $gateway ]['mode'] ) && 'live' === $settings[ $gateway ]['mode'] ? 'live' : 'sandbox';
 
 		$pmpro_order = new MemberOrder();
 

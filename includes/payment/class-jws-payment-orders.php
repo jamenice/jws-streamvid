@@ -253,6 +253,32 @@ class Jws_Payment_Orders {
 		);
 	}
 
+	/**
+	 * Changes some of an order's meta, keeping the rest.
+	 *
+	 * For a gateway that learns, after the payment, that the purchase has to
+	 * be recorded differently — a renewing plan whose subscription could not
+	 * be set up is granted as one paid term instead of as access forever.
+	 */
+	public static function merge_meta( $order_id, array $changes ) {
+
+		global $wpdb;
+
+		$order = self::find( $order_id );
+
+		if ( ! $order ) {
+			return false;
+		}
+
+		return false !== $wpdb->update(
+			Jws_Payment_Ledger::table(),
+			array( 'meta' => wp_json_encode( array_merge( self::meta( $order ), $changes ) ) ),
+			array( 'id' => (int) $order_id ),
+			array( '%s' ),
+			array( '%d' )
+		);
+	}
+
 	/** What was bought, as the array that was handed to create(). */
 	public static function meta( $order ) {
 

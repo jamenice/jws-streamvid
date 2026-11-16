@@ -185,8 +185,33 @@
 }
 
 .jws-pay-method input {
-	margin-top: 2px;
+	/* Level with the middle of the logo beside it. */
+	margin-top: 12px;
 	flex: 0 0 auto;
+}
+
+/* The same badge art as the checkout (public/assets/images/payment), which
+   carries its own white ground and margins. Card has no art, so it keeps a
+   plain glyph in the same frame. */
+.jws-pay-method-logo {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 60px;
+	height: 39px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	overflow: hidden;
+	color: #50575e;
+}
+
+.jws-pay-method-logo img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .jws-pay-method-body {
@@ -210,6 +235,91 @@
 }
 
 /* Gateways --------------------------------------------------------------- */
+
+/* One tab per gateway inside the Gateways tab. Without the script every
+   gateway shows, one under the other, with a rule between them. */
+.jws-pay-gateway+.jws-pay-gateway {
+	margin-top: 24px;
+	padding-top: 6px;
+	border-top: 1px solid #dcdcde;
+}
+
+.jws-pay.is-ready .jws-pay-gateway {
+	display: none;
+}
+
+.jws-pay.is-ready .jws-pay-gateway.is-active {
+	display: block;
+	margin-top: 0;
+	padding-top: 0;
+	border-top: 0;
+}
+
+.jws-pay-subtabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 16px 0 0;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+/* Only useful with the script, which is what switches them. */
+.jws-pay:not(.is-ready) .jws-pay-subtabs {
+	display: none;
+}
+
+.jws-pay-subtab {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 6px 12px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #fff;
+	color: #1d2327;
+	font: inherit;
+	font-size: 13px;
+	line-height: 1.4;
+	cursor: pointer;
+}
+
+.jws-pay-subtab:hover {
+	border-color: #2271b1;
+	color: #2271b1;
+}
+
+.jws-pay-subtab.is-active {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.jws-pay-subtab:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+/* The gateway's state, in the same colours as the badges in its header. */
+.jws-pay-subtab-dot {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #c3c4c7;
+}
+
+.jws-pay-subtab-dot.is-on {
+	background: #00a32a;
+}
+
+.jws-pay-subtab-dot.is-warn {
+	background: #dba617;
+}
+
+.jws-pay-subtab.is-active .jws-pay-subtab-dot {
+	box-shadow: 0 0 0 2px #fff;
+}
 
 .jws-pay-gateway-head {
 	display: flex;

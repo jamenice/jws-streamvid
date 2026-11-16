@@ -84,6 +84,104 @@
 	font-weight: 600;
 }
 
+/* What a membership level includes: its PMPro description as the admin wrote
+   it — images, paragraphs, links, lists. Bullet lists get the check mark the
+   plan cards in the coin popup use. */
+.jws-checkout-includes {
+	padding: 18px 0;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.jws-checkout-includes-title {
+	margin: 0 0 10px;
+}
+
+/* Spacing by gap rather than margins: the theme's default.css zeroes list
+   margins with a selector as strong as one here and loads later, so a margin
+   on a list would lose. The doubled class outranks the theme's own margins
+   on paragraphs, headings and captions. */
+.jws-checkout-desc {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.jws-checkout .jws-checkout-desc> * {
+	margin: 0;
+}
+
+/* wpautop wraps a captioned image in <p>, which the browser closes before
+   the <figure>, leaving an empty paragraph that would add a second gap. */
+.jws-checkout-desc> p:empty {
+	display: none;
+}
+
+/* The panel is narrow: an image floated left or right by the editor would
+   squeeze the text beside it to a word per line, so every image sits on its
+   own row at no more than the panel's width. */
+.jws-checkout-desc img,
+.jws-checkout-desc figure,
+.jws-checkout-desc .wp-caption {
+	display: block;
+	float: none;
+	max-width: 100% !important;
+	height: auto;
+	margin-inline: 0;
+}
+
+.jws-checkout-desc img {
+	border-radius: 8px;
+}
+
+.jws-checkout-desc .aligncenter {
+	margin-inline: auto;
+}
+
+.jws-checkout-desc figcaption,
+.jws-checkout-desc .wp-caption-text {
+	margin-top: 6px;
+	color: var(--body2);
+}
+
+.jws-checkout-desc strong,
+.jws-checkout-desc b {
+	color: var(--heading);
+}
+
+.jws-checkout-desc a {
+	color: var(--main);
+	text-decoration: underline;
+}
+
+.jws-checkout-desc ul {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-checkout-desc ul li {
+	position: relative;
+	padding-inline-start: 22px;
+}
+
+.jws-checkout-desc ul li::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 0;
+	top: .3em;
+	width: 12px;
+	height: 12px;
+	background-color: var(--main);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8.5l3.5 3.5 7.5-8' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8.5l3.5 3.5 7.5-8' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.jws-checkout-desc ol {
+	padding-inline-start: 1.2em;
+}
+
 .jws-checkout-total {
 	display: flex;
 	justify-content: space-between;
@@ -109,12 +207,18 @@
 	margin-top: 4px;
 }
 
-/* The renewal lines are swapped for the WooCommerce one and back as the
-   method changes. Spelled out rather than left to the browser's default
+/* The renewal lines are hidden while WooCommerce is the method and shown
+   again when it is not. Spelled out rather than left to the browser's default
    because any author rule setting `display` on these beats a UA [hidden] —
    the same reason the wallet rows and the card panel need it. */
 .jws-checkout-notices li[hidden] {
 	display: none !important;
+}
+
+/* With every line hidden, the list's own margins would still leave a gap
+   between Total and Pay Now. */
+.jws-checkout-notices:not(:has(li:not([hidden]))) {
+	display: none;
 }
 
 .jws-checkout-notices a {

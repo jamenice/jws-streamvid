@@ -441,9 +441,16 @@ class Jws_Payment_Checkout {
 		}
 
 		$base    = plugin_dir_url( dirname( dirname( __FILE__ ) ) ) . 'public/assets/';
+		$dir     = dirname( dirname( dirname( __FILE__ ) ) ) . '/public/assets/';
 		$version = defined( 'JWS_STREAMVID_VERSION' ) ? JWS_STREAMVID_VERSION : '1.0.0';
 
-		wp_enqueue_style( 'jws-payment', $base . 'css/jws-payment.css', array(), $version );
+		/* The file's own time, as the plugin's other assets use, so a changed
+		   stylesheet or script reaches buyers without waiting on a version
+		   bump to clear their browser cache. */
+		$css_ver = file_exists( $dir . 'css/jws-payment.css' ) ? (string) filemtime( $dir . 'css/jws-payment.css' ) : $version;
+		$js_ver  = file_exists( $dir . 'js/jws-payment.js' ) ? (string) filemtime( $dir . 'js/jws-payment.js' ) : $version;
+
+		wp_enqueue_style( 'jws-payment', $base . 'css/jws-payment.css', array(), $css_ver );
 
 		$methods = Jws_Payment_Settings::available_methods();
 		$stripe  = Jws_Payment_Settings::get( 'stripe' );
@@ -464,7 +471,7 @@ class Jws_Payment_Checkout {
 			'jws-payment',
 			$base . 'js/jws-payment.js',
 			$needs_stripe_js ? array( 'jquery', 'jws-stripe-js' ) : array( 'jquery' ),
-			$version,
+			$js_ver,
 			true
 		);
 
@@ -547,10 +554,43 @@ class Jws_Payment_Checkout {
 	 * Offering it there would take the first payment and then quietly never
 	 * take another.
 	 */
+	/**
+	 * Whether a checkout method bills a renewing plan again by itself.
+	 *
+	 * WooCommerce never does; the gateways built on Jws_Payment_Gateway say
+	 * so through renews(); Stripe and PayPal always do. A method that does
+	 * not is sold a renewing plan as one paid term — see ajax_start().
+	 */
+	private static function method_renews( $method_key ) {
+
+		$catalog = Jws_Payment_Settings::method_catalog();
+		$gateway = isset( $catalog[ $method_key ] ) ? $catalog[ $method_key ]['gateway'] : '';
+
+		if ( 'woocommerce' === $gateway ) {
+			return false;
+		}
+
+		$extra = Jws_Payment_Gateways::get( $gateway );
+
+		return $extra ? (bool) $extra::renews() : true;
+	}
+
 	private static function methods_for( array $methods, array $item ) {
 
 		if ( isset( $methods['woocommerce'] ) && ! Jws_Payment_Woocommerce::supports( $item ) ) {
 			unset( $methods['woocommerce'] );
+		}
+
+		/* The same question for the gateways built on Jws_Payment_Gateway:
+		   a currency the gateway cannot charge, or a billing period it
+		   cannot express, is a button that could only fail. */
+		foreach ( $methods as $key => $method ) {
+
+			$extra = Jws_Payment_Gateways::get( $method['gateway'] );
+
+			if ( $extra && is_wp_error( $extra::supports( $item ) ) ) {
+				unset( $methods[ $key ] );
+			}
 		}
 
 		return $methods;
@@ -572,6 +612,17 @@ class Jws_Payment_Checkout {
 		 */
 		$non_wallet_methods = array_diff_key( $methods, array_flip( $wallet_keys ) );
 		$default_method     = $non_wallet_methods ? array_key_first( $non_wallet_methods ) : '';
+
+		/*
+		 * The renewal lines are hidden for a method that does not renew
+		 * (WooCommerce, Razorpay) by selectMethod() in the script, but only
+		 * when the buyer picks a method. When such a method is already the
+		 * one checked — often the only one on offer — the page has to open
+		 * with them hidden, or it promises "Auto-renew" for a payment that
+		 * never renews.
+		 */
+		$wc_first = $default_method && ! self::method_renews( $default_method );
+		$description = Jws_Payment_Items::description( $item );
 		?>
 		<div class="jws-checkout"
 			data-type="<?php echo esc_attr( $item['type'] ); ?>"
@@ -589,7 +640,7 @@ class Jws_Payment_Checkout {
 					<div class="jws-checkout-methods" role="radiogroup" aria-label="<?php echo esc_attr__( 'Payment method', 'jws_streamvid' ); ?>">
 						<?php foreach ( $methods as $key => $method ) : ?>
 							<?php $is_wallet = in_array( $key, $wallet_keys, true ); ?>
-							<label class="jws-checkout-method" data-method="<?php echo esc_attr( $key ); ?>" <?php echo $is_wallet ? 'hidden' : ''; ?>>
+							<label class="jws-checkout-method" data-method="<?php echo esc_attr( $key ); ?>" data-renews="<?php echo self::method_renews( $key ) ? '1' : '0'; ?>" <?php echo $is_wallet ? 'hidden' : ''; ?>>
 								<input type="radio" name="jws_pay_method" value="<?php echo esc_attr( $key ); ?>" <?php checked( ! $is_wallet && $key === $default_method ); ?> />
 								<span class="jws-checkout-method-icon jws-checkout-method-icon--<?php echo esc_attr( $key ); ?><?php echo self::method_image_url( $key ) ? ' jws-checkout-method-icon--image' : ''; ?>"><?php self::method_icon( $key ); ?></span>
 								<span class="jws-checkout-method-label"><?php echo esc_html( $method['label'] ); ?></span>
@@ -629,6 +680,18 @@ class Jws_Payment_Checkout {
 					<span class="jws-checkout-price"><?php echo esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) ); ?></span>
 				</div>
 
+				<?php if ( $description ) : ?>
+					<?php /* The level's description from Memberships > Settings >
+					         Levels, images and all, so the buyer sees what the
+					         plan gives them right next to what it costs. */ ?>
+					<div class="jws-checkout-includes">
+						<h6 class="jws-checkout-includes-title"><?php echo esc_html__( "What's included", 'jws_streamvid' ); ?></h6>
+						<div class="jws-checkout-desc fs-small">
+							<?php echo $description; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- passed through wp_kses_post() in Jws_Payment_Items::description(). ?>
+						</div>
+					</div>
+				<?php endif; ?>
+
 				<div class="jws-checkout-total">
 					<span><?php echo esc_html__( 'Total', 'jws_streamvid' ); ?></span>
 					<strong><?php echo esc_html( Jws_Payment_Items::format_price( $item['amount'], $item['currency'] ) ); ?></strong>
@@ -638,10 +701,10 @@ class Jws_Payment_Checkout {
 					<?php if ( ! empty( $item['recurring'] ) ) : ?>
 						<?php /* Every line below describes a plan that bills
 						         itself. WooCommerce cannot do that, so picking
-						         it hides these and shows the one after instead
-						         — see selectMethod() in the script. */ ?>
-						<li class="jws-checkout-notice--auto"><?php echo esc_html__( 'Auto-renew. Cancel anytime.', 'jws_streamvid' ); ?></li>
-						<li class="jws-checkout-notice--auto">
+						         it hides them — see selectMethod() in the
+						         script. */ ?>
+						<li class="jws-checkout-notice--auto" <?php echo $wc_first ? 'hidden' : ''; ?>><?php echo esc_html__( 'Auto-renew. Cancel anytime.', 'jws_streamvid' ); ?></li>
+						<li class="jws-checkout-notice--auto" <?php echo $wc_first ? 'hidden' : ''; ?>>
 							<?php
 							$period = Jws_Payment_Items::period_phrase( $item['period'], $item['cycle'] );
 
@@ -663,7 +726,7 @@ class Jws_Payment_Checkout {
 							}
 							?>
 						</li>
-						<li class="jws-checkout-notice--auto">
+						<li class="jws-checkout-notice--auto" <?php echo $wc_first ? 'hidden' : ''; ?>>
 							<?php
 							printf(
 								/* translators: %s: link to the subscriptions page. */
@@ -672,21 +735,6 @@ class Jws_Payment_Checkout {
 							);
 							?>
 						</li>
-
-						<?php if ( isset( $methods['woocommerce'] ) ) : ?>
-							<?php $term = Jws_Payment_Woocommerce::term_for( $item ); ?>
-							<?php if ( $term ) : ?>
-								<li class="jws-checkout-notice--wc" hidden>
-									<?php
-									printf(
-										/* translators: %s: how long one payment covers, e.g. "month". */
-										esc_html__( 'Paid through WooCommerce, this covers one %s and does not renew itself. Your membership ends when that runs out, and you buy it again to carry on.', 'jws_streamvid' ),
-										esc_html( Jws_Payment_Items::period_phrase( $term['period'], $term['cycle'] ) )
-									);
-									?>
-								</li>
-							<?php endif; ?>
-						<?php endif; ?>
 					<?php else : ?>
 						<li><?php echo esc_html__( 'One-time payment. No renewal.', 'jws_streamvid' ); ?></li>
 					<?php endif; ?>
@@ -774,35 +822,15 @@ class Jws_Payment_Checkout {
 	}
 
 	/**
-	 * Where a method's badge art lives, relative to the plugin.
+	 * The full URL to a method's badge art, or '' if it has none.
 	 *
-	 * Real artwork for the methods a browser or a bank actually recognises by
-	 * their own logo — card has none, because there is no single brand to
-	 * badge a generic card with, so it keeps a plain glyph instead.
+	 * The catalog names the file (Jws_Payment_Settings::method_catalog()), so
+	 * the Payment methods tab shows the same logo as this page. Card has none,
+	 * because there is no single brand to badge a generic card with, so it
+	 * keeps a plain glyph instead.
 	 */
-	private static function method_image( $key ) {
-
-		$images = array(
-			'apple_pay'  => 'apple.png',
-			'google_pay' => 'google.png',
-			'paypal'     => 'paypal.svg',
-			'quick_pay'  => 'stripe.svg',
-			'woocommerce' => 'woocommerce.png',
-		);
-
-		return isset( $images[ $key ] ) ? $images[ $key ] : '';
-	}
-
-	/** The full URL to a method's badge art, or '' if it has none. */
 	private static function method_image_url( $key ) {
-
-		$file = self::method_image( $key );
-
-		if ( ! $file ) {
-			return '';
-		}
-
-		return plugin_dir_url( dirname( dirname( __FILE__ ) ) ) . 'public/assets/images/payment/' . $file;
+		return Jws_Payment_Settings::method_image_url( $key );
 	}
 
 	/**
@@ -1171,7 +1199,8 @@ class Jws_Payment_Checkout {
 		 */
 		$term = null;
 
-		if ( 'woocommerce' === $gateway && ! empty( $item['recurring'] ) ) {
+		/* The same holds for any gateway that does not renew by itself. */
+		if ( ! self::method_renews( $method_key ) && ! empty( $item['recurring'] ) ) {
 			$term = Jws_Payment_Woocommerce::term_for( $item );
 
 			$item['recurring'] = false;
@@ -1254,6 +1283,12 @@ class Jws_Payment_Checkout {
 			$this->send_redirect_or_fail( Jws_Payment_Woocommerce::checkout_url( $order, $item ), $order_id );
 		}
 
+		$extra = Jws_Payment_Gateways::get( $gateway );
+
+		if ( $extra ) {
+			$this->send_redirect_or_fail( $extra::start( $order, $item ), $order_id );
+		}
+
 		if ( 'redirect' === $method['flow'] ) {
 			$this->send_redirect_or_fail( Jws_Payment_Stripe::checkout_session( $order, $item ), $order_id );
 		}
@@ -1298,9 +1333,15 @@ class Jws_Payment_Checkout {
 			wp_send_json_error( array( 'message' => esc_html__( 'We could not find that order.', 'jws_streamvid' ) ), 404 );
 		}
 
-		$paid = 'paypal' === $order->gateway
-			? Jws_Payment_Paypal::settle( $order )
-			: Jws_Payment_Stripe::settle( $order );
+		$extra = Jws_Payment_Gateways::get( $order->gateway );
+
+		if ( $extra ) {
+			$paid = $extra::settle( $order );
+		} elseif ( 'paypal' === $order->gateway ) {
+			$paid = Jws_Payment_Paypal::settle( $order );
+		} else {
+			$paid = Jws_Payment_Stripe::settle( $order );
+		}
 
 		if ( ! $paid ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'The payment has not gone through yet.', 'jws_streamvid' ) ), 200 );

@@ -50,6 +50,24 @@ class Jws_Payment_Events {
 				)
 			);
 		}
+
+		/*
+		 * The gateways built on Jws_Payment_Gateway verify and handle their
+		 * own deliveries. Mercado Pago sends some notifications as GET, so
+		 * these routes take both; what a request is allowed to change is still
+		 * decided only by the verified payload, or by asking the gateway.
+		 */
+		foreach ( Jws_Payment_Gateways::all() as $gateway => $class ) {
+			register_rest_route(
+				self::NAMESPACE_REST,
+				'/webhook/' . $gateway,
+				array(
+					'methods'             => array( 'POST', 'GET' ),
+					'callback'            => array( $class, 'receive' ),
+					'permission_callback' => '__return_true',
+				)
+			);
+		}
 	}
 
 	/* ---------------------------------------------------------------------- */
@@ -625,7 +643,11 @@ class Jws_Payment_Events {
 		} else {
 			/* Which gateway settles it is decided by the order, not by the
 			   query string, which the buyer controls. */
-			if ( 'paypal' === $order->gateway ) {
+			$extra = Jws_Payment_Gateways::get( $order->gateway );
+
+			if ( $extra ) {
+				$extra::settle( $order );
+			} elseif ( 'paypal' === $order->gateway ) {
 				Jws_Payment_Paypal::settle( $order );
 			} else {
 				Jws_Payment_Stripe::settle( $order );

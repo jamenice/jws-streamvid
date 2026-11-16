@@ -182,6 +182,13 @@ class Jws_Payment_Woocommerce {
 		add_filter( 'wp_headers', array( $this, 'allow_framing' ), 20 );
 		add_action( 'wp_head', array( $this, 'frame_styles' ) );
 
+		/* The toolbar is only drawn for staff, but inside a 720px modal it
+		   takes the top of the panel and loads its own scripts and styles
+		   for nothing. */
+		if ( self::requested_ref() ) {
+			add_filter( 'show_admin_bar', '__return_false' );
+		}
+
 		/* After WooCommerce's own footer scripts (priority 20), so jQuery and
 		   checkout.js are both on the page when this binds. */
 		add_action( 'wp_footer', array( $this, 'frame_script' ), 100 );
@@ -991,6 +998,29 @@ class Jws_Payment_Woocommerce {
 		}
 
 		?>
+		<script id="jws-payment-wc-ready">
+			/*
+			 * Tells the opener the form is on screen. Its spinner otherwise
+			 * waits for the frame's `load` event, which also waits for every
+			 * image and third-party script the shop pulls in, about two
+			 * seconds after the buyer could already have started.
+			 */
+			(function () {
+				if (!window.parent || window.parent === window) {
+					return;
+				}
+
+				function ready() {
+					window.parent.postMessage({ type: 'jws_payment_wc_ready' }, <?php echo wp_json_encode( home_url( '/' ) ); ?>);
+				}
+
+				if ('loading' === document.readyState) {
+					document.addEventListener('DOMContentLoaded', ready);
+				} else {
+					ready();
+				}
+			}());
+		</script>
 		<script id="jws-payment-wc-reveal">
 			(function ($) {
 				if (!$) {

@@ -230,9 +230,15 @@ class Jws_Payment_Subscriptions {
 			return false;
 		}
 
-		$cancelled = 'stripe' === $subscription->gateway
-			? Jws_Payment_Stripe::cancel_subscription( $subscription->gateway_ref )
-			: Jws_Payment_Paypal::cancel_subscription( $subscription->gateway_ref );
+		$extra = Jws_Payment_Gateways::get( $subscription->gateway );
+
+		if ( $extra ) {
+			$cancelled = $extra::cancel_subscription( $subscription->gateway_ref );
+		} elseif ( 'stripe' === $subscription->gateway ) {
+			$cancelled = Jws_Payment_Stripe::cancel_subscription( $subscription->gateway_ref );
+		} else {
+			$cancelled = Jws_Payment_Paypal::cancel_subscription( $subscription->gateway_ref );
+		}
 
 		/*
 		 * Marked cancelled either way. A gateway that refuses because the

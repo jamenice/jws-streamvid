@@ -5,7 +5,7 @@
  * and let someone check a pasted secret before saving it.
  *
  * The tab state is carried in a hidden field rather than only in the URL hash,
- * so saving from the Stripe tab comes back to the Stripe tab — a settings page
+ * so saving from the Gateways tab comes back to the Gateways tab — a settings page
  * that always reopens on the first tab makes fixing one field a three-click
  * job every time.
  */
@@ -28,7 +28,52 @@
 	var panels = Array.prototype.slice.call(root.querySelectorAll('.jws-pay-panel'));
 	var field = root.querySelector('input[name="active_tab"]');
 
+	/* The Gateways tab has one tab of its own per gateway. */
+	var subtabs = Array.prototype.slice.call(root.querySelectorAll('.jws-pay-subtab'));
+	var sections = Array.prototype.slice.call(root.querySelectorAll('.jws-pay-gateway'));
+	var gatewayField = root.querySelector('input[name="active_gateway"]');
+
+	function showGateway(id, focus) {
+		var known = subtabs.some(function (tab) {
+			return tab.dataset.gateway === id;
+		});
+
+		if (!known) {
+			id = subtabs.length ? subtabs[0].dataset.gateway : '';
+		}
+
+		subtabs.forEach(function (tab) {
+			var current = tab.dataset.gateway === id;
+
+			tab.classList.toggle('is-active', current);
+			tab.setAttribute('aria-selected', current ? 'true' : 'false');
+			tab.tabIndex = current ? 0 : -1;
+
+			if (current && focus) {
+				tab.focus();
+			}
+		});
+
+		sections.forEach(function (section) {
+			section.classList.toggle('is-active', section.id === 'jws-pay-gateway-' + id);
+		});
+
+		/* Saved with the form, so Save comes back to this gateway. */
+		if (gatewayField) {
+			gatewayField.value = id;
+		}
+	}
+
 	function show(name) {
+		/* A gateway's name (#stripe, #mollie…) opens the Gateways tab on that
+		   gateway. Stripe and PayPal had a tab each before, so old bookmarks to
+		   them land there too. */
+		var gateway = name && document.getElementById('jws-pay-gateway-' + name) ? name : '';
+
+		if (gateway) {
+			name = 'gateways';
+		}
+
 		var known = tabs.some(function (tab) {
 			return tab.dataset.tab === name;
 		});
@@ -54,6 +99,10 @@
 		root.querySelectorAll('input[name="active_tab"]').forEach(function (input) {
 			input.value = name;
 		});
+
+		if (gateway) {
+			showGateway(gateway);
+		}
 	}
 
 	tabs.forEach(function (tab) {
@@ -64,12 +113,45 @@
 		});
 	});
 
+	subtabs.forEach(function (tab) {
+		tab.addEventListener('click', function () {
+			showGateway(tab.dataset.gateway);
+			/* The gateway's own name, so the link opens straight on it. */
+			history.replaceState(null, '', '#' + tab.dataset.gateway);
+		});
+
+		/* Arrow keys, Home and End move between gateways, as in any tab list. */
+		tab.addEventListener('keydown', function (event) {
+			var index = subtabs.indexOf(tab);
+			var next = null;
+
+			if ('ArrowRight' === event.key) {
+				next = subtabs[(index + 1) % subtabs.length];
+			} else if ('ArrowLeft' === event.key) {
+				next = subtabs[(index - 1 + subtabs.length) % subtabs.length];
+			} else if ('Home' === event.key) {
+				next = subtabs[0];
+			} else if ('End' === event.key) {
+				next = subtabs[subtabs.length - 1];
+			}
+
+			if (next) {
+				event.preventDefault();
+				showGateway(next.dataset.gateway, true);
+				history.replaceState(null, '', '#' + next.dataset.gateway);
+			}
+		});
+	});
+
 	/*
 	 * Only now: until the panels can be switched, hiding them would leave a
 	 * page with no way to reach four of its five sections.
 	 */
 	root.classList.add('is-ready');
 
+	/* The gateway the server says was last open, then whatever the address
+	   asks for, which may name a gateway of its own. */
+	showGateway(gatewayField ? gatewayField.value : '');
 	show((window.location.hash || '').replace('#', '') || (field && field.value) || 'general');
 
 	/* ---------------------------------------------------------------------- */
