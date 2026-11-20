@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Jws Streamvid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 13:48+0000\n"
+"POT-Creation-Date: 2026-11-20 02:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -51,6 +51,7 @@ msgid "%1$d free, then %2$d coins"
 msgstr ""
 
 #. 1: used, 2: allowed
+#: public/user/profile/dashboard.php:328
 #: public/user/profile/v3/subscription.php:139
 #, php-format
 msgid "%1$d of %2$d"
@@ -86,8 +87,14 @@ msgstr ""
 msgid "%1$s (%2$d)"
 msgstr ""
 
+#. 1: gateway name, 2: currency code.
+#: includes/payment/gateways/class-jws-payment-gateway.php:121
+#, php-format
+msgid "%1$s cannot charge in %2$s."
+msgstr ""
+
 #. 1: price charged today, 2: billing period, 3: price charged on every renewal.
-#: includes/payment/class-jws-payment-checkout.php:651
+#: includes/payment/class-jws-payment-checkout.php:714
 #, php-format
 msgid "%1$s for the first %2$s, then %3$s every %2$s."
 msgstr ""
@@ -96,6 +103,14 @@ msgstr ""
 #: includes/drama/templates/parts/purchase-modal.php:102
 #, php-format
 msgid "%1$s for the first %2$s, then %3$s/%2$s. Cancel anytime."
+msgstr ""
+
+#. 1: gateway name, 2: Test or Live, as the key says, 3: Test or Live, as the Mode setting says.
+#: includes/payment/class-jws-payment-settings.php:970
+#, php-format
+msgid ""
+"%1$s has %2$s keys but its Mode is set to %3$s. The keys decide which one is "
+"charged, so check that they are the ones you meant."
 msgstr ""
 
 #. 1: browser or app, 2: operating system
@@ -127,7 +142,7 @@ msgstr[1] ""
 msgid "%d coins"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:313
+#: includes/payment/class-jws-payment-items.php:355
 msgid "%d days"
 msgstr ""
 
@@ -156,7 +171,7 @@ msgstr ""
 msgid "%d images added to the Media Library."
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:315
+#: includes/payment/class-jws-payment-items.php:357
 msgid "%d months"
 msgstr ""
 
@@ -179,11 +194,11 @@ msgid ""
 "error log."
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:314
+#: includes/payment/class-jws-payment-items.php:356
 msgid "%d weeks"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:316
+#: includes/payment/class-jws-payment-items.php:358
 msgid "%d years"
 msgstr ""
 
@@ -220,7 +235,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. %s: coin amount
-#: includes/payment/class-jws-payment-items.php:234
+#: includes/payment/class-jws-payment-items.php:276
 #: includes/drama/class-drama-ajax.php:155
 #: includes/drama/templates/parts/purchase-modal.php:133
 #, php-format
@@ -228,7 +243,7 @@ msgid "%s coins"
 msgstr ""
 
 #. %s: number of coins.
-#: includes/payment/class-jws-payment-checkout.php:1004
+#: includes/payment/class-jws-payment-checkout.php:1032
 #, php-format
 msgid "%s coins added to your wallet"
 msgstr ""
@@ -240,15 +255,43 @@ msgid "%s drama coins"
 msgstr ""
 
 #. %s: membership level name.
-#: includes/payment/class-jws-payment-checkout.php:1018
+#: includes/payment/class-jws-payment-checkout.php:1046
 #, php-format
 msgid "%s is active"
 msgstr ""
 
+#. %s: profile name
+#: public/user/profiles/choose.php:69
+#, php-format
+msgid "%s is not included in your plan. Change your plan to use this profile."
+msgstr ""
+
 #. %s: gateway name.
-#: includes/payment/class-jws-payment-settings.php:802
+#: includes/payment/class-jws-payment-settings.php:959
+#, php-format
+msgid ""
+"%s is switched on but its keys are missing, so the checkout does not offer "
+"it."
+msgstr ""
+
+#. %s: number of items
+#: public/user/profile/woocommerce/orders.php:206
+#, php-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
+#. %s: gateway name.
+#: includes/payment/class-jws-payment-settings.php:1125
 #, php-format
 msgid "%s not configured"
+msgstr ""
+
+#. %s: gateway name.
+#: includes/payment/gateways/class-jws-payment-gateway.php:361
+#, php-format
+msgid "%s refused the request."
 msgstr ""
 
 #. %s: number of ticked titles (filled in by CSS)
@@ -334,13 +377,13 @@ msgid ""
 "A light logo on a transparent background reads best — it sits on dark tiles."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:764
+#: includes/payment/class-jws-payment-settings.php:1075
 msgid ""
 "A normal page holding the [jws_checkout] shortcode. Style it like any other "
 "page."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1056
+#: includes/payment/class-jws-payment-settings.php:1399
 msgid "A payment table is missing, so this list cannot be trusted."
 msgstr ""
 
@@ -352,7 +395,7 @@ msgstr ""
 msgid "A verification code was sent to %s."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:876
+#: includes/payment/class-jws-payment-settings.php:1199
 msgid ""
 "A WooCommerce order is a single charge and nothing here can renew it — there "
 "is no WooCommerce Subscriptions on this site, and bank transfer or cash on "
@@ -364,9 +407,14 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:948
+#: includes/payment/gateways/class-jws-payment-square.php:44
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:41
+msgid "Access token"
+msgstr ""
+
+#: includes/payment/class-jws-payment-checkout.php:976
 #: public/user/profiles/account-menu.php:62
-#: public/user/profile/v3/layout.php:48 public/user/profile/v3/layout.php:156
+#: public/user/profile/v3/layout.php:50 public/user/profile/v3/layout.php:164
 msgid "Account"
 msgstr ""
 
@@ -375,7 +423,7 @@ msgstr ""
 msgid "Account and security"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:991
+#: includes/payment/class-jws-payment-settings.php:1338
 msgid "Account country"
 msgstr ""
 
@@ -384,7 +432,7 @@ msgstr ""
 msgid "Account password"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:200
+#: public/user/profile/v3/layout.php:208
 msgid "Account sections"
 msgstr ""
 
@@ -449,6 +497,7 @@ msgstr ""
 #: includes/class-jws-streamvid-dashboard.php:150
 #: includes/class-jws-streamvid-dashboard.php:162
 #: includes/class-jws-streamvid-dashboard.php:170
+#: public/user/profile/woocommerce/edit-address.php:81
 #: public/user/profile/v3/settings.php:50
 #: public/user/profile/v3/settings.php:56
 #: public/user/profile/v3/settings.php:62
@@ -457,6 +506,11 @@ msgstr ""
 
 #: includes/metabox/class-jws-metabox.php:403
 msgid "Add %d selected"
+msgstr ""
+
+#: public/user/profile/woocommerce/edit-address.php:79
+#, php-format
+msgid "Add %s"
 msgstr ""
 
 #: public/user/profiles/edit.php:68
@@ -557,7 +611,7 @@ msgstr ""
 msgid "Add phone number"
 msgstr ""
 
-#: public/user/profile/profiles.php:57 public/user/profiles/choose.php:105
+#: public/user/profile/profiles.php:57 public/user/profiles/choose.php:106
 #: public/user/profiles/edit.php:65 public/user/profiles/edit.php:196
 msgid "Add Profile"
 msgstr ""
@@ -594,12 +648,55 @@ msgstr ""
 msgid "Add term"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1010
+#: includes/payment/class-jws-payment-settings.php:1265
 msgid "Add this endpoint in PayPal, then paste the ID PayPal gives it above."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1009
+#: includes/payment/class-jws-payment-settings.php:1256
 msgid "Add this endpoint in Stripe, then paste its signing secret above."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:55
+msgid ""
+"Add this URL in Mercado Pago under Your integrations > Webhooks, tick the "
+"events below, then paste the secret it shows above. Mercado Pago only "
+"notifies public https addresses, and test payments send no notifications."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-razorpay.php:58
+msgid ""
+"Add this URL in Razorpay under Account & Settings > Webhooks, type any "
+"secret there and paste the same secret above. Razorpay does not deliver to "
+"localhost."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:73
+msgid ""
+"Add this URL in the Authorize.net Merchant Interface under Account > "
+"Webhooks, and paste the Signature Key from Account > Settings > Security "
+"Settings > API Credentials and Keys above. Authorize.net does not deliver to "
+"localhost."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:60
+msgid ""
+"Add this URL in the Square Developer Console under your app > Webhooks > "
+"Subscriptions, then paste its Signature Key above. Square only delivers to "
+"public https addresses."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:56
+msgid ""
+"Add this URL in your Flutterwave dashboard under Settings > Webhooks, type a "
+"secret hash there and paste the same value above. Flutterwave does not "
+"deliver to localhost."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:57
+msgid ""
+"Add this URL in your Paystack dashboard as the webhook URL, and paste the "
+"webhook signing secret from Developers > API configuration above. Paystack "
+"does not deliver to localhost."
 msgstr ""
 
 #: includes/metabox/fields/episodes.php:70
@@ -635,7 +732,7 @@ msgstr ""
 msgid "Added after the last episode when you update."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1040
+#: includes/payment/class-jws-payment-checkout.php:1068
 msgid "Added to your library"
 msgstr ""
 
@@ -643,9 +740,18 @@ msgstr ""
 msgid "Adding the menu link and the sample page…"
 msgstr ""
 
+#: includes/class-jws-streamvid-profile.php:167
+#: public/user/profile/woocommerce/edit-address.php:44
+msgid "Addresses"
+msgstr ""
+
 #: includes/tv_channel/class-tv-channel-demo.php:216
 msgid ""
 "Adds \"Live TV\" at the end of this menu, unless it already links there."
+msgstr ""
+
+#: includes/class-jws-hide-login.php:407
+msgid "Admin login address"
 msgstr ""
 
 #: includes/function_template.php:1323
@@ -751,8 +857,12 @@ msgstr ""
 msgid "All gateways"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:636
+#: includes/class-jws-profiles-front.php:697
 msgid "All maturity ratings"
+msgstr ""
+
+#: public/user/profile/woocommerce/orders.php:87
+msgid "All orders"
 msgstr ""
 
 #: includes/payment/class-jws-payment-orders-table.php:180
@@ -810,11 +920,11 @@ msgstr ""
 msgid "An mp4 from the media library or an external url."
 msgstr ""
 
-#: includes/class-jws-profiles.php:737
+#: includes/class-jws-profiles.php:776
 msgid "Animals"
 msgstr ""
 
-#: includes/class-jws-profiles.php:943
+#: includes/class-jws-profiles.php:982
 msgid "Another profile on this account already uses that name."
 msgstr ""
 
@@ -822,7 +932,15 @@ msgstr ""
 msgid "Answer"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:219
+#: includes/payment/gateways/class-jws-payment-mollie.php:45
+msgid "API key"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:52
+msgid "API Login ID"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:304
 msgid "Apple Pay"
 msgstr ""
 
@@ -856,11 +974,27 @@ msgstr ""
 msgid "Audio URL"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:107
+msgid "Authorize.net cannot bill at this interval."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:162
+msgid "Authorize.net could not be reached."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:306
+msgid "Authorize.net did not open a payment form."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:166
+msgid "Authorize.net refused the request."
+msgstr ""
+
 #: includes/drama/templates/parts/purchase-modal.php:69
 msgid "Auto renew. Cancel anytime."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:643
+#: includes/payment/class-jws-payment-checkout.php:706
 #: includes/drama/templates/parts/purchase-modal.php:108
 msgid "Auto-renew. Cancel anytime."
 msgstr ""
@@ -877,7 +1011,7 @@ msgstr ""
 msgid "Avatar"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:973
+#: includes/payment/class-jws-payment-checkout.php:1001
 msgid "Back to home"
 msgstr ""
 
@@ -956,9 +1090,15 @@ msgstr ""
 msgid "Billed To"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:241
+#: includes/class-jws-streamvid-profile.php:269
+#: public/user/profile/dashboard.php:170
 #: public/user/profile/v3/subscription.php:152
 msgid "Billing"
+msgstr ""
+
+#: public/user/profile/woocommerce/edit-address.php:25
+#: public/user/profile/woocommerce/edit-address.php:29
+msgid "Billing address"
 msgstr ""
 
 #: includes/metabox/fields/misc.php:66
@@ -991,14 +1131,19 @@ msgstr ""
 msgid "Bought on %s"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:519
-#: includes/payment/class-jws-payment-checkout.php:525
-#: includes/payment/class-jws-payment-checkout.php:878
+#: includes/payment/class-jws-payment-checkout.php:526
+#: includes/payment/class-jws-payment-checkout.php:532
+#: includes/payment/class-jws-payment-checkout.php:906
 msgid "Browse"
 msgstr ""
 
 #: includes/tv_channel/class-tv-channel-demo.php:636
 msgid "Browse channels"
+msgstr ""
+
+#: public/user/profile/woocommerce/downloads.php:30
+#: public/user/profile/woocommerce/orders.php:259
+msgid "Browse products"
 msgstr ""
 
 #: includes/livestream/templates/ended.php:19
@@ -1007,6 +1152,10 @@ msgstr ""
 
 #: includes/metabox/class-jws-metabox-settings.php:181
 msgid "Bundled copy (acf-schema.php)"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-xendit.php:47
+msgid "Business country (ID, PH, VN, TH, SG or MY)"
 msgstr ""
 
 #: includes/payment/class-jws-payment-orders-table.php:216
@@ -1018,7 +1167,7 @@ msgstr ""
 msgid "Buy for "
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:187
+#: includes/payment/class-jws-payment-items.php:229
 #, php-format
 msgid "Buy Live: %s"
 msgstr ""
@@ -1027,7 +1176,7 @@ msgstr ""
 msgid "Buy Price"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:185
+#: includes/payment/class-jws-payment-items.php:227
 #, php-format
 msgid "Buy: %s"
 msgstr ""
@@ -1051,8 +1200,10 @@ msgstr ""
 #: includes/class-jws-streamvid-dashboard.php:703
 #: includes/class-jws-streamvid-dashboard.php:732
 #: includes/metabox/class-jws-metabox.php:1360
-#: public/playlist/delete-playlist.php:55 public/user/profile/header.php:65
-#: public/user/profiles/edit.php:197 public/user/profile/v3/library.php:157
+#: public/playlist/delete-playlist.php:55
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:273
+#: public/user/profile/header.php:65 public/user/profiles/edit.php:197
+#: public/user/profile/v3/library.php:157
 msgid "Cancel"
 msgstr ""
 
@@ -1061,7 +1212,7 @@ msgid "Cancel membership"
 msgstr ""
 
 #. %s: link to the subscriptions page.
-#: includes/payment/class-jws-payment-checkout.php:670
+#: includes/payment/class-jws-payment-checkout.php:733
 #, php-format
 msgid ""
 "Cancel or manage your subscription any time from <a href=\"%s\">Subscription "
@@ -1077,11 +1228,11 @@ msgid "Cannot read/write file playervideo_idc.m3u8"
 msgstr ""
 
 #: includes/payment/class-jws-payment-invoice.php:304
-#: includes/payment/class-jws-payment-checkout.php:1081
+#: includes/payment/class-jws-payment-checkout.php:1109
 msgid "Card"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:214
+#: includes/payment/class-jws-payment-settings.php:297
 msgid "Card form on your own checkout page (Stripe Elements)."
 msgstr ""
 
@@ -1151,7 +1302,12 @@ msgstr ""
 msgid "Change plan"
 msgstr ""
 
-#: public/user/profile/profiles.php:135
+#: public/user/profile/profiles.php:130 public/user/profiles/choose.php:141
+#: public/user/profiles/choose.php:174
+msgid "Change your plan"
+msgstr ""
+
+#: public/user/profile/profiles.php:140
 msgid "Change your plan for more profiles."
 msgstr ""
 
@@ -1194,7 +1350,7 @@ msgstr ""
 msgid "Channel Settings"
 msgstr ""
 
-#: includes/class-jws-profiles.php:741
+#: includes/class-jws-profiles.php:780
 msgid "Characters"
 msgstr ""
 
@@ -1216,13 +1372,29 @@ msgstr ""
 msgid "Checkout"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:638
-#: includes/payment/class-jws-payment-settings.php:754
+#: includes/payment/class-jws-payment-settings.php:897
+#: includes/payment/class-jws-payment-settings.php:1065
 msgid "Checkout page"
 msgstr ""
 
+#. %d: how many profiles besides the main one the plan allows
+#: includes/class-jws-profiles-front.php:538
+msgid "Choose %d profile."
+msgid_plural "Choose up to %d profiles."
+msgstr[0] ""
+msgstr[1] ""
+
 #: includes/drama/class-drama-templates.php:154
 msgid "Choose a payment method first."
+msgstr ""
+
+#: public/user/profiles/waiting.php:26
+msgid "Choose a profile"
+msgstr ""
+
+#: includes/class-jws-profile-filter.php:311
+#: public/user/profiles/waiting.php:25
+msgid "Choose a profile to continue."
 msgstr ""
 
 #: includes/class-jws-streamvid-livevideo.php:550
@@ -1242,11 +1414,11 @@ msgstr ""
 msgid "Choose from the most used badges"
 msgstr ""
 
-#: includes/class-jws-profiles.php:958
+#: includes/class-jws-profiles.php:997
 msgid "Choose one of the avatars shown."
 msgstr ""
 
-#: includes/class-jws-profiles.php:982
+#: includes/class-jws-profiles.php:1021
 msgid "Choose one of the maturity ratings shown."
 msgstr ""
 
@@ -1254,18 +1426,8 @@ msgstr ""
 msgid "Choose season…"
 msgstr ""
 
-#: includes/class-jws-streamvid-livevideo.php:470
-msgid "Choose tags"
-msgstr ""
-
-#: public/user/profile/profiles.php:126
+#: public/user/profile/profiles.php:127
 msgid "Choose which profiles to keep"
-msgstr ""
-
-#: public/user/profiles/choose.php:123
-msgid ""
-"Choose which profiles to keep using. The others keep their history and lists,"
-" and come back when you change your plan."
 msgstr ""
 
 #: includes/class-jws-streamvid-post.php:996
@@ -1303,15 +1465,15 @@ msgstr ""
 msgid "Click to show it again"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:908
+#: includes/payment/class-jws-payment-settings.php:1259
 msgid "Client ID"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:905
-#: includes/payment/class-jws-payment-checkout.php:755
+#: includes/class-jws-profiles-front.php:972
+#: includes/payment/class-jws-payment-checkout.php:803
 #: includes/metabox/class-jws-metabox.php:1290
 #: includes/drama/templates/parts/purchase-modal.php:62
-#: public/user/profile/v3/layout.php:161
+#: public/user/profile/v3/layout.php:169
 msgid "Close"
 msgstr ""
 
@@ -1326,7 +1488,7 @@ msgstr ""
 #: includes/drama/class-drama-coins.php:493
 #: includes/drama/class-drama-admin.php:503
 #: includes/drama/templates/parts/wallet.php:110
-#: public/user/profile/v3/layout.php:68
+#: public/user/profile/v3/layout.php:72
 msgid "Coins"
 msgstr ""
 
@@ -1340,7 +1502,7 @@ msgid ""
 "Settings → Drama Coins."
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:219
+#: includes/payment/class-jws-payment-items.php:261
 msgid "Coins are unavailable right now."
 msgstr ""
 
@@ -1366,8 +1528,8 @@ msgstr ""
 msgid "Collapse all"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:744
-#: includes/payment/class-jws-payment-checkout.php:751
+#: includes/payment/class-jws-payment-checkout.php:792
+#: includes/payment/class-jws-payment-checkout.php:799
 msgid "Complete payment"
 msgstr ""
 
@@ -1393,6 +1555,7 @@ msgstr ""
 msgid "Content Badges"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:271
 #: public/user/profiles/pin.php:50 public/user/profiles/unlock.php:53
 #: public/user/profiles/unlock.php:66 public/user/profile/v3/purchases.php:67
 msgid "Continue"
@@ -1404,17 +1567,22 @@ msgstr ""
 msgid "Continue as %s"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-gateways.php:83
+msgid "Continue to payment"
+msgstr ""
+
 #: public/class-jws-streamvid-public.php:328
+#: public/user/profile/dashboard.php:346
 msgid "Continue watching"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:520
+#: includes/payment/class-jws-payment-settings.php:731
 #: includes/livestream/templates/studio.php:27
 msgid "Copied"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:521
-#: includes/payment/class-jws-payment-settings.php:1004
+#: includes/payment/class-jws-payment-settings.php:732
+#: includes/payment/class-jws-payment-settings.php:1351
 #: includes/livestream/templates/studio.php:145
 #: includes/livestream/templates/studio.php:153
 msgid "Copy"
@@ -1461,7 +1629,7 @@ msgstr ""
 msgid "Could not start the live stream."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1239
+#: includes/payment/class-jws-payment-checkout.php:1268
 #: includes/drama/class-drama-ajax.php:169
 msgid "Could not start the purchase."
 msgstr ""
@@ -1554,7 +1722,7 @@ msgstr ""
 msgid "Created %1$d, skipped %2$d existing."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:761
+#: includes/payment/class-jws-payment-settings.php:1072
 msgid "Created automatically when you save with the system enabled."
 msgstr ""
 
@@ -1570,11 +1738,11 @@ msgid ""
 "are skipped, so you can run it again after adding more."
 msgstr ""
 
-#: public/user/profile/v3/layout.php:47
+#: public/user/profile/v3/layout.php:49
 msgid "Creator"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:213
+#: includes/payment/class-jws-payment-settings.php:296
 msgid "Credit or debit card"
 msgstr ""
 
@@ -1587,8 +1755,8 @@ msgstr ""
 msgid "Crew"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:654
-#: includes/payment/class-jws-payment-settings.php:739
+#: includes/payment/class-jws-payment-settings.php:913
+#: includes/payment/class-jws-payment-settings.php:1026
 msgid "Currency"
 msgstr ""
 
@@ -1617,19 +1785,22 @@ msgstr ""
 msgid "Current phone: %s"
 msgstr ""
 
+#: public/user/profile/dashboard.php:292
 #: public/user/profile/v3/subscription.php:90
 #: public/user/profile/v3/subscription.php:117
-#: public/user/profile/v3/layout.php:177
+#: public/user/profile/v3/layout.php:185
 msgid "Current plan"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:269
+#: includes/class-jws-streamvid-profile.php:297
+#: includes/class-jws-streamvid-profile.php:374
+#: public/user/profile/dashboard.php:245
 msgid "Dashboard"
 msgstr ""
 
 #: includes/class-jws-streamvid-videos.php:44
 #: includes/payment/class-jws-payment-orders-table.php:78
-#: includes/payment/class-jws-payment-checkout.php:932
+#: includes/payment/class-jws-payment-checkout.php:960
 #: includes/metabox/fields/shared.php:155
 msgid "Date"
 msgstr ""
@@ -1656,7 +1827,7 @@ msgstr ""
 
 #: includes/function_template.php:190 includes/function_template.php:215
 #: includes/function_template.php:216
-#: includes/payment/class-jws-payment-items.php:306
+#: includes/payment/class-jws-payment-items.php:348
 msgid "day"
 msgstr ""
 
@@ -1764,12 +1935,13 @@ msgstr ""
 msgid "Device limit"
 msgstr ""
 
+#: public/user/profile/dashboard.php:131 public/user/profile/dashboard.php:162
 #: public/user/profile/v3/subscription.php:55
-#: public/user/profile/v3/layout.php:71
+#: public/user/profile/v3/layout.php:75
 msgid "Devices"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:291
+#: includes/class-jws-streamvid-profile.php:319
 msgid "Devices Manager"
 msgstr ""
 
@@ -1781,6 +1953,10 @@ msgstr ""
 
 #: public/class-jws-streamvid-public.php:690
 msgid "DevTools is not allowed on this site. Please close it to continue."
+msgstr ""
+
+#: public/user/profiles/choose.php:115
+msgid "Dimmed profiles are not included in your plan."
 msgstr ""
 
 #: includes/metabox/fields/misc.php:212
@@ -1812,7 +1988,7 @@ msgstr ""
 msgid "Display name:"
 msgstr ""
 
-#: public/user/profiles/choose.php:141
+#: public/user/profiles/choose.php:184
 msgid "Done"
 msgstr ""
 
@@ -1832,6 +2008,10 @@ msgstr ""
 
 #: includes/function_template.php:1070
 msgid "Download Videos"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:166
+msgid "Downloads"
 msgstr ""
 
 #: includes/metabox/class-jws-metabox.php:1348
@@ -1934,10 +2114,11 @@ msgid "Earlier"
 msgstr ""
 
 #: includes/class-jws-streamvid-dashboard.php:1000
-#: includes/payment/class-jws-payment-settings.php:758
+#: includes/payment/class-jws-payment-settings.php:1069
 #: public/playlist/playlist-single.php:56
 #: public/playlist/page-content/content.php:109
 #: public/user/profile/header.php:64 public/user/profile/profiles.php:110
+#: public/user/profile/woocommerce/edit-address.php:81
 #: public/user/profile/v3/settings.php:83
 #: public/user/profile/v3/playlists.php:110
 #: public/user/profile/v3/videos.php:185
@@ -1945,7 +2126,9 @@ msgid "Edit"
 msgstr ""
 
 #. %s: profile name
-#: public/user/profiles/choose.php:59
+#. %s: address name
+#: public/user/profiles/choose.php:60
+#: public/user/profile/woocommerce/edit-address.php:79
 #, php-format
 msgid "Edit %s"
 msgstr ""
@@ -2006,7 +2189,7 @@ msgstr ""
 
 #: includes/class-jws-streamvid-dashboard.php:149
 #: public/user/profile/header.php:25 public/user/profile/v3/settings.php:49
-#: public/user/profile/v3/layout.php:134
+#: public/user/profile/v3/layout.php:142
 msgid "Email not set"
 msgstr ""
 
@@ -2041,8 +2224,8 @@ msgstr ""
 msgid "Empty = the header from Theme Options."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:853
-#: includes/payment/class-jws-payment-settings.php:939
+#: includes/payment/class-jws-payment-settings.php:1176
+#: includes/payment/class-jws-payment-settings.php:1286
 msgid "Enable"
 msgstr ""
 
@@ -2058,7 +2241,7 @@ msgstr ""
 msgid "Enable Rent"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:731
+#: includes/payment/class-jws-payment-settings.php:1018
 msgid "Enable the unified payment system"
 msgstr ""
 
@@ -2078,6 +2261,7 @@ msgid "Ends"
 msgstr ""
 
 #. %s: date
+#: public/user/profile/dashboard.php:114
 #: public/user/profile/v3/subscription.php:103
 #, php-format
 msgid "Ends on %s"
@@ -2089,11 +2273,11 @@ msgstr ""
 msgid "Enter %s's PIN to edit this profile"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:533
+#: includes/class-jws-profiles-front.php:585
 msgid "Enter a 4-digit PIN, or turn Profile Lock off."
 msgstr ""
 
-#: includes/class-jws-profiles.php:928
+#: includes/class-jws-profiles.php:967
 msgid "Enter a profile name."
 msgstr ""
 
@@ -2117,11 +2301,11 @@ msgstr ""
 msgid "Enter the 6-digit code we sent to your new phone number."
 msgstr ""
 
-#: includes/class-jws-profiles.php:276
+#: includes/class-jws-profiles.php:315
 msgid "Enter the PIN for this profile."
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:367
+#: includes/class-jws-profiles-front.php:408
 msgid "Enter this profile's PIN first."
 msgstr ""
 
@@ -2239,12 +2423,20 @@ msgstr ""
 msgid "Error please check config api key and account id."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1014
+#: includes/payment/class-jws-payment-settings.php:264
+msgid "Euro"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:1356
 msgid "Events to subscribe to"
 msgstr ""
 
 #: includes/tv_channel/class-tv-channel-schedule.php:39
 msgid "Every day"
+msgstr ""
+
+#: public/user/profile/dashboard.php:177
+msgid "Every membership payment."
 msgstr ""
 
 #: includes/payment/class-jws-payment-ledger.php:47
@@ -2296,7 +2488,8 @@ msgstr ""
 
 #: includes/class-jws-streamvid-migration.php:114
 #: includes/class-jws-streamvid-profile.php:77
-#: includes/class-jws-streamvid-profile.php:341
+#: includes/class-jws-streamvid-profile.php:380
+#: public/user/profile/dashboard.php:81
 #: public/user/profiles/account-menu.php:77
 msgid "Favorites"
 msgstr ""
@@ -2372,6 +2565,10 @@ msgstr ""
 msgid "File was not found or empty."
 msgstr ""
 
+#: public/user/profile/woocommerce/downloads.php:29
+msgid "Files from the downloadable products you buy are listed here."
+msgstr ""
+
 #: includes/class-jws-streamvid-livevideo.php:367
 msgid ""
 "Fill in the details below. On the next screen you go live from your webcam "
@@ -2409,7 +2606,41 @@ msgstr ""
 msgid "first %1$d free, then %2$d coins"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:658
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:78
+msgid "Flutterwave cannot bill at this interval."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:193
+msgid "Flutterwave did not create the plan."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:251
+msgid "Flutterwave did not say where to send you."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:210
+msgid "Flutterwave needs an email address on your account."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:108
+msgid "Flutterwave refused the request."
+msgstr ""
+
+#. %s: currency code the store already uses.
+#: includes/payment/class-jws-payment-settings.php:1044
+#, php-format
+msgid "Follow the store (%s)"
+msgstr ""
+
+#. %s: currency code the store already uses.
+#: includes/payment/class-jws-payment-settings.php:1057
+#, php-format
+msgid ""
+"Follow the store bills in the store currency, which is %s right now. Choose "
+"another currency only if this checkout should bill in something else."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:917
 msgid "Following the store."
 msgstr ""
 
@@ -2443,9 +2674,10 @@ msgstr ""
 msgid "Free Episodes"
 msgstr ""
 
+#: public/user/profile/dashboard.php:293
 #: public/user/profiles/account-menu.php:41
 #: public/user/profile/v3/subscription.php:118
-#: public/user/profile/v3/layout.php:178
+#: public/user/profile/v3/layout.php:186
 msgid "Free Plan"
 msgstr ""
 
@@ -2474,13 +2706,18 @@ msgstr ""
 msgid "Fullscreen"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:632
+#: includes/class-jws-profiles-front.php:693
 msgid "G only"
 msgstr ""
 
 #: includes/metabox/fields/movies.php:106
 #: includes/metabox/fields/users-blog.php:70
 msgid "Gallery"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:655
+#: includes/payment/class-jws-payment-settings.php:817
+msgid "Gateways"
 msgstr ""
 
 #: includes/class-jws-streamvid-dashboard.php:667
@@ -2493,7 +2730,7 @@ msgstr ""
 msgid "Gender:"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:477
+#: includes/payment/class-jws-payment-settings.php:650
 msgid "General"
 msgstr ""
 
@@ -2544,11 +2781,11 @@ msgstr ""
 msgid "Go live with webcam"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1095
+#: includes/payment/class-jws-payment-checkout.php:1123
 msgid "Go to my wallet"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:225
+#: includes/payment/class-jws-payment-settings.php:311
 msgid "Google Pay"
 msgstr ""
 
@@ -2561,7 +2798,7 @@ msgstr ""
 msgid "Guest"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:244
+#: includes/payment/class-jws-payment-settings.php:333
 msgid ""
 "Hands the payment to the store's own checkout, so the buyer can pay with "
 "anything WooCommerce is already set up to take. A membership bought this way "
@@ -2588,7 +2825,7 @@ msgstr ""
 msgid "here."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:523
+#: includes/payment/class-jws-payment-settings.php:734
 msgid "Hide"
 msgstr ""
 
@@ -2598,7 +2835,7 @@ msgstr ""
 
 #: includes/class-jws-streamvid-migration.php:124
 #: includes/class-jws-streamvid-profile.php:86
-#: includes/class-jws-streamvid-profile.php:347
+#: includes/class-jws-streamvid-profile.php:386
 #: public/user/profiles/account-menu.php:75
 msgid "History"
 msgstr ""
@@ -2680,6 +2917,10 @@ msgstr ""
 msgid "Importing %s…"
 msgstr ""
 
+#: public/user/profile/dashboard.php:79
+msgid "In history"
+msgstr ""
+
 #: includes/livestream/templates/studio.php:136
 msgid ""
 "In OBS open Settings > Stream, set Service to \"Custom\", then paste the "
@@ -2691,8 +2932,20 @@ msgstr ""
 msgid "In this show: %s"
 msgstr ""
 
+#: public/user/profile/dashboard.php:80
+msgid "In watchlist"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-xendit.php:62
+msgid ""
+"In Xendit under Settings > Webhooks, paste this URL for Payment Session "
+"Completed, Payment Status and Refund, and copy the verification token shown "
+"there above. Xendit only returns buyers to https addresses and does not "
+"deliver to localhost."
+msgstr ""
+
 #. %d: PIN attempts left before the profile locks
-#: includes/class-jws-profiles.php:692
+#: includes/class-jws-profiles.php:731
 msgid "Incorrect PIN. %d attempt left."
 msgid_plural "Incorrect PIN. %d attempts left."
 msgstr[0] ""
@@ -2730,14 +2983,14 @@ msgstr ""
 msgid "invoice %s"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:249
-#: public/user/profile/invoices.php:9
+#: includes/class-jws-streamvid-profile.php:277
+#: public/user/profile/dashboard.php:176 public/user/profile/invoices.php:11
 #: public/user/profile/v3/subscription.php:161
 msgid "Invoices"
 msgstr ""
 
 #: includes/payment/class-jws-payment-orders-table.php:81
-#: includes/payment/class-jws-payment-checkout.php:937
+#: includes/payment/class-jws-payment-checkout.php:965
 msgid "Item"
 msgstr ""
 
@@ -2786,11 +3039,24 @@ msgstr ""
 msgid "JWSThemes team"
 msgstr ""
 
+#: public/user/profiles/choose.php:172
+msgid "Keep these profiles"
+msgstr ""
+
 #: includes/livestream/templates/studio.php:155
 msgid "Keep your stream key private. Anyone with it can stream to this page."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:931
+#: includes/payment/gateways/class-jws-payment-razorpay.php:42
+msgid "Key ID"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-razorpay.php:43
+msgid "Key secret"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:685
+#: includes/payment/class-jws-payment-settings.php:1278
 msgid "Keys missing"
 msgstr ""
 
@@ -2798,7 +3064,7 @@ msgstr ""
 msgid "Keywords were not found"
 msgstr ""
 
-#: public/user/profile/profiles.php:71 public/user/profiles/choose.php:94
+#: public/user/profile/profiles.php:71 public/user/profiles/choose.php:95
 #: public/user/profiles/kids-bar.php:25
 #: public/user/profiles/account-menu.php:115
 msgid "Kids"
@@ -2838,14 +3104,6 @@ msgstr ""
 msgid "Layout"
 msgstr ""
 
-#. %s: currency code the store already uses.
-#: includes/payment/class-jws-payment-settings.php:746
-#, php-format
-msgid ""
-"Leave empty to follow the store, which is %s right now. Set it only if this "
-"checkout should bill in something else."
-msgstr ""
-
 #: includes/class-jws-streamvid-videos.php:856
 msgid "Leave empty to go live at any time."
 msgstr ""
@@ -2855,7 +3113,7 @@ msgid "Left"
 msgstr ""
 
 #: public/user/profiles/account-menu.php:60
-#: public/user/profile/v3/layout.php:45
+#: public/user/profile/v3/layout.php:47
 msgid "Library"
 msgstr ""
 
@@ -2895,9 +3153,12 @@ msgstr ""
 #: includes/class-jws-streamvid-media.php:499
 #: includes/class-jws-streamvid-livevideo.php:363
 #: includes/payment/class-jws-payment-orders-table.php:218
-#: includes/payment/class-jws-payment-settings.php:808
-#: includes/payment/class-jws-payment-settings.php:914
-#: includes/payment/class-jws-payment-settings.php:915
+#: includes/payment/class-jws-payment-settings.php:972
+#: includes/payment/class-jws-payment-settings.php:973
+#: includes/payment/class-jws-payment-settings.php:1131
+#: includes/payment/class-jws-payment-settings.php:1245
+#: includes/payment/class-jws-payment-settings.php:1254
+#: includes/payment/class-jws-payment-settings.php:1263
 #: public/movies/player.php:625 includes/livestream/templates/studio.php:32
 #: includes/livestream/templates/studio.php:109
 #: includes/livestream/templates/viewer.php:31
@@ -2911,7 +3172,7 @@ msgstr ""
 msgid "Live channels with a stream and a program guide."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:964
+#: includes/payment/class-jws-payment-settings.php:1311
 msgid "Live mode — real cards, real money."
 msgstr ""
 
@@ -2965,7 +3226,7 @@ msgstr ""
 msgid "Load the player"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:767
+#: includes/payment/class-jws-payment-checkout.php:815
 msgid "Loading secure checkout…"
 msgstr ""
 
@@ -2975,6 +3236,16 @@ msgstr ""
 
 #: includes/metabox/class-jws-metabox.php:398
 msgid "Loading…"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:45
+msgid "Location ID"
+msgstr ""
+
+#: includes/class-jws-hide-login.php:439
+msgid ""
+"Locked out? Sign in with the site's own sign-in form, or add define( "
+"'JWS_HIDE_LOGIN_OFF', true ); to wp-config.php. Needs pretty permalinks."
 msgstr ""
 
 #: includes/class-jws-streamvid-videos.php:626
@@ -2994,7 +3265,7 @@ msgstr ""
 msgid "Log in to upload a video."
 msgstr ""
 
-#: public/user/profile/v3/layout.php:218
+#: public/user/profile/v3/layout.php:228
 msgid "Log out"
 msgstr ""
 
@@ -3003,7 +3274,7 @@ msgstr ""
 msgid "Logo"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:176
+#: includes/class-jws-streamvid-profile.php:198
 msgid "Logout"
 msgstr ""
 
@@ -3034,7 +3305,7 @@ msgstr ""
 msgid "Manage Episodes page"
 msgstr ""
 
-#: public/user/profiles/choose.php:28 public/user/profiles/choose.php:143
+#: public/user/profiles/choose.php:29 public/user/profiles/choose.php:186
 #: public/user/profiles/account-menu.php:149
 msgid "Manage Profiles"
 msgstr ""
@@ -3051,7 +3322,13 @@ msgstr ""
 msgid "Media file"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:225
+#. %s: date the account was created
+#: public/user/profile/dashboard.php:261
+#, php-format
+msgid "Member since %s"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:253
 #: includes/payment/class-jws-payment-orders-table.php:215
 msgid "Membership"
 msgstr ""
@@ -3066,7 +3343,7 @@ msgstr ""
 msgid "Membership on %s"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:620
+#: includes/payment/class-jws-payment-settings.php:879
 msgid "Membership, buy/rent and coins all go through it."
 msgstr ""
 
@@ -3076,6 +3353,23 @@ msgstr ""
 
 #: includes/tv_channel/class-tv-channel-demo.php:208
 msgid "Menu link"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:84
+msgid "Mercado Pago cannot bill this often."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:88
+msgid "Mercado Pago cannot charge a different first payment."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:92
+msgid "Mercado Pago cannot stop a plan after a set number of payments."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:240
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:283
+msgid "Mercado Pago did not say where to send you."
 msgstr ""
 
 #: includes/metabox/class-jws-metabox-settings.php:65
@@ -3121,8 +3415,20 @@ msgstr ""
 msgid "Missing demo file: %s"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:956
+#: includes/payment/class-jws-payment-settings.php:1303
 msgid "Mode"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mollie.php:90
+msgid "Mollie cannot bill this often or this rarely."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mollie.php:210
+msgid "Mollie did not create a customer."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mollie.php:292
+msgid "Mollie did not say where to send you."
 msgstr ""
 
 #: includes/tv_channel/class-tv-channel-schedule.php:42
@@ -3134,11 +3440,11 @@ msgstr ""
 msgid "Monetization"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:308
+#: includes/payment/class-jws-payment-items.php:350
 msgid "month"
 msgstr ""
 
-#: includes/class-jws-profiles.php:762
+#: includes/class-jws-profiles.php:801
 msgid "More"
 msgstr ""
 
@@ -3148,6 +3454,13 @@ msgstr ""
 
 #: public/user/profile/v3/videos.php:139
 msgid "Most viewed"
+msgstr ""
+
+#: includes/class-jws-hide-login.php:421
+msgid ""
+"Moves the admin sign-in form to this address. Visitors who are not signed in "
+"then get the 404 page at wp-login.php and /wp-admin/. Signed-in users reach "
+"the dashboard as before. Leave empty to turn this off."
 msgstr ""
 
 #: includes/class-jws-streamvid-post.php:74
@@ -3221,7 +3534,7 @@ msgstr ""
 msgid "Mute microphone"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:126 public/user/profile/v3/layout.php:158
+#: public/user/profile/v3/layout.php:134 public/user/profile/v3/layout.php:166
 msgid "My account"
 msgstr ""
 
@@ -3233,12 +3546,12 @@ msgstr ""
 msgid "My History"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:162
-#: includes/class-jws-streamvid-profile.php:277
+#: includes/class-jws-streamvid-profile.php:184
+#: includes/class-jws-streamvid-profile.php:305
 msgid "My Profile"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:69
+#: public/user/profile/dashboard.php:192 public/user/profile/v3/layout.php:73
 msgid "My Videos"
 msgstr ""
 
@@ -3255,11 +3568,15 @@ msgstr ""
 msgid "Name is required"
 msgstr ""
 
+#: public/user/profile/dashboard.php:147
+msgid "Name, email, phone and password."
+msgstr ""
+
 #: public/user/profiles/edit.php:186
 msgid "Needed to set, change or turn off the PIN."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:706
+#: includes/payment/class-jws-payment-settings.php:993
 msgid "Needs attention"
 msgstr ""
 
@@ -3319,6 +3636,10 @@ msgstr ""
 msgid "Newest first"
 msgstr ""
 
+#: public/user/profile/woocommerce/orders.php:246
+msgid "Next"
+msgstr ""
+
 #: includes/drama/class-drama-templates.php:150
 #: includes/drama/templates/parts/stage.php:144
 msgid "Next episode"
@@ -3356,6 +3677,10 @@ msgstr ""
 
 #: public/user/profile/v3/coins.php:102
 msgid "No coin activity yet."
+msgstr ""
+
+#: public/user/profile/woocommerce/downloads.php:28
+msgid "No downloads yet"
 msgstr ""
 
 #: includes/metabox/class-jws-metabox.php:744
@@ -3403,15 +3728,19 @@ msgstr ""
 msgid "No orders match this filter."
 msgstr ""
 
+#: public/user/profile/woocommerce/orders.php:257
+msgid "No orders yet"
+msgstr ""
+
 #: public/user/profile/v3/devices.php:128
 msgid "No other devices are signed in."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:531
+#: includes/payment/class-jws-payment-checkout.php:538
 msgid "No payment method is available right now. Please try again later."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:676
+#: includes/payment/class-jws-payment-settings.php:935
 msgid ""
 "No payment method is usable — tick at least one method and fill in the keys "
 "for the gateway behind it. Until then nobody can buy anything."
@@ -3491,7 +3820,7 @@ msgstr ""
 msgid "No."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:632
+#: includes/payment/class-jws-payment-settings.php:891
 msgid "Nobody can buy anything yet."
 msgstr ""
 
@@ -3519,7 +3848,7 @@ msgstr ""
 msgid "Not available on this profile."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:643
+#: includes/payment/class-jws-payment-settings.php:902
 msgid "Not created"
 msgstr ""
 
@@ -3559,7 +3888,7 @@ msgstr ""
 msgid "Not linked"
 msgstr ""
 
-#: public/user/profile/profiles.php:100 public/user/profiles/choose.php:70
+#: public/user/profile/profiles.php:100
 msgid "Not on your plan"
 msgstr ""
 
@@ -3599,6 +3928,13 @@ msgstr ""
 msgid "Nothing scheduled"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-mollie.php:54
+msgid ""
+"Nothing to set up in Mollie: every payment tells Mollie this address itself. "
+"Mollie cannot reach a site on localhost, so there payments are confirmed "
+"when the buyer comes back, and renewals are not recorded."
+msgstr ""
+
 #: public/class-jws-streamvid-public.php:512
 msgid "Nothing to share."
 msgstr ""
@@ -3611,9 +3947,10 @@ msgstr ""
 msgid "OBS, Streamlabs, vMix"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:617
-#: includes/payment/class-jws-payment-settings.php:843
-#: includes/payment/class-jws-payment-settings.php:933
+#: includes/payment/class-jws-payment-settings.php:688
+#: includes/payment/class-jws-payment-settings.php:876
+#: includes/payment/class-jws-payment-settings.php:1166
+#: includes/payment/class-jws-payment-settings.php:1280
 msgid "Off"
 msgstr ""
 
@@ -3632,7 +3969,7 @@ msgstr ""
 msgid "Old user meta cleared."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:617
+#: includes/payment/class-jws-payment-settings.php:876
 msgid "On"
 msgstr ""
 
@@ -3644,22 +3981,23 @@ msgstr ""
 msgid "On now"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:734
+#: includes/payment/class-jws-payment-settings.php:1021
 msgid ""
 "On: membership, buy/rent and coin purchases all go through this checkout. "
 "Off: each keeps working exactly as it does today."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:559
+#: includes/payment/class-jws-payment-settings.php:787
 msgid ""
 "One checkout for membership, buy/rent and coins, taking payment with its own "
-"Stripe and PayPal keys. Switching it on replaces the WooCommerce cart and "
-"the Paid Memberships Pro checkout page — nothing else moves: PMPro keeps "
-"owning membership levels and access, buy/rent keeps unlocking the same way, "
-"coins keep landing in the same wallet."
+"gateway accounts: Stripe, PayPal, Razorpay, Paystack, Mollie, Mercado Pago, "
+"Square, Flutterwave, Xendit and Authorize.net. Switching it on replaces the "
+"WooCommerce cart and the Paid Memberships Pro checkout page — nothing else "
+"moves: PMPro keeps owning membership levels and access, buy/rent keeps "
+"unlocking the same way, coins keep landing in the same wallet."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:868
+#: includes/payment/class-jws-payment-settings.php:1191
 msgid ""
 "One hidden virtual product, created the first time it is needed and priced "
 "from the order being paid. It never appears in the shop, and nothing needs "
@@ -3674,7 +4012,7 @@ msgstr ""
 msgid "One-off payment. No renewal."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:691
+#: includes/payment/class-jws-payment-checkout.php:739
 msgid "One-time payment. No renewal."
 msgstr ""
 
@@ -3716,12 +4054,19 @@ msgid "or VTT URL"
 msgstr ""
 
 #: includes/payment/class-jws-payment-orders-table.php:77
-#: includes/payment/class-jws-payment-checkout.php:927
+#: includes/payment/class-jws-payment-checkout.php:955
 msgid "Order"
 msgstr ""
 
 #: includes/payment/class-jws-payment-invoice.php:240
 msgid "Order #"
+msgstr ""
+
+#. %s: order number
+#: public/user/profile/woocommerce/orders.php:106
+#: public/user/profile/woocommerce/orders.php:194
+#, php-format
+msgid "Order #%s"
 msgstr ""
 
 #. %s: order number
@@ -3743,8 +4088,25 @@ msgstr ""
 msgid "Order not found"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:482
+#: public/user/profile/woocommerce/orders.php:231
+msgid "Order pages"
+msgstr ""
+
+#: public/user/profile/woocommerce/orders.php:123
+msgid "Order updates"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:165
+#: includes/payment/class-jws-payment-settings.php:657
 msgid "Orders"
+msgstr ""
+
+#: public/user/profile/woocommerce/orders.php:258
+msgid "Orders you place in the store show up here with their status."
+msgstr ""
+
+#: public/user/profile/dashboard.php:201
+msgid "Orders, downloads and addresses."
 msgstr ""
 
 #: includes/function_template.php:291 includes/metabox/fields/users-blog.php:45
@@ -3768,6 +4130,12 @@ msgstr ""
 msgid "Owner"
 msgstr ""
 
+#. 1: current page, 2: number of pages
+#: public/user/profile/woocommerce/orders.php:241
+#, php-format
+msgid "Page %1$d of %2$d"
+msgstr ""
+
 #: includes/metabox/fields/misc.php:83
 msgid "Page Settings"
 msgstr ""
@@ -3789,16 +4157,8 @@ msgstr ""
 msgid "Paid Memberships Pro has no levels here, so every channel stays free."
 msgstr ""
 
-#. %s: how long one payment covers, e.g. "month".
-#: includes/payment/class-jws-payment-checkout.php:683
-#, php-format
-msgid ""
-"Paid through WooCommerce, this covers one %s and does not renew itself. Your "
-"membership ends when that runs out, and you buy it again to carry on."
-msgstr ""
-
 #: includes/payment/class-jws-payment-orders-table.php:83
-#: includes/payment/class-jws-payment-checkout.php:942
+#: includes/payment/class-jws-payment-checkout.php:970
 msgid "Paid with"
 msgstr ""
 
@@ -3839,7 +4199,7 @@ msgid "Paste a video link or embed code."
 msgstr ""
 
 #. %s: amount to pay.
-#: includes/payment/class-jws-payment-checkout.php:727
+#: includes/payment/class-jws-payment-checkout.php:775
 #, php-format
 msgid "Pay Now %s"
 msgstr ""
@@ -3852,31 +4212,35 @@ msgstr ""
 msgid "Pay to"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:586
-#: includes/payment/class-jws-payment-woocommerce.php:311
+#: includes/payment/class-jws-payment-checkout.php:637
+#: includes/payment/class-jws-payment-woocommerce.php:318
 msgid "Payment"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:904
-#: includes/payment/class-jws-payment-woocommerce.php:1106
+#: includes/payment/class-jws-payment-checkout.php:932
+#: includes/payment/class-jws-payment-woocommerce.php:1136
 msgid "Payment complete"
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:1119
+#: includes/payment/class-jws-payment-woocommerce.php:1149
 msgid "Payment complete. One moment…"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:589
+#: includes/payment/class-jws-payment-checkout.php:640
 msgid "Payment method"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:478
+#: public/user/profile/dashboard.php:171
+msgid "Payment method and billing address."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:651
 msgid "Payment methods"
 msgstr ""
 
 #: includes/payment/class-jws-payment-settings.php:47
 #: includes/payment/class-jws-payment-settings.php:48
-#: includes/payment/class-jws-payment-settings.php:556
+#: includes/payment/class-jws-payment-settings.php:784
 msgid "Payment System"
 msgstr ""
 
@@ -3884,7 +4248,7 @@ msgstr ""
 msgid "Payment:"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:231
+#: includes/payment/class-jws-payment-settings.php:318
 msgid "PayPal"
 msgstr ""
 
@@ -3895,7 +4259,7 @@ msgstr ""
 msgid "PayPal did not say where to send you."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:688
+#: includes/payment/class-jws-payment-settings.php:947
 msgid ""
 "PayPal has no webhook ID. One-off payments still capture on return, but "
 "subscription renewals will not be recorded."
@@ -3917,6 +4281,34 @@ msgstr ""
 
 #: includes/payment/class-jws-payment-paypal.php:87
 msgid "PayPal would not issue a token. Check the client ID and secret."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:93
+msgid "Paystack cannot bill at this interval."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:217
+msgid "Paystack did not create the plan."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:581
+msgid "Paystack did not return the token needed to cancel this subscription."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:269
+msgid "Paystack did not say where to send you."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:234
+msgid "Paystack needs an email address on your account."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:97
+msgid "Paystack plans here cannot stop after a set number of payments."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-paystack.php:132
+msgid "Paystack refused the request."
 msgstr ""
 
 #: public/user/profile/v3/subscription.php:180
@@ -3950,11 +4342,11 @@ msgstr ""
 msgid "Personal information"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:633
+#: includes/class-jws-profiles-front.php:694
 msgid "PG and below"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:634
+#: includes/class-jws-profiles-front.php:695
 msgid "PG-13 and below"
 msgstr ""
 
@@ -4017,6 +4409,12 @@ msgstr ""
 msgid "Place of Birth"
 msgstr ""
 
+#. %s: date
+#: public/user/profile/woocommerce/orders.php:114
+#, php-format
+msgid "Placed on %s"
+msgstr ""
+
 #: includes/metabox/class-jws-metabox.php:1331
 msgid "Placeholders: {show}, {season}, {n}, {nn} (zero-padded)."
 msgstr ""
@@ -4039,7 +4437,7 @@ msgstr ""
 msgid "Player / server"
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:353
+#: includes/class-jws-streamvid-profile.php:392
 #: includes/metabox/fields/terms.php:119
 msgid "Playlist"
 msgstr ""
@@ -4064,7 +4462,7 @@ msgstr ""
 msgid "Playlist was not found"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:65
+#: public/user/profile/dashboard.php:184 public/user/profile/v3/layout.php:69
 msgid "Playlists"
 msgstr ""
 
@@ -4091,7 +4489,7 @@ msgstr ""
 
 #: includes/payment/class-jws-payment-router.php:164
 #: includes/payment/class-jws-payment-invoice.php:88
-#: includes/payment/class-jws-payment-checkout.php:1329
+#: includes/payment/class-jws-payment-checkout.php:1370
 #: includes/drama/class-drama-coins.php:102
 #: includes/drama/class-drama-templates.php:152
 #: includes/drama/class-drama-ajax.php:52
@@ -4101,11 +4499,11 @@ msgstr ""
 msgid "Please sign in first."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:501
+#: includes/payment/class-jws-payment-checkout.php:508
 msgid "Please sign in to complete your purchase."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:621
+#: includes/payment/class-jws-payment-settings.php:880
 msgid "PMPro checkout and the WooCommerce cart are still in charge."
 msgstr ""
 
@@ -4159,6 +4557,10 @@ msgstr ""
 msgid "Postcode:"
 msgstr ""
 
+#: includes/payment/class-jws-payment-settings.php:265
+msgid "Pound sterling"
+msgstr ""
+
 #: includes/metabox/fields/misc.php:140
 msgid "Pre-roll"
 msgstr ""
@@ -4172,6 +4574,10 @@ msgstr ""
 #: includes/metabox/fields/episodes.php:50
 #: includes/metabox/fields/drama.php:196 includes/metabox/fields/videos.php:58
 msgid "Preview"
+msgstr ""
+
+#: public/user/profile/woocommerce/orders.php:235
+msgid "Previous"
 msgstr ""
 
 #: includes/drama/class-drama-templates.php:149
@@ -4198,7 +4604,7 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:482
+#: includes/payment/class-jws-payment-checkout.php:489
 msgid "Processing…"
 msgstr ""
 
@@ -4214,7 +4620,7 @@ msgstr ""
 msgid "Product video"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:588
+#: includes/class-jws-profiles-front.php:649
 msgid "Profile deleted."
 msgstr ""
 
@@ -4226,7 +4632,7 @@ msgstr ""
 msgid "Profile Lock"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:590
+#: includes/class-jws-profiles-front.php:651
 msgid "Profile Lock is off."
 msgstr ""
 
@@ -4234,7 +4640,7 @@ msgstr ""
 msgid "Profile Lock is on"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:589
+#: includes/class-jws-profiles-front.php:650
 msgid "Profile Lock is on."
 msgstr ""
 
@@ -4242,12 +4648,13 @@ msgstr ""
 msgid "Profile name"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:587
+#: includes/class-jws-profiles-front.php:647
 msgid "Profile saved."
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:904
-#: includes/class-jws-profiles-front.php:1035
+#: includes/class-jws-profiles-front.php:971
+#: includes/class-jws-profiles-front.php:1102
+#: public/user/profile/dashboard.php:122 public/user/profile/dashboard.php:153
 #: public/user/profile/v3/subscription.php:47
 msgid "Profiles"
 msgstr ""
@@ -4292,7 +4699,7 @@ msgstr ""
 msgid "Publish video"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:903
+#: includes/payment/class-jws-payment-settings.php:1250
 msgid "Publishable key"
 msgstr ""
 
@@ -4306,23 +4713,23 @@ msgstr ""
 msgid "Purchase Date"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:606
+#: includes/payment/class-jws-payment-checkout.php:657
 msgid "Purchase summary"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:227
+#: public/user/profile/v3/layout.php:237
 msgid "Purchase type"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:230
+#: public/user/profile/v3/layout.php:240
 msgid "Purchased"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:66 public/user/profile/v3/layout.php:67
+#: public/user/profile/v3/layout.php:70 public/user/profile/v3/layout.php:71
 msgid "Purchased and Rented"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:46
+#: public/user/profile/v3/layout.php:48
 msgid "Purchases"
 msgstr ""
 
@@ -4355,12 +4762,22 @@ msgstr ""
 msgid "Quote author"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:635
+#: includes/class-jws-profiles-front.php:696
 msgid "R and below"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:839
-#: includes/payment/class-jws-payment-settings.php:928
+#: includes/payment/gateways/class-jws-payment-razorpay.php:160
+msgid "Razorpay did not say where to send you."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-razorpay.php:267
+msgid ""
+"Razorpay payments here do not renew, so there is no subscription to cancel."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:681
+#: includes/payment/class-jws-payment-settings.php:1162
+#: includes/payment/class-jws-payment-settings.php:1275
 msgid "Ready"
 msgstr ""
 
@@ -4392,7 +4809,7 @@ msgstr ""
 msgid "Redirecting to checkout page"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:957
+#: includes/payment/class-jws-payment-checkout.php:985
 msgid "Reference"
 msgstr ""
 
@@ -4491,23 +4908,24 @@ msgstr ""
 msgid "Removing the demo…"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:873
+#: includes/payment/class-jws-payment-settings.php:1196
 msgid "Renewals"
 msgstr ""
 
 #. 1: renewal price, 2: billing period.
-#: includes/payment/class-jws-payment-checkout.php:659
+#: includes/payment/class-jws-payment-checkout.php:722
 #, php-format
 msgid "Renews at %1$s every %2$s."
 msgstr ""
 
 #. 1: renewal amount, 2: date of the next payment.
-#: includes/payment/class-jws-payment-checkout.php:1061
+#: includes/payment/class-jws-payment-checkout.php:1089
 #, php-format
 msgid "Renews at %1$s on %2$s. You can cancel any time from your account."
 msgstr ""
 
 #. %s: date
+#: public/user/profile/dashboard.php:111
 #: public/user/profile/v3/subscription.php:100
 #, php-format
 msgid "Renews on %s"
@@ -4536,7 +4954,7 @@ msgstr ""
 msgid "Rent Price"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:186
+#: includes/payment/class-jws-payment-items.php:228
 #, php-format
 msgid "Rent: %s"
 msgstr ""
@@ -4547,7 +4965,7 @@ msgstr ""
 msgid "Rental ended on %s"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:230
+#: public/user/profile/v3/layout.php:240
 msgid "Rented"
 msgstr ""
 
@@ -4563,8 +4981,8 @@ msgstr ""
 msgid "Rented on %s"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1057
-#: includes/payment/class-jws-payment-settings.php:1074
+#: includes/payment/class-jws-payment-settings.php:1400
+#: includes/payment/class-jws-payment-settings.php:1417
 msgid "Repair tables"
 msgstr ""
 
@@ -4608,7 +5026,7 @@ msgstr ""
 msgid "Sample page"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:915
+#: includes/payment/class-jws-payment-settings.php:1263
 msgid "Sandbox"
 msgstr ""
 
@@ -4617,7 +5035,7 @@ msgid "Saturday"
 msgstr ""
 
 #: includes/class-jws-streamvid-playlist.php:670
-#: public/user/profiles/choose.php:135 public/user/profiles/edit.php:196
+#: public/user/profiles/edit.php:196
 msgid "Save"
 msgstr ""
 
@@ -4629,7 +5047,7 @@ msgstr ""
 msgid "Save PIN"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:586
+#: includes/payment/class-jws-payment-settings.php:845
 msgid "Save Settings"
 msgstr ""
 
@@ -4646,7 +5064,7 @@ msgstr ""
 msgid "Save Update"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:649
+#: includes/payment/class-jws-payment-settings.php:908
 msgid "Save with the system enabled and it is made for you."
 msgstr ""
 
@@ -4720,7 +5138,7 @@ msgstr ""
 msgid "Search Episodes"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1067
+#: includes/payment/class-jws-payment-settings.php:1410
 msgid "Search orders"
 msgstr ""
 
@@ -4794,19 +5212,25 @@ msgstr ""
 msgid "Second gradient stop."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:909
+#: includes/payment/class-jws-payment-settings.php:1260
 msgid "Secret"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:904
+#: includes/payment/gateways/class-jws-payment-xendit.php:46
+msgid "Secret API key"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:1251
+#: includes/payment/gateways/class-jws-payment-paystack.php:42
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:41
 msgid "Secret key"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:150
+#: public/user/profile/v3/layout.php:158
 msgid "Sections"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:752
+#: includes/payment/class-jws-payment-checkout.php:800
 msgid "Secure checkout powered by WooCommerce"
 msgstr ""
 
@@ -4814,16 +5238,20 @@ msgstr ""
 msgid "Security check failed."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:396
+#: includes/payment/class-jws-payment-settings.php:535
 msgid "Security check failed. Nothing was changed."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:367
+#: includes/payment/class-jws-payment-settings.php:506
 msgid "Security check failed. Nothing was saved."
 msgstr ""
 
 #: includes/payment/class-jws-payment-router.php:77
 msgid "Security checking"
+msgstr ""
+
+#: public/user/profile/dashboard.php:348
+msgid "See all history"
 msgstr ""
 
 #: includes/metabox/class-jws-metabox.php:394
@@ -4880,17 +5308,68 @@ msgstr ""
 msgid "Send message"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:232
+#: includes/payment/gateways/class-jws-payment-razorpay.php:54
+msgid ""
+"Sends the buyer to a Razorpay payment page: cards, UPI, netbanking and "
+"wallets. A membership bought this way is paid one term at a time and does "
+"not renew itself."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:56
+msgid ""
+"Sends the buyer to a Square payment page. Square works in the United States, "
+"Canada, the United Kingdom, Ireland, France, Spain, Australia and Japan, in "
+"the currency of your Square location. A membership bought this way is paid "
+"one term at a time and does not renew itself."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:64
+msgid ""
+"Sends the buyer to Authorize.net's payment form. Charges in your Authorize."
+"net account's currency. Renewing plans are charged to the card used for the "
+"first payment."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:52
+msgid ""
+"Sends the buyer to Flutterwave's checkout: cards, bank transfer, USSD and "
+"mobile money across Africa. Renewing plans are charged to the card used for "
+"the first payment."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:51
+msgid ""
+"Sends the buyer to Mercado Pago: cards, account money and local methods in "
+"Argentina, Brazil, Chile, Colombia, Mexico, Peru and Uruguay. For a "
+"membership the buyer has to use the same email on Mercado Pago as on this "
+"site."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mollie.php:50
+msgid ""
+"Sends the buyer to Mollie's checkout: cards, iDEAL, Bancontact, SEPA and the "
+"other methods switched on in your Mollie account. Renewing plans charge "
+"cards, SEPA Direct Debit or PayPal."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:319
 msgid "Sends the buyer to PayPal and back."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:238
+#: includes/payment/gateways/class-jws-payment-paystack.php:53
+msgid ""
+"Sends the buyer to Paystack: cards, bank transfer, USSD and mobile money in "
+"Nigeria, Ghana, South Africa, Kenya and Côte d'Ivoire. Renewing plans are "
+"charged to the card used for the first payment."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:326
 msgid ""
 "Sends the buyer to Stripe's own checkout page instead of taking the card "
 "here."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:848
+#: includes/payment/class-jws-payment-settings.php:1171
 msgid ""
 "Sends the buyer to the store's own checkout to pay, then brings them back "
 "here once WooCommerce says the order is paid. Useful for the payment methods "
@@ -4898,11 +5377,19 @@ msgid ""
 "a local card processor — since whatever the store already takes, this takes."
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-xendit.php:58
+msgid ""
+"Sends the buyer to Xendit's payment page: cards, e-wallets, virtual accounts "
+"and QR in Indonesia, the Philippines, Vietnam, Thailand, Singapore and "
+"Malaysia. A membership bought this way is paid one term at a time and does "
+"not renew itself."
+msgstr ""
+
 #: includes/function_ajax.php:29 includes/livestream/templates/studio.php:142
 msgid "Server"
 msgstr ""
 
-#: includes/class-jws-profiles.php:1091
+#: includes/class-jws-profiles.php:1130
 msgid "Set an account password in Settings first, then use it here."
 msgstr ""
 
@@ -4910,7 +5397,7 @@ msgstr ""
 msgid "Set channel cover"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:659
+#: includes/payment/class-jws-payment-settings.php:918
 msgid "Set on this screen."
 msgstr ""
 
@@ -4922,12 +5409,13 @@ msgstr ""
 msgid "Sets the order in lists and in the TV guide."
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:169
-#: public/user/profile/v3/layout.php:72
+#: includes/class-jws-streamvid-profile.php:191
+#: public/user/profile/dashboard.php:146 public/user/profile/dashboard.php:270
+#: public/user/profile/v3/layout.php:76
 msgid "Settings"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:384
+#: includes/payment/class-jws-payment-settings.php:523
 msgid "Settings saved."
 msgstr ""
 
@@ -4935,16 +5423,26 @@ msgstr ""
 msgid "Share"
 msgstr ""
 
+#: public/user/profile/woocommerce/edit-address.php:26
+msgid "Shipping address"
+msgstr ""
+
 #: includes/class-jws-streamvid-profile.php:153
 msgid "Shop"
+msgstr ""
+
+#: includes/class-jws-streamvid-profile.php:435
+#: public/user/profile/dashboard.php:200
+#: public/user/profile/woocommerce/shop.php:35
+msgid "Shopping"
 msgstr ""
 
 #: includes/metabox/fields/terms.php:38
 msgid "Short label shown on posters."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:522
-#: includes/payment/class-jws-payment-settings.php:983
+#: includes/payment/class-jws-payment-settings.php:733
+#: includes/payment/class-jws-payment-settings.php:1330
 #: includes/drama/class-drama-admin.php:306
 msgid "Show"
 msgstr ""
@@ -4979,7 +5477,7 @@ msgstr ""
 msgid "Show or hide this row"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:983
+#: includes/payment/class-jws-payment-settings.php:1330
 msgid "Show or hide this value"
 msgstr ""
 
@@ -4987,19 +5485,19 @@ msgstr ""
 msgid "Show stream key"
 msgstr ""
 
-#: includes/class-jws-kids-mode.php:114
+#: includes/class-jws-kids-mode.php:115
 msgid "Showing titles rated G"
 msgstr ""
 
-#: includes/class-jws-kids-mode.php:115
+#: includes/class-jws-kids-mode.php:116
 msgid "Showing titles rated G and PG"
 msgstr ""
 
-#: includes/class-jws-kids-mode.php:116
+#: includes/class-jws-kids-mode.php:117
 msgid "Showing titles rated PG-13 and below"
 msgstr ""
 
-#: includes/class-jws-kids-mode.php:117
+#: includes/class-jws-kids-mode.php:118
 msgid "Showing titles rated R and below"
 msgstr ""
 
@@ -5031,8 +5529,14 @@ msgstr ""
 msgid "Sign In"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:503
+#: includes/payment/class-jws-payment-checkout.php:510
 msgid "Sign in"
+msgstr ""
+
+#. %s: the admin sign-in address.
+#: includes/class-jws-hide-login.php:428
+#, php-format
+msgid "Sign in to the admin at %s. Bookmark it."
 msgstr ""
 
 #. %d: coin price
@@ -5052,6 +5556,10 @@ msgstr ""
 msgid "Sign out of all other devices"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:54
+msgid "Signature Key"
+msgstr ""
+
 #: includes/metabox/fields/misc.php:210
 msgid "Skippable after"
 msgstr ""
@@ -5060,11 +5568,13 @@ msgstr ""
 msgid "SMS code"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:879
+#. %s: list of gateway names, such as "Stripe, PayPal, and Mollie".
+#: includes/payment/class-jws-payment-settings.php:1215
+#, php-format
 msgid ""
 "So a membership bought this way is sold as one paid term: the member gets "
 "one billing cycle, the membership then expires, and they buy it again to "
-"carry on. Stripe and PayPal remain the methods that renew on their own."
+"carry on. These gateways renew on their own: %s."
 msgstr ""
 
 #: includes/metabox/fields/misc.php:33
@@ -5075,19 +5585,23 @@ msgstr ""
 msgid "Social Login Accounts"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:404
+#: includes/payment/class-jws-payment-settings.php:543
 msgid ""
 "Some tables could not be created. Check that the database user may create "
 "tables."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:481
+#: includes/payment/class-jws-payment-checkout.php:488
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:496
-#: includes/class-jws-profiles-front.php:906
+#: includes/class-jws-profiles-front.php:548
+#: includes/class-jws-profiles-front.php:973
 msgid "Something went wrong. Try again."
+msgstr ""
+
+#: public/user/profile/woocommerce/orders.php:93
+msgid "Sorry, you can not view this order."
 msgstr ""
 
 #: public/user/profile/v3/videos.php:143
@@ -5115,6 +5629,15 @@ msgstr ""
 
 #: public/user/profile/v3/coins.php:53
 msgid "Spent this month"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:200
+msgid "Square did not say where to send you."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:336
+msgid ""
+"Square payments here do not renew, so there is no subscription to cancel."
 msgstr ""
 
 #. 1: date the rental must start by, 2: number of days to finish
@@ -5184,7 +5707,7 @@ msgstr ""
 msgid "StreamVid Landing Page"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:237
+#: includes/payment/class-jws-payment-settings.php:325
 msgid "Stripe"
 msgstr ""
 
@@ -5198,7 +5721,7 @@ msgstr ""
 msgid "Stripe did not return anything to confirm."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:684
+#: includes/payment/class-jws-payment-settings.php:943
 msgid ""
 "Stripe has no webhook secret. Payments still complete when the buyer lands "
 "back on the site, but a closed tab or a renewal will not be recorded."
@@ -5215,7 +5738,7 @@ msgid "Stripe refused the request."
 msgstr ""
 
 #: includes/class-jws-streamvid-profile.php:96 public/movies/player.php:404
-#: public/user/profile/v3/layout.php:70
+#: public/user/profile/v3/layout.php:74
 msgid "Subscription"
 msgstr ""
 
@@ -5231,7 +5754,7 @@ msgstr ""
 msgid "Sunday"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:195
+#: public/user/profile/v3/layout.php:203
 msgid "Switch"
 msgstr ""
 
@@ -5239,17 +5762,17 @@ msgstr ""
 msgid "Switch profile"
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:359
-#: includes/class-jws-profiles-front.php:593
+#: includes/class-jws-profiles-front.php:400
+#: includes/class-jws-profiles-front.php:654
 msgid "Switch to an adult profile to manage profiles."
 msgstr ""
 
-#: includes/class-jws-profile-filter.php:309
+#: includes/class-jws-profile-filter.php:321
 msgid "Switch to the main profile to change the account."
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:360
-#: includes/class-jws-profiles-front.php:594
+#: includes/class-jws-profiles-front.php:401
+#: includes/class-jws-profiles-front.php:655
 msgid "Switch to the main profile to manage profiles."
 msgstr ""
 
@@ -5264,7 +5787,7 @@ msgstr ""
 msgid "Sync Data Tables"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:405
+#: includes/payment/class-jws-payment-settings.php:544
 msgid "Tables are up to date."
 msgstr ""
 
@@ -5277,17 +5800,19 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:857
+#: includes/payment/class-jws-payment-settings.php:1180
 msgid "Take payments through the WooCommerce checkout"
 msgstr ""
 
 #. %s: gateway name.
-#: includes/payment/class-jws-payment-settings.php:947
+#: includes/payment/class-jws-payment-settings.php:1294
 #, php-format
 msgid "Take payments with %s"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:483
+#: includes/payment/class-jws-payment-checkout.php:490
+#: includes/payment/gateways/class-jws-payment-gateways.php:76
+#: includes/payment/gateways/class-jws-payment-gateways.php:85
 msgid "Taking you to the payment page…"
 msgstr ""
 
@@ -5322,7 +5847,10 @@ msgstr ""
 msgid "Tell viewers what your stream is about"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:914
+#: includes/payment/class-jws-payment-settings.php:972
+#: includes/payment/class-jws-payment-settings.php:973
+#: includes/payment/class-jws-payment-settings.php:1245
+#: includes/payment/class-jws-payment-settings.php:1254
 msgid "Test"
 msgstr ""
 
@@ -5337,7 +5865,7 @@ msgid "Thank you for your purchase!"
 msgstr ""
 
 #. %s: amount paid, already formatted.
-#: includes/payment/class-jws-payment-checkout.php:909
+#: includes/payment/class-jws-payment-checkout.php:937
 #, php-format
 msgid "Thanks — your payment of %s went through."
 msgstr ""
@@ -5371,39 +5899,43 @@ msgstr ""
 msgid "That option is no longer on sale."
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:252
+#: includes/payment/class-jws-payment-items.php:294
 #: includes/drama/class-drama-coins.php:120
 msgid "That package is no longer on sale."
 msgstr ""
 
-#: includes/class-jws-kids-mode.php:103
+#: includes/class-jws-kids-mode.php:104
 msgid "That page is not available on a Kids profile."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1157
+#: includes/payment/class-jws-payment-checkout.php:1185
 msgid "That payment method cannot be used for this purchase."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1139
+#: includes/payment/class-jws-payment-checkout.php:1167
 #: includes/drama/class-drama-ajax.php:110
 msgid "That payment method is not available."
 msgstr ""
 
-#: includes/class-jws-profiles.php:1117
+#: includes/class-jws-profiles.php:1156
 msgid "That profile does not exist on this account."
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-mollie.php:559
+msgid "That subscription is not on record."
+msgstr ""
+
 #. %s: profile name
-#: includes/class-jws-kids-mode.php:107
+#: includes/class-jws-kids-mode.php:108
 #, php-format
 msgid "That title is not available on %s's profile."
 msgstr ""
 
-#: includes/class-jws-profile-filter.php:330
+#: includes/class-jws-profile-filter.php:342
 msgid "That title is not available on this profile."
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:173
+#: includes/payment/class-jws-payment-items.php:215
 msgid "That title is not available."
 msgstr ""
 
@@ -5412,20 +5944,34 @@ msgstr ""
 msgid "That took too long — please try again."
 msgstr ""
 
-#: includes/class-jws-profiles.php:1095
+#: includes/class-jws-profiles.php:1134
 msgid "The account password is incorrect."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:811
+msgid ""
+"The accounts that take the money. Switch on each gateway you use and paste "
+"its keys; the methods it powers are picked on the Payment methods tab."
 msgstr ""
 
 #: includes/drama/class-drama-templates.php:175
 msgid "The ad did not play. Please try again."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:226
+#. %s: the address that was entered.
+#: includes/class-jws-hide-login.php:465
+#, php-format
+msgid ""
+"The admin login address \"%s\" is already used by WordPress or a page. "
+"Choose another one."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:312
 msgid ""
 "The browser's own payment sheet. Chrome, on a device that has a card set up."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:220
+#: includes/payment/class-jws-payment-settings.php:305
 msgid ""
 "The browser's own payment sheet. Safari only, and only on a device that has "
 "a card set up."
@@ -5445,8 +5991,8 @@ msgid ""
 "timezone (Settings › General)."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:496
-#: includes/payment/class-jws-payment-checkout.php:1325
+#: includes/payment/class-jws-payment-checkout.php:503
+#: includes/payment/class-jws-payment-checkout.php:1366
 msgid "The checkout is not switched on."
 msgstr ""
 
@@ -5478,6 +6024,10 @@ msgstr ""
 
 #: public/user/profile/video_rented.php:82
 msgid "The expiration date will be automatically activated after %d days"
+msgstr ""
+
+#: public/user/profile/woocommerce/edit-address.php:69
+msgid "The following addresses will be used on the checkout page by default."
 msgstr ""
 
 #: includes/livestream/class-livestream-frontend.php:80
@@ -5512,33 +6062,54 @@ msgstr ""
 msgid "The live stream has ended."
 msgstr ""
 
-#: includes/class-jws-profiles.php:971
+#: includes/class-jws-profiles.php:1010
 msgid "The main profile cannot be a Kids profile."
 msgstr ""
 
-#: includes/class-jws-profiles.php:538
+#: includes/class-jws-profiles.php:577
 msgid "The main profile cannot be deleted."
 msgstr ""
 
+#. %d: how many profiles besides the main one the plan allows
+#: public/user/profiles/choose.php:151
+msgid ""
+"The main profile is always kept. Choose %d more to keep using. The others "
+"keep their history and lists, and come back when you change your plan."
+msgid_plural ""
+"The main profile is always kept. Choose up to %d more to keep using. The "
+"others keep their history and lists, and come back when you change your plan."
+msgstr[0] ""
+msgstr[1] ""
+
 #: includes/tv_channel/class-tv-channel-demo.php:577
 msgid "The menu already links to Live TV."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-mollie.php:566
+msgid ""
+"The Mollie customer for this subscription is not on record under the current "
+"API key."
 msgstr ""
 
 #: includes/class-jws-streamvid-dashboard.php:465
 msgid "The new password must be at least 6 characters."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1306
+#: includes/payment/class-jws-payment-checkout.php:1347
 msgid "The payment has not gone through yet."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:883
+#: includes/payment/gateways/class-jws-payment-gateway.php:291
+msgid "The payment page address is not secure."
+msgstr ""
+
+#: includes/payment/class-jws-payment-checkout.php:911
 msgid "The payment was not completed, so nothing has been charged."
 msgstr ""
 
-#: includes/class-jws-profiles.php:618
-#: includes/class-jws-profiles-front.php:466
-#: includes/class-jws-profiles-front.php:535
+#: includes/class-jws-profiles.php:657
+#: includes/class-jws-profiles-front.php:507
+#: includes/class-jws-profiles-front.php:587
 msgid "The PIN must be 4 digits."
 msgstr ""
 
@@ -5547,11 +6118,11 @@ msgstr ""
 msgid "The playlist has no videos."
 msgstr ""
 
-#: includes/class-jws-profiles.php:1121
+#: includes/class-jws-profiles.php:1160
 msgid "The profile could not be saved. Try again."
 msgstr ""
 
-#: includes/class-jws-profiles-front.php:591
+#: includes/class-jws-profiles-front.php:652
 msgid "The profile is saved, but Profile Lock did not change. Try again."
 msgstr ""
 
@@ -5559,13 +6130,13 @@ msgstr ""
 msgid "The shop is unavailable right now."
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:225
+#: includes/payment/class-jws-payment-woocommerce.php:232
 msgid ""
 "The store could not prepare this payment. Please choose another payment "
 "method."
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:247
+#: includes/payment/class-jws-payment-woocommerce.php:254
 msgid "The store has no checkout page set up."
 msgstr ""
 
@@ -5578,7 +6149,7 @@ msgid "The StreamVid payment system is not available."
 msgstr ""
 
 #. %s: database table name.
-#: includes/payment/class-jws-payment-settings.php:695
+#: includes/payment/class-jws-payment-settings.php:982
 #, php-format
 msgid ""
 "The table %s is missing. Nothing can be recorded until it is created — use "
@@ -5603,21 +6174,25 @@ msgstr ""
 msgid "There is a problem with the network connection. Try again."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:680
+#: includes/payment/class-jws-payment-settings.php:939
 msgid ""
 "There is no checkout page yet. Save this screen once and it will be created."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:519
+#: includes/payment/class-jws-payment-checkout.php:526
 msgid "There is nothing to pay for yet."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1145
+#: includes/payment/class-jws-payment-checkout.php:1173
 msgid "There is nothing to pay for."
 msgstr ""
 
 #: public/user/profile/videos.php:84
 msgid "There isn't any video."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:103
+msgid "This Authorize.net account does not charge in this currency."
 msgstr ""
 
 #: includes/payment/class-jws-payment-orders-table.php:228
@@ -5663,7 +6238,7 @@ msgid "This episode is not linked to a drama."
 msgstr ""
 
 #: includes/class-jws-profile-library.php:310
-#: includes/class-jws-profiles-front.php:341
+#: includes/class-jws-profiles-front.php:382
 msgid "This form has expired. Reload the page and try again."
 msgstr ""
 
@@ -5699,8 +6274,8 @@ msgstr ""
 msgid "This is already your phone number."
 msgstr ""
 
-#: includes/class-jws-profile-filter.php:308
 #: includes/class-jws-profile-filter.php:320
+#: includes/class-jws-profile-filter.php:332
 msgid "This is not available on a Kids profile."
 msgstr ""
 
@@ -5744,10 +6319,18 @@ msgstr ""
 msgid "This phone number is already used by another account."
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:220
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:255
+msgid "This plan cannot be billed through Mercado Pago."
+msgstr ""
+
+#: includes/payment/class-jws-payment-woocommerce.php:227
 msgid ""
 "This plan does not say how long one payment covers, so it cannot be paid "
 "through WooCommerce. Please choose another payment method."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-gateway.php:111
+msgid "This plan has no billing period to sell one term of."
 msgstr ""
 
 #: public/user/profiles/pin.php:55
@@ -5759,7 +6342,7 @@ msgid ""
 "This profile has Profile Lock on, so changing or deleting it needs its PIN."
 msgstr ""
 
-#: includes/class-jws-profiles.php:271
+#: includes/class-jws-profiles.php:310
 msgid "This profile is not available on your current plan."
 msgstr ""
 
@@ -5767,10 +6350,16 @@ msgstr ""
 msgid "This profile only shows titles at or below this rating."
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:240
+#: includes/payment/class-jws-payment-woocommerce.php:247
 msgid ""
 "This purchase is priced in a different currency to the store, so it cannot "
 "be paid through WooCommerce. Please choose another payment method."
+msgstr ""
+
+#. %s: currency code of the Square location.
+#: includes/payment/gateways/class-jws-payment-square.php:95
+#, php-format
+msgid "This Square location charges in %s only."
 msgstr ""
 
 #: includes/metabox/fields/videos.php:89
@@ -5861,6 +6450,10 @@ msgid ""
 "whose rating is lower than the title."
 msgstr ""
 
+#: public/user/profile/dashboard.php:185
+msgid "Titles grouped your way."
+msgstr ""
+
 #: public/user/profile/v3/purchases.php:165
 msgid "Titles you buy stay on this account for good and show up here."
 msgstr ""
@@ -5897,7 +6490,7 @@ msgid "Toggle sound"
 msgstr ""
 
 #. %d: minutes until the PIN can be tried again
-#: includes/class-jws-profiles.php:1109
+#: includes/class-jws-profiles.php:1148
 msgid "Too many attempts. Try again in %d minute."
 msgid_plural "Too many attempts. Try again in %d minutes."
 msgstr[0] ""
@@ -5923,7 +6516,7 @@ msgstr ""
 
 #: includes/payment/class-jws-payment-invoice.php:262
 #: includes/payment/class-jws-payment-invoice.php:279
-#: includes/payment/class-jws-payment-checkout.php:633
+#: includes/payment/class-jws-payment-checkout.php:696
 msgid "Total"
 msgstr ""
 
@@ -5931,7 +6524,7 @@ msgstr ""
 msgid "Total Episodes (planned)"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:964
+#: includes/payment/class-jws-payment-checkout.php:992
 msgid "Total paid"
 msgstr ""
 
@@ -5960,11 +6553,15 @@ msgstr ""
 msgid "Transaction History"
 msgstr ""
 
+#: includes/payment/gateways/class-jws-payment-authorizenet.php:53
+msgid "Transaction Key"
+msgstr ""
+
 #: public/user/profile/v3/coins.php:68
 msgid "Transactions"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:885
+#: includes/payment/class-jws-payment-checkout.php:913
 msgid "Try again"
 msgstr ""
 
@@ -5996,6 +6593,10 @@ msgstr ""
 
 #: public/user/profiles/pin.php:94
 msgid "Turn off Profile Lock"
+msgstr ""
+
+#: includes/class-jws-hide-login.php:435
+msgid "Turned off in wp-config.php (JWS_HIDE_LOGIN_OFF)."
 msgstr ""
 
 #: includes/tv_channel/class-tv-channel-fields.php:102
@@ -6037,7 +6638,7 @@ msgstr ""
 msgid "Tv Shows Playlists"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:994
+#: includes/payment/class-jws-payment-settings.php:1341
 msgid ""
 "Two-letter country of the Stripe account. Apple Pay and Google Pay will not "
 "open without it."
@@ -6056,9 +6657,13 @@ msgstr ""
 msgid "Type Playlist"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:616
-#: includes/payment/class-jws-payment-settings.php:727
+#: includes/payment/class-jws-payment-settings.php:875
+#: includes/payment/class-jws-payment-settings.php:1014
 msgid "Unified checkout"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:263
+msgid "United States (US) dollar"
 msgstr ""
 
 #: includes/tv_channel/class-tv-channel-demo.php:323
@@ -6133,7 +6738,7 @@ msgstr ""
 msgid "Update discussion"
 msgstr ""
 
-#: public/user/profile/v3/layout.php:181
+#: public/user/profile/v3/layout.php:189
 msgid "Upgrade"
 msgstr ""
 
@@ -6141,6 +6746,7 @@ msgstr ""
 msgid "Upgrade Premium"
 msgstr ""
 
+#: public/user/profile/dashboard.php:299
 #: public/user/profile/v3/subscription.php:119
 msgid ""
 "Upgrade to watch premium titles, add more profiles and sign in on more "
@@ -6203,7 +6809,7 @@ msgid "URL / embed"
 msgstr ""
 
 #. %d: maximum number of characters
-#: includes/class-jws-profiles.php:935
+#: includes/class-jws-profiles.php:974
 msgid "Use %d characters or fewer for the profile name."
 msgstr ""
 
@@ -6326,7 +6932,7 @@ msgstr ""
 #: includes/class-jws-streamvid-post.php:511
 #: includes/class-jws-streamvid-post.php:512
 #: includes/class-jws-streamvid-post.php:518
-#: includes/class-jws-streamvid-profile.php:365
+#: includes/class-jws-streamvid-profile.php:404
 #: includes/metabox/class-jws-metabox-settings.php:48
 #: public/user/profile/v3/videos.php:71
 msgid "Videos"
@@ -6344,10 +6950,15 @@ msgstr ""
 msgid "Videos you upload and live streams you run show up here."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:757
+#: public/user/profile/dashboard.php:193
+msgid "Videos you uploaded."
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:1068
 msgid "View"
 msgstr ""
 
+#: public/user/profile/dashboard.php:311
 #: public/user/profile/v3/subscription.php:124
 msgid "View all Membership Options"
 msgstr ""
@@ -6369,7 +6980,7 @@ msgstr ""
 msgid "View Live TV"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1098
+#: includes/payment/class-jws-payment-checkout.php:1126
 msgid "View my membership"
 msgstr ""
 
@@ -6447,7 +7058,7 @@ msgid "Watch at least half of the ad to open this episode."
 msgstr ""
 
 #. %d: number of days the rental lasts.
-#: includes/payment/class-jws-payment-checkout.php:621
+#: includes/payment/class-jws-payment-checkout.php:672
 msgid "Watch for %d day once you start."
 msgid_plural "Watch for %d days once you start."
 msgstr[0] ""
@@ -6461,7 +7072,7 @@ msgstr ""
 msgid "Watch Now"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1101
+#: includes/payment/class-jws-payment-checkout.php:1129
 msgid "Watch now"
 msgstr ""
 
@@ -6475,7 +7086,7 @@ msgid "watching"
 msgstr ""
 
 #. %s: profile name
-#: public/user/profile/v3/layout.php:192
+#: public/user/profile/v3/layout.php:200
 #, php-format
 msgid "Watching as %s"
 msgstr ""
@@ -6486,7 +7097,7 @@ msgstr ""
 
 #: includes/class-jws-streamvid-migration.php:119
 #: includes/function_template.php:1036
-#: includes/class-jws-streamvid-profile.php:359
+#: includes/class-jws-streamvid-profile.php:398
 #: public/user/profiles/account-menu.php:76
 msgid "Watchlist"
 msgstr ""
@@ -6495,12 +7106,12 @@ msgstr ""
 msgid "Watchlisted"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:626
+#: includes/payment/class-jws-payment-settings.php:885
 msgid "Ways to pay"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:878
-#: includes/payment/class-jws-payment-checkout.php:1298
+#: includes/payment/class-jws-payment-checkout.php:906
+#: includes/payment/class-jws-payment-checkout.php:1333
 msgid "We could not find that order."
 msgstr ""
 
@@ -6508,16 +7119,34 @@ msgstr ""
 msgid "Webcam"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:1000
+#: includes/payment/class-jws-payment-settings.php:1347
 msgid "Webhook"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:910
+#: includes/payment/class-jws-payment-settings.php:1261
 msgid "Webhook ID"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:905
+#: includes/payment/gateways/class-jws-payment-razorpay.php:44
+#: includes/payment/gateways/class-jws-payment-mercadopago.php:42
+msgid "Webhook secret"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-flutterwave.php:42
+msgid "Webhook secret hash"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-square.php:46
+msgid "Webhook signature key"
+msgstr ""
+
+#: includes/payment/class-jws-payment-settings.php:1252
+#: includes/payment/gateways/class-jws-payment-paystack.php:43
 msgid "Webhook signing secret"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-xendit.php:48
+msgid "Webhook verification token"
 msgstr ""
 
 #: includes/function_template.php:346
@@ -6528,7 +7157,7 @@ msgstr ""
 msgid "Wednesday"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:307
+#: includes/payment/class-jws-payment-items.php:349
 msgid "week"
 msgstr ""
 
@@ -6538,6 +7167,12 @@ msgstr ""
 
 #: includes/tv_channel/class-tv-channel-schedule.php:41
 msgid "Weekend (Sat & Sun)"
+msgstr ""
+
+#. %s: profile or display name
+#: public/user/profile/dashboard.php:250
+#, php-format
+msgid "Welcome back, %s"
 msgstr ""
 
 #. %s: profile name
@@ -6554,11 +7189,11 @@ msgstr ""
 msgid "What is this video about?"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:865
+#: includes/payment/class-jws-payment-settings.php:1188
 msgid "What it sells"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:783
+#: includes/payment/class-jws-payment-settings.php:1094
 msgid ""
 "What the checkout offers the buyer. A method only appears if the gateway "
 "behind it is switched on and has its keys."
@@ -6568,6 +7203,10 @@ msgstr ""
 msgid ""
 "What the finished series will run to. Display only — the real count comes "
 "from the episodes themselves."
+msgstr ""
+
+#: includes/payment/class-jws-payment-checkout.php:688
+msgid "What's included"
 msgstr ""
 
 #: includes/drama/class-drama-admin.php:551
@@ -6584,7 +7223,15 @@ msgid ""
 "is active."
 msgstr ""
 
-#: public/user/profiles/choose.php:28
+#: public/user/profile/dashboard.php:163
+msgid "Where this account is signed in."
+msgstr ""
+
+#: public/user/profile/dashboard.php:154
+msgid "Who watches on this account."
+msgstr ""
+
+#: public/user/profiles/choose.php:29 public/user/profiles/waiting.php:24
 msgid "Who's watching?"
 msgstr ""
 
@@ -6595,31 +7242,40 @@ msgid ""
 "are shown."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:243
+#: includes/payment/class-jws-payment-settings.php:332
 msgid "WooCommerce"
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:763
+#: includes/payment/class-jws-payment-checkout.php:811
 msgid "WooCommerce checkout"
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:860
+#: includes/payment/class-jws-payment-settings.php:1183
 msgid ""
 "WooCommerce is not active on this site, so there is no checkout to hand the "
 "payment to. The setting is kept either way, and takes effect as soon as "
 "WooCommerce is back."
 msgstr ""
 
-#: includes/payment/class-jws-payment-woocommerce.php:214
+#: includes/payment/class-jws-payment-woocommerce.php:221
 msgid "WooCommerce is not available right now."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:841
+#: includes/payment/class-jws-payment-settings.php:1164
 msgid "WooCommerce not active"
 msgstr ""
 
 #: includes/function_template.php:322
 msgid "X (Twitter)"
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-xendit.php:172
+msgid "Xendit did not say where to send you."
+msgstr ""
+
+#: includes/payment/gateways/class-jws-payment-xendit.php:301
+msgid ""
+"Xendit payments here do not renew, so there is no subscription to cancel."
 msgstr ""
 
 #: includes/class-jws-streamvid-videos.php:136
@@ -6628,7 +7284,7 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: includes/payment/class-jws-payment-items.php:309
+#: includes/payment/class-jws-payment-items.php:351
 msgid "year"
 msgstr ""
 
@@ -6678,7 +7334,7 @@ msgstr ""
 msgid "You can only edit your own videos."
 msgstr ""
 
-#: includes/class-jws-profiles.php:262
+#: includes/class-jws-profiles.php:301
 msgid "You can only switch profiles on your own account."
 msgstr ""
 
@@ -6694,7 +7350,7 @@ msgstr ""
 msgid "You can start from your webcam or a streaming app on the next screen."
 msgstr ""
 
-#: includes/payment/class-jws-payment-settings.php:371
+#: includes/payment/class-jws-payment-settings.php:510
 msgid "You cannot change these settings."
 msgstr ""
 
@@ -6703,7 +7359,7 @@ msgstr ""
 msgid "You do not have access to this live stream."
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:715
+#: includes/class-jws-streamvid-profile.php:844
 msgid "You do not have access."
 msgstr ""
 
@@ -6714,11 +7370,15 @@ msgid "You do not have permission to add post to this collection"
 msgstr ""
 
 #. %d: number of days the rental lasts.
-#: includes/payment/class-jws-payment-checkout.php:1032
+#: includes/payment/class-jws-payment-checkout.php:1060
 msgid "You have %d day to finish it once you start watching."
 msgid_plural "You have %d days to finish it once you start watching."
 msgstr[0] ""
 msgstr[1] ""
+
+#: public/user/profile/woocommerce/edit-address.php:87
+msgid "You have not set up this type of address yet."
+msgstr ""
 
 #: public/user/profile/video_rented.php:81
 msgid "You have not watched the video yet"
@@ -6749,6 +7409,10 @@ msgstr ""
 msgid "You were disconnected. Click Watch live to rejoin."
 msgstr ""
 
+#: public/user/profile/dashboard.php:377
+msgid "Your account"
+msgstr ""
+
 #: includes/class-jws-streamvid-livevideo.php:233
 msgid "Your account cannot create live streams."
 msgstr ""
@@ -6769,7 +7433,7 @@ msgid "Your balance"
 msgstr ""
 
 #. %s: the wallet balance after this purchase.
-#: includes/payment/class-jws-payment-checkout.php:1009
+#: includes/payment/class-jws-payment-checkout.php:1037
 #, php-format
 msgid "Your balance is now %s coins."
 msgstr ""
@@ -6784,6 +7448,10 @@ msgstr ""
 
 #: includes/class-jws-streamvid-videos.php:413
 msgid "Your changes have been saved."
+msgstr ""
+
+#: includes/class-jws-profiles-front.php:648
+msgid "Your choice is saved."
 msgstr ""
 
 #: includes/livestream/class-livestream-frontend.php:86
@@ -6817,7 +7485,7 @@ msgstr ""
 msgid "Your membership level does not include video upload."
 msgstr ""
 
-#: public/user/profile/profiles.php:133
+#: public/user/profile/profiles.php:138
 msgid ""
 "Your membership, purchased and rented titles, and signed-in devices are "
 "shared by every profile on this account. Each profile has its own history, "
@@ -6835,7 +7503,7 @@ msgid ""
 msgstr ""
 
 #. %d: number of profiles the plan allows
-#: public/user/profiles/choose.php:118
+#: public/user/profiles/choose.php:130
 msgid "Your plan allows %d profile"
 msgid_plural "Your plan allows %d profiles"
 msgstr[0] ""
@@ -6852,17 +7520,27 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. %d: number of profiles the plan allows
-#: includes/class-jws-profiles.php:433
+#: includes/class-jws-profiles.php:472
 msgid "Your plan allows %d profile."
 msgid_plural "Your plan allows %d profiles."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-jws-profiles-front.php:592
+#: includes/class-jws-profiles-front.php:653
 msgid "Your plan has no room for another profile."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1028
+#: includes/class-jws-profiles-front.php:536
+msgid "Your plan includes only the main profile."
+msgstr ""
+
+#: public/user/profiles/choose.php:138
+msgid ""
+"Your plan includes only the main profile. The other profiles keep their "
+"history and lists, and come back when you change your plan."
+msgstr ""
+
+#: includes/payment/class-jws-payment-checkout.php:1056
 msgid "Your rental is ready to watch"
 msgstr ""
 
@@ -6871,7 +7549,8 @@ msgstr ""
 msgid "Your session has expired. Reload the page and try again."
 msgstr ""
 
-#: includes/class-jws-streamvid-profile.php:233
+#: includes/class-jws-streamvid-profile.php:261
+#: public/user/profile/dashboard.php:306
 msgid "Your Subscriptions"
 msgstr ""
 
@@ -6887,7 +7566,7 @@ msgstr ""
 msgid "Yours to keep. Watch any time."
 msgstr ""
 
-#: includes/payment/class-jws-payment-checkout.php:1041
+#: includes/payment/class-jws-payment-checkout.php:1069
 msgid "Yours to watch any time, as often as you like."
 msgstr ""
 
