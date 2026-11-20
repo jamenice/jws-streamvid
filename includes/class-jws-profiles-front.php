@@ -701,7 +701,8 @@ class Jws_Profiles_Front {
 	}
 
 	/** Profile page tabs that change the account: Settings, Devices, Subscription and Profiles. */
-	const ACCOUNT_TABS = array( 'dashboard', 'profile', 'devices_manager', 'membership', 'subscriptions', 'profiles' );
+	// The WooCommerce pages sit under dashboard/, which route() keeps from the other profiles too.
+	const ACCOUNT_TABS = array( 'dashboard', 'profile', 'devices_manager', 'membership', 'subscriptions', 'profiles', 'shop', 'orders', 'downloads', 'edit-address' );
 
 	/** How long a locked profile stays open for editing after its PIN. */
 	const UNLOCK_TTL = 15 * MINUTE_IN_SECONDS;

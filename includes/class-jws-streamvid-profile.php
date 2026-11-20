@@ -158,6 +158,28 @@ class Jws_Streamvid_Profile {
     	   );
        }
 
+       // WooCommerce account pages of the profile (Dashboard > Shopping), not the store's Shop page.
+       $user_id = get_current_user_id();
+       if( function_exists( 'WC' ) && $user_id ){
+            $shop_pages = array(
+                'orders'       => array( esc_html__( 'Orders', 'jws_streamvid' ), 'jws-icon-list-bullets' ),
+                'downloads'    => array( esc_html__( 'Downloads', 'jws_streamvid' ), 'jws-icon-arrow-line-down' ),
+                'edit-address' => array( esc_html__( 'Addresses', 'jws_streamvid' ), 'jws-icon-map-pin' ),
+            );
+            $priority = 39;
+            foreach ( $shop_pages as $key => $page ) {
+                $items[ $key ] = array(
+                    'title'    => $page[0],
+                    'icon'     => $page[1],
+                    'callback' => '',
+                    // ?dashboard=shop/orders without pretty permalinks, as shop.php expects.
+                    'url'      => $this->get_endpoint( $user_id, 'dashboard', 'shop/' . $key ),
+                    'priority' => $priority,
+                );
+                $priority += 0.1;
+            }
+       }
+
        $items[ 'author' ] 	= array(
 			'title'			=>	esc_html__( 'My Profile', 'jws_streamvid' ),
 			'icon'			=>	'jws-icon-user-circle',
@@ -193,9 +215,15 @@ class Jws_Streamvid_Profile {
        $disabled = ( isset($header_menu_list['disabled']) && is_array($header_menu_list['disabled']) ) ? $header_menu_list['disabled'] : array();
        unset( $enabled['placebo'], $disabled['placebo'] );
 
-       // Not saved yet: match the sorter default, which hides Upload, Go live and Shop.
+       /*
+        * Added to the sorter after sites had saved it. Theme Options lists them
+        * under Disabled until someone moves them, so they stay hidden until then.
+        */
+       $hidden_until_enabled = array( 'orders', 'downloads', 'edit-address' );
+
+       // Not saved yet: match the sorter default, which hides Upload, Go live, Shop and the WooCommerce pages.
        if ( empty( $enabled ) && empty( $disabled ) ) {
-            $disabled = array( 'upload' => 1, 'live' => 1, 'shop' => 1 );
+            $disabled = array_fill_keys( array_merge( array( 'upload', 'live', 'shop' ), $hidden_until_enabled ), 1 );
        }
 
        $sorted = array();
@@ -205,7 +233,7 @@ class Jws_Streamvid_Profile {
             }
        }
        foreach ($items as $key => $item) {
-            if ( ! isset($sorted[$key]) && ! isset($disabled[$key]) ) {
+            if ( ! isset($sorted[$key]) && ! isset($disabled[$key]) && ! in_array( $key, $hidden_until_enabled, true ) ) {
                 $sorted[$key] = $item;
             }
        }
@@ -337,6 +365,17 @@ class Jws_Streamvid_Profile {
     $items = array();
 
     $default_items = array(
+        /*
+         * The account overview. Same slug as the Dashboard parent endpoint
+         * (get_menu_dashboard_items), so /author/{user}/dashboard/ opens it
+         * and its sub pages (dashboard/profile, ...) keep working.
+         */
+        'dashboard' => array(
+            'title' => esc_html__( 'Dashboard', 'jws_streamvid' ),
+            'icon'  => '',
+            'callback' => function(){ jws_streamvid_load_template( 'user/profile/dashboard.php' ); },
+            'priority' => -10
+        ),
         'favorites' => array(
             'title' => esc_html__( 'Favorites', 'jws_streamvid' ),
             'icon'  => '',
@@ -385,7 +424,20 @@ class Jws_Streamvid_Profile {
                 jws_streamvid_load_template( 'user/profile/video_rented.php' );
             },
             'priority'		=>	40
-        );     
+        );
+
+        /*
+         * WooCommerce account pages (Orders, Downloads, Addresses). They stay at
+         * dashboard/shop/..., where shop.php reads the sub page from, so the
+         * tab links there instead of getting an endpoint of its own.
+         */
+        $default_items[ 'shop' ] = array(
+            'title'    => esc_html__( 'Shopping', 'jws_streamvid' ),
+            'icon'     => '',
+            'callback' => function(){ jws_streamvid_load_template( 'user/profile/woocommerce/shop.php' ); },
+            'parent'   => 'dashboard',
+            'priority' => 45
+        );
     }
 
 
@@ -457,12 +509,16 @@ class Jws_Streamvid_Profile {
     
     public function add_endpoints(){
         
-		$menu_items = array_keys($this->get_menu_items());        
+		// Tabs with a parent (Shopping: dashboard/shop) open through that parent's endpoint.
+		$menu_items = array_keys( array_filter( $this->get_menu_items(), function( $item ){
+			return empty( $item['parent'] );
+		} ) );
         $menu_dashboard_items = array_keys($this->get_menu_dashboard_items());
         $menu_membership_items = array_keys($this->get_menu_membership_items());
        
-        $menu_items = array_merge($menu_items, $menu_dashboard_items , $menu_membership_items);
- 
+        // "dashboard" is both a menu tab and the Dashboard parent endpoint; register it once.
+        $menu_items = array_values( array_unique( array_merge($menu_items, $menu_dashboard_items , $menu_membership_items) ) );
+
 		for ( $i=0; $i < count( $menu_items ); $i++) {
 			add_rewrite_endpoint( $menu_items[$i], EP_AUTHORS );
 		}
@@ -593,7 +649,12 @@ class Jws_Streamvid_Profile {
           
 
           if($endpoint_dashboard == 'dashboard') {
-        
+
+            // /dashboard/ opens the Dashboard tab when the Profile Menu Sorter has it enabled.
+            if ( isset( $menu_layout['dashboard'] ) ) {
+                return 'dashboard';
+            }
+
             return array_keys($menu_layout)[0];
             
           }
@@ -687,7 +748,13 @@ class Jws_Streamvid_Profile {
             $endpoint_member = $this->get_request_endpoint('membership');
             $endpoint_dashboard = $this->get_request_endpoint('dashboard');
   
-            if(isset($endpoint_dashboard[0]) && !empty($endpoint_dashboard[0])) {
+            /*
+             * A bare /dashboard/ comes back as the string "dashboard" ("d" at [0]). With the
+             * Dashboard tab enabled it stays in the main menu; sub pages still get the submenu.
+             */
+            $dashboard_tab = isset( $menu_items['dashboard'] ) && 'dashboard' === $endpoint_dashboard;
+
+            if(isset($endpoint_dashboard[0]) && !empty($endpoint_dashboard[0]) && ! $dashboard_tab) {
                 $menu_items = $this->get_menu_dashboard_items();
                 $menu_items = $menu_items['dashboard']['submenu'];
             }
@@ -703,11 +770,73 @@ class Jws_Streamvid_Profile {
     
     
     
+    /**
+     * PMPro gives an administrator the levels picked in the admin bar ("View
+     * as": no access / all levels) everywhere except its own Account, Billing,
+     * Invoice ... pages, where it shows the real ones. The profile's
+     * Membership pages (membership/billing, subscriptions, invoices) are those
+     * pages here, so they get the real ones too; in "no access" view the
+     * Billing page showed an empty Level.
+     */
+    public function pmpro_true_levels(){
+
+        global $wp_query;
+
+        if ( is_author() && isset( $wp_query->query_vars['membership'] ) ) {
+            add_filter( 'pmpro_disable_admin_membership_access', '__return_true' );
+        }
+    }
+
+    /**
+     * Dashboard > Shopping > Addresses saves through WooCommerce, which reads
+     * the address type from the "edit-address" query var of its My Account
+     * page. The profile page carries it in dashboard=shop/edit-address/{type},
+     * so without this every Shipping form was handled as Billing and dropped.
+     */
+    public function shop_address_type(){
+
+        global $wp;
+
+        if ( ! is_author() || ! isset( $_POST['action'] ) || 'edit_address' !== $_POST['action'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce checks the nonce when it saves.
+            return;
+        }
+
+        if ( preg_match( '#^shop/edit-address/(billing|shipping)\b#', (string) get_query_var( 'dashboard' ), $match ) ) {
+            $wp->query_vars['edit-address'] = $match[1];
+        }
+    }
+
+    /**
+     * Every page the profile can open: the menu tabs plus the Dashboard and
+     * Membership sub pages (dashboard/shop/orders, membership/billing, ...).
+     * The Version 2 and 3 menus list only some of those, yet links to the
+     * others (Dashboard cards, the account dropdown) still have to open them.
+     */
+    public function get_route_items() {
+
+        $items      = $this->the_menu_items_position();
+        $dashboard  = $this->get_menu_dashboard_items();
+        $membership = $this->get_menu_membership_items();
+
+        $sub_pages = array_merge(
+            isset( $dashboard['dashboard']['submenu'] ) ? $dashboard['dashboard']['submenu'] : array(),
+            isset( $membership['membership']['submenu'] ) ? $membership['membership']['submenu'] : array()
+        );
+
+        foreach ( $sub_pages as $id => $item ) {
+            if ( ! isset( $items[ $id ] ) ) {
+                $items[ $id ] = $item;
+            }
+        }
+
+        return $items;
+    }
+
     public  function the_content() {
- 
+
        	$current = $this->get_currents_menu();
-       
-		$menu_items = $this->the_menu_items_position();
+
+		$menu_items = $this->get_route_items();
         
         $is_owner = jws_streamvid_check_owner();
         

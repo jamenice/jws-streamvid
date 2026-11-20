@@ -1952,3 +1952,806 @@
 	overflow-y: auto;
 	overscroll-behavior: contain;
 }
+
+/* ------------------------------------------------------------------ *
+ * Dashboard tab (user/profile/dashboard.php), every Profile Version
+ * ------------------------------------------------------------------ */
+
+.jws-dash {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.jws-dash__hero {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.jws-dash__avatar {
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex: 0 0 auto;
+}
+
+.jws-dash__hero-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	flex: 1 1 240px;
+}
+
+.jws-dash__eyebrow {
+	font-size: var(--jws-pf-fs-xs);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--body2);
+}
+
+/* An email used as the display name has no spaces to wrap on. */
+.jws-dash__title {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.jws-dash__sub {
+	color: var(--body2);
+}
+
+.jws-dash__hero-actions,
+.jws-dash__plan-actions {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.jws-dash :is(a, button):is(.button-default, .button-custom) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+/*
+ * .button-custom has the card background (or none, per Theme Options), so on
+ * a card it would read as plain text. An inset line keeps it a button.
+ */
+body .jws-dash :is(a, button).button-custom {
+	box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+body .jws-dash :is(a, button).button-custom:hover,
+body .jws-dash :is(a, button).button-custom:focus-visible {
+	box-shadow: inset 0 0 0 1px var(--main);
+}
+
+/* Library figures */
+
+.jws-dash__stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-dash__stat-link {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	height: 100%;
+	padding: 20px;
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	background: var(--background-item);
+	color: var(--heading);
+	text-decoration: none;
+	transition: border-color 0.2s ease;
+}
+
+.jws-dash__stat-link:hover,
+.jws-dash__stat-link:focus-visible {
+	border-color: var(--main);
+	color: var(--heading);
+}
+
+.jws-dash__stat-link > i {
+	font-size: 22px;
+	color: var(--main);
+	margin-bottom: 6px;
+}
+
+.jws-dash__stat-value {
+	color: var(--heading);
+}
+
+.jws-dash__stat-label {
+	font-size: var(--font-size-sm);
+	color: var(--body2);
+}
+
+/* Plan and usage */
+
+.jws-dash__plan {
+	padding: 24px;
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	background: var(--background-item);
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.jws-dash__plan-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.jws-dash__plan-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	flex: 1 1 280px;
+}
+
+.jws-dash__plan-name {
+	margin: 0;
+}
+
+.jws-dash__plan-cost {
+	color: var(--body2);
+}
+
+.jws-dash__usage {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px 40px;
+	padding-top: 20px;
+	border-top: 1px solid var(--border-color);
+}
+
+.jws-dash__meter {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	color: var(--heading);
+	text-decoration: none;
+}
+
+.jws-dash__meter:hover,
+.jws-dash__meter:focus-visible {
+	color: var(--main);
+}
+
+.jws-dash__meter-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	font-size: var(--font-size-sm);
+}
+
+.jws-dash__meter .jws-pf-meter {
+	width: 100%;
+}
+
+/* All slots used: the count takes the accent so the limit stands out. */
+.jws-dash__meter.is-full .jws-dash__meter-row strong {
+	color: var(--main);
+}
+
+/* Section heads */
+
+.jws-dash__head {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.jws-dash__head-title {
+	margin: 0;
+}
+
+.jws-dash__head-link {
+	font-size: var(--font-size-sm);
+	color: var(--main);
+	white-space: nowrap;
+}
+
+/*
+ * Continue watching: one row that scrolls sideways, without a scrollbar.
+ * Whole cards plus half of the next one are in view (5.5 on desktop), and
+ * that half card fades out to show the row goes on. Same weight as
+ * ".jws-pv3 ul.jws-lib__grid" plus one class, so it wins on Version 3 too.
+ */
+@property --jws-dash-fade {
+	syntax: '<length-percentage>';
+	inherits: false;
+	initial-value: 0px;
+}
+
+.jws-dash ul.jws-lib__grid.jws-dash__grid {
+	--jws-dash-gap: 16px;
+	--jws-dash-card: calc((100% - 5 * var(--jws-dash-gap)) / 5.5);
+	--jws-dash-fade: 0px;
+	display: grid;
+	grid-template-columns: none;
+	grid-auto-flow: column;
+	grid-auto-columns: var(--jws-dash-card);
+	gap: var(--jws-dash-gap);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scroll-snap-type: x mandatory;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
+	/* An alpha mask, not a color: black keeps a pixel, transparent hides it. */
+	-webkit-mask-image: linear-gradient(to right, black calc(100% - var(--jws-dash-fade)), transparent);
+	mask-image: linear-gradient(to right, black calc(100% - var(--jws-dash-fade)), transparent);
+	transition: --jws-dash-fade 0.25s ease;
+}
+
+.jws-dash ul.jws-dash__grid::-webkit-scrollbar {
+	display: none;
+}
+
+/* pages/profile.js sets .has-more while cards wait past the edge; at the end the fade goes. */
+.jws-dash ul.jws-lib__grid.jws-dash__grid.has-more {
+	--jws-dash-fade: calc(var(--jws-dash-card) / 2 + var(--jws-dash-gap));
+}
+
+[dir="rtl"] .jws-dash ul.jws-lib__grid.jws-dash__grid {
+	-webkit-mask-image: linear-gradient(to left, black calc(100% - var(--jws-dash-fade)), transparent);
+	mask-image: linear-gradient(to left, black calc(100% - var(--jws-dash-fade)), transparent);
+}
+
+.jws-dash__grid > .jws-lib__item {
+	scroll-snap-align: start;
+}
+
+/*
+ * Mouse drag (pages/profile.js): grab cursor between the cards, snapping off
+ * while the row follows the pointer, no text selection or card hover meanwhile.
+ */
+@media (hover: hover) and (pointer: fine) {
+	.jws-dash [data-jws-drag-scroll] {
+		cursor: grab;
+	}
+}
+
+.jws-dash ul.jws-lib__grid.jws-dash__grid.is-dragging {
+	scroll-snap-type: none;
+	user-select: none;
+}
+
+.jws-dash [data-jws-drag-scroll].is-dragging,
+.jws-dash [data-jws-drag-scroll].is-dragging * {
+	cursor: grabbing;
+}
+
+.jws-dash [data-jws-drag-scroll].is-dragging > * {
+	pointer-events: none;
+}
+
+/* Your account */
+
+.jws-dash__link-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-dash__link-item {
+	min-width: 0;
+}
+
+/* Full height, so cards with a one-line description match their row. */
+.jws-dash__link {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	height: 100%;
+	padding: 16px;
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	color: var(--heading);
+	text-decoration: none;
+	transition: border-color 0.2s ease;
+}
+
+.jws-dash__link:hover,
+.jws-dash__link:focus-visible {
+	border-color: var(--main);
+	color: var(--heading);
+}
+
+.jws-dash__link > i {
+	font-size: 20px;
+	color: var(--main);
+	flex: 0 0 auto;
+}
+
+.jws-dash__link-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.jws-dash__link-sub {
+	color: var(--body2);
+}
+
+.jws-dash__link-arrow {
+	color: var(--body2);
+	transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.jws-dash__link:hover .jws-dash__link-arrow,
+.jws-dash__link:focus-visible .jws-dash__link-arrow {
+	color: var(--main);
+	transform: translateX(3px);
+}
+
+@media (max-width: 1024px) {
+	.jws-dash ul.jws-lib__grid.jws-dash__grid {
+		--jws-dash-card: calc((100% - 3 * var(--jws-dash-gap)) / 3.5);
+	}
+}
+
+@media (max-width: 767px) {
+	.jws-dash {
+		gap: 22px;
+	}
+
+	.jws-dash__hero-actions,
+	.jws-dash__plan-actions {
+		width: 100%;
+	}
+
+	.jws-dash__hero-actions > *,
+	.jws-dash__plan-actions > * {
+		flex: 1 1 auto;
+	}
+
+	/* Three figures stay on one row instead of two plus one. */
+	.jws-dash__stats {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.jws-dash__stat-link {
+		padding: 14px 12px;
+	}
+
+	.jws-dash__stat-link > i {
+		font-size: 20px;
+		margin-bottom: 2px;
+	}
+
+	.jws-dash__plan {
+		padding: 18px;
+	}
+
+	.jws-dash ul.jws-lib__grid.jws-dash__grid {
+		--jws-dash-gap: 12px;
+		--jws-dash-card: calc((100% - 2 * var(--jws-dash-gap)) / 2.5);
+	}
+
+	.jws-dash__link-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.jws-dash ul.jws-lib__grid.jws-dash__grid {
+		--jws-dash-card: calc((100% - var(--jws-dash-gap)) / 1.5);
+	}
+}
+
+/* ------------------------------------------------------------------ *
+ * Dashboard > Shopping (user/profile/woocommerce/*.php), every Profile
+ * Version: Orders, one order, Downloads, Addresses and the address form.
+ * ------------------------------------------------------------------ */
+
+/*
+ * The theme sizes .woocommerce-MyAccount-content as a 70% column beside its
+ * own My Account menu; here the tab bar is above, so it takes the full width.
+ */
+.woocommerce .jws-shop__content.woocommerce-MyAccount-content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	flex: none;
+	width: 100%;
+	max-width: none;
+	padding: 0;
+}
+
+.jws-shop .woocommerce-notices-wrapper:empty {
+	display: none;
+}
+
+.jws-shop__heading,
+.jws-shop__card-title {
+	margin: 0;
+}
+
+.jws-shop__muted {
+	margin: 0;
+	color: var(--body2);
+}
+
+.jws-shop__card {
+	padding: 16px 18px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+}
+
+.jws-shop__card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.jws-shop .jws-buy__chip {
+	white-space: nowrap;
+}
+
+/* Refunded and draft orders: neither good nor bad news. */
+.jws-buy__chip--muted {
+	background: color-mix(in srgb, var(--body2) 18%, transparent);
+	color: var(--body2);
+}
+
+/* Theme buttons, small; extra weight because the theme's button rule loads later. */
+.jws-shop :is(a, button):is(.button-default, .button-custom) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+}
+
+body .jws-shop :is(a, button).jws-btn-sm:is(.button-default, .button-custom) {
+	padding: 10px 18px;
+}
+
+/* .button-custom has the card background (or none, per Theme Options); a line keeps it a button. */
+body .jws-shop :is(a, button).button-custom {
+	box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+body .jws-shop :is(a, button).button-custom:hover,
+body .jws-shop :is(a, button).button-custom:focus-visible {
+	box-shadow: inset 0 0 0 1px var(--main);
+}
+
+.jws-shop__back {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	align-self: flex-start;
+	color: var(--body2);
+	text-decoration: none;
+}
+
+.jws-shop__back:hover,
+.jws-shop__back:focus-visible {
+	color: var(--heading);
+}
+
+/* Orders */
+
+.jws-shop ul.jws-shop__orders {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-shop__order,
+.jws-shop__order-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 24px;
+}
+
+.jws-shop__order {
+	transition: border-color 0.2s ease;
+}
+
+.jws-shop__order:hover {
+	border-color: color-mix(in srgb, var(--main) 55%, var(--border-color));
+}
+
+.jws-shop__order-text {
+	display: flex;
+	flex: 1 1 260px;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.jws-shop__order-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+}
+
+.jws-shop__order-number {
+	margin: 0;
+	color: var(--heading);
+	text-decoration: none;
+}
+
+.jws-shop__order-number:hover,
+.jws-shop__order-number:focus-visible {
+	color: var(--main);
+}
+
+.jws-shop__order-side {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px 18px;
+}
+
+.jws-shop__total {
+	margin: 0;
+	color: var(--heading);
+	white-space: nowrap;
+}
+
+.jws-shop__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.jws-shop__pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+}
+
+/* One order: updates, then WooCommerce's details and address tables as cards */
+
+.jws-shop ol.jws-shop__notes {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-shop__note {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding-inline-start: 14px;
+	border-inline-start: 2px solid var(--main);
+}
+
+.jws-shop__note-text p {
+	margin: 0;
+}
+
+.jws-shop :is(.woocommerce-order-details, .woocommerce-customer-details, .woocommerce-order-downloads) {
+	margin: 0;
+	padding: 16px 18px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--background-item);
+}
+
+.jws-shop :is(.woocommerce-order-details, .woocommerce-customer-details) .jws-shop__card-title,
+.jws-shop .woocommerce-order-downloads__title {
+	margin: 0 0 12px;
+	text-align: start;
+	text-transform: none;
+}
+
+.jws-shop .col2-set::before,
+.jws-shop .col2-set::after {
+	display: none;
+}
+
+.jws-shop .woocommerce-columns--addresses {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 20px;
+}
+
+.jws-shop .woocommerce-columns--addresses .woocommerce-column {
+	float: none;
+	width: auto;
+	max-width: none;
+	padding: 0;
+}
+
+.jws-shop table.shop_table {
+	width: 100%;
+	margin: 0;
+	border: 0;
+	border-collapse: collapse;
+	background: none;
+}
+
+/* Lines go on the cells; the theme also draws one under each row. */
+.jws-shop table.shop_table tr {
+	border: 0;
+}
+
+.jws-shop table.shop_table :is(th, td) {
+	padding: 12px 0;
+	border: 0;
+	border-bottom: 1px solid var(--border-color);
+	background: none;
+	text-align: start;
+	vertical-align: middle;
+}
+
+.jws-shop table.shop_table :is(th, td):last-child {
+	text-align: end;
+}
+
+.jws-shop table.shop_table thead th {
+	color: var(--body2);
+	font-size: var(--font-size-sm);
+	text-transform: none;
+}
+
+.jws-shop table.shop_table tfoot tr:last-child :is(th, td) {
+	border-bottom: 0;
+	color: var(--heading);
+}
+
+/* WooCommerce repeats Pay / Cancel as a table row; they are already at the top of the order. */
+.jws-shop table.shop_table tr:has(> .order-actions--heading) {
+	display: none;
+}
+
+/* With that row hidden, the one before it ends the table. */
+.jws-shop table.shop_table tfoot tr:has(+ tr > .order-actions--heading) :is(th, td) {
+	border-bottom: 0;
+}
+
+/* Addresses */
+
+.jws-shop__intro {
+	max-width: 640px;
+}
+
+.jws-shop ul.jws-shop__addresses {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.jws-shop address {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-style: normal;
+	line-height: 1.7;
+}
+
+/* The form: WooCommerce's fields on a two column grid, its empty title hidden */
+
+.jws-shop form > h2:empty {
+	display: none;
+}
+
+/* A readable line length; the Save button keeps the theme's full width of it. */
+.jws-shop .woocommerce-address-fields {
+	max-width: 720px;
+}
+
+.jws-shop .woocommerce-address-fields__field-wrapper {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 16px;
+}
+
+.jws-shop .woocommerce-address-fields .woocommerce-input-wrapper {
+	display: block;
+}
+
+.jws-shop .woocommerce-address-fields .woocommerce-input-wrapper :is(input, select, textarea) {
+	width: 100%;
+}
+
+.jws-shop .woocommerce-address-fields__field-wrapper .form-row {
+	grid-column: 1 / -1;
+	float: none;
+	width: auto;
+}
+
+.jws-shop .woocommerce-address-fields__field-wrapper :is(.form-row-first, .form-row-last) {
+	grid-column: auto;
+}
+
+/* The theme sizes the name fields by id (50%) for its own My Account layout; here the grid column does. */
+.jws-shop .woocommerce-address-fields__field-wrapper :is(#billing_first_name_field, #billing_last_name_field, #shipping_first_name_field, #shipping_last_name_field) {
+	width: auto;
+	padding: 0;
+}
+
+@media (max-width: 767px) {
+	.jws-shop__order-side {
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.jws-shop__order-head .jws-shop__actions,
+	.jws-shop__order-head .jws-shop__actions > * {
+		flex: 1 1 auto;
+	}
+
+	.jws-shop .woocommerce-address-fields__field-wrapper {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.jws-shop .woocommerce-address-fields__field-wrapper :is(.form-row-first, .form-row-last) {
+		grid-column: 1 / -1;
+	}
+
+	/* WooCommerce's responsive tables (data-title on each cell), as label / value rows. */
+	.jws-shop table.shop_table_responsive thead {
+		display: none;
+	}
+
+	.jws-shop table.shop_table_responsive tbody tr {
+		display: block;
+		padding: 10px 0;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.jws-shop table.shop_table_responsive tbody :is(th, td) {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 4px 0;
+		border: 0;
+		text-align: end;
+	}
+
+	.jws-shop table.shop_table_responsive tbody td[data-title]::before {
+		content: attr(data-title);
+		color: var(--body2);
+		text-align: start;
+	}
+}

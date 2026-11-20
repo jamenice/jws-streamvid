@@ -42,12 +42,15 @@ if ( ! $jws_v3_owner ) :
 endif;
 
 $jws_v3_groups = array(
+	// The Dashboard tab sits above the groups, without a label.
+	'overview'  => array( 'label' => '', 'items' => array() ),
 	'library'   => array( 'label' => __( 'Library', 'jws_streamvid' ), 'items' => array() ),
 	'purchases' => array( 'label' => __( 'Purchases', 'jws_streamvid' ), 'items' => array() ),
 	'creator'   => array( 'label' => __( 'Creator', 'jws_streamvid' ), 'items' => array() ),
 	'account'   => array( 'label' => __( 'Account', 'jws_streamvid' ), 'items' => array() ),
 );
 $jws_v3_group_of = array(
+	'dashboard'       => 'overview',
 	'history'         => 'library',
 	'watchlist'       => 'library',
 	'favorites'       => 'library',
@@ -55,6 +58,7 @@ $jws_v3_group_of = array(
 	'pay_per_view'    => 'purchases',
 	'rented'          => 'purchases',
 	'drama-coins'     => 'purchases',
+	'shop'            => 'purchases',
 	'video'           => 'creator',
 	'profiles'        => 'account',
 	'subscriptions'   => 'account',
@@ -72,6 +76,7 @@ $jws_v3_titles = array(
 	'profile'         => __( 'Settings', 'jws_streamvid' ),
 );
 $jws_v3_icons = array(
+	'dashboard'       => 'jws-icon-house',
 	'history'         => 'jws-icon-eye',
 	'watchlist'       => 'jws-icon-bookmark-simple',
 	'favorites'       => 'jws-icon-heart',
@@ -79,6 +84,7 @@ $jws_v3_icons = array(
 	'pay_per_view'    => 'jws-icon-handbag',
 	'rented'          => 'jws-icon-handbag',
 	'drama-coins'     => 'jws-icon-coins',
+	'shop'            => 'jws-icon-handbag',
 	'video'           => 'jws-icon-monitor-play',
 	'profiles'        => 'jws-icon-user-circle',
 	'subscriptions'   => 'jws-icon-crown-simple',
@@ -122,8 +128,10 @@ foreach ( $jws_v3_items as $jws_v3_id => $jws_v3_menu ) {
 	);
 }
 
+// A sub page the menu does not list (membership/billing, dashboard/shop when off in the sorter) keeps its own title.
 if ( '' === $jws_v3_title ) {
-	$jws_v3_title = __( 'My account', 'jws_streamvid' );
+	$jws_v3_routes = $jws_v3_profile->get_route_items();
+	$jws_v3_title  = isset( $jws_v3_routes[ $jws_v3_current ]['title'] ) ? $jws_v3_routes[ $jws_v3_current ]['title'] : __( 'My account', 'jws_streamvid' );
 }
 
 $jws_v3_user     = wp_get_current_user();
@@ -201,7 +209,9 @@ $jws_v3_here     = ( is_ssl() ? 'https://' : 'http://' ) . $jws_v3_host . $jws_v
 				<?php foreach ( $jws_v3_groups as $jws_v3_group ) : ?>
 					<?php if ( ! $jws_v3_group['items'] ) { continue; } ?>
 					<div class="jws-pv3__group">
-						<span class="jws-pv3__group-label"><?php echo esc_html( $jws_v3_group['label'] ); ?></span>
+						<?php if ( '' !== $jws_v3_group['label'] ) : ?>
+							<span class="jws-pv3__group-label"><?php echo esc_html( $jws_v3_group['label'] ); ?></span>
+						<?php endif; ?>
 						<?php foreach ( $jws_v3_group['items'] as $jws_v3_id => $jws_v3_item ) : ?>
 							<a class="jws-pv3__link<?php echo $jws_v3_item['on'] ? ' is-active' : ''; ?>" href="<?php echo esc_url( $jws_v3_item['href'] ); ?>"<?php echo $jws_v3_item['on'] ? ' aria-current="page"' : ''; ?>>
 								<i class="<?php echo esc_attr( $jws_v3_item['icon'] ); ?>" aria-hidden="true"></i>

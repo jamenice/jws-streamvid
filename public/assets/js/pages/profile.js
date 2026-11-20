@@ -709,8 +709,156 @@
             
         }
         
-        edit_personal();  
- 
+        edit_personal();
+
+        /**
+         * Rows marked data-jws-drag-scroll (Dashboard > Continue watching) scroll
+         * sideways when dragged with the mouse. Touch and trackpads keep native
+         * scrolling. Bound on document, so a row that Profile V3 loads in place
+         * (profiles.js) works without binding again.
+         */
+        function drag_scroll() {
+
+            var THRESHOLD = 6; // px before a press becomes a drag, so a plain click still opens the card
+            var drag = null;
+
+            // Distance from the row's start edge to the closest card start (RTL aware).
+            function nearest_start(box) {
+                var side = getComputedStyle(box).direction === 'rtl' ? 'right' : 'left';
+                var edge = box.getBoundingClientRect()[side];
+                var best = null;
+
+                Array.prototype.forEach.call(box.children, function(item) {
+                    var delta = item.getBoundingClientRect()[side] - edge;
+                    if (best === null || Math.abs(delta) < Math.abs(best)) {
+                        best = delta;
+                    }
+                });
+
+                return best || 0;
+            }
+
+            // Glide to the closest card, then hand the row back to CSS scroll snapping.
+            function settle(box) {
+                var timer;
+                var done = function() {
+                    clearTimeout(timer);
+                    box.removeEventListener('scrollend', done);
+                    box.classList.remove('is-dragging');
+                    box.jwsSettle = null;
+                };
+
+                box.jwsSettle = { cancel: function() {
+                    clearTimeout(timer);
+                    box.removeEventListener('scrollend', done);
+                    box.jwsSettle = null;
+                } };
+
+                var delta = nearest_start(box);
+                if (Math.abs(delta) < 1) {
+                    done();
+                    return;
+                }
+
+                box.addEventListener('scrollend', done);
+                timer = setTimeout(done, 600); // no scrollend support, or the row was already at its end
+                box.scrollBy({ left: delta, behavior: 'smooth' });
+            }
+
+            function on_move(event) {
+                if (!drag || event.pointerId !== drag.id) return;
+
+                var dx = event.clientX - drag.x;
+
+                if (!drag.moved) {
+                    if (Math.abs(dx) < THRESHOLD) return;
+                    drag.moved = true;
+                    drag.box.classList.add('is-dragging');
+                    // Only now: capturing on press would send every plain click to the row instead of the card.
+                    try { drag.box.setPointerCapture(drag.id); } catch (e) {}
+                }
+
+                event.preventDefault();
+                drag.box.scrollLeft = drag.left - dx;
+            }
+
+            function on_end(event) {
+                if (!drag || event.pointerId !== drag.id) return;
+
+                var box = drag.box;
+                var moved = drag.moved;
+
+                window.removeEventListener('pointermove', on_move);
+                window.removeEventListener('pointerup', on_end);
+                window.removeEventListener('pointercancel', on_end);
+                drag = null;
+
+                if (!moved) return;
+
+                // The release lands on a card: that click must not open it (nor reach profiles.js).
+                var block = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                };
+                box.addEventListener('click', block, true);
+                setTimeout(function() {
+                    box.removeEventListener('click', block, true);
+                }, 0);
+
+                settle(box);
+            }
+
+            document.addEventListener('pointerdown', function(event) {
+                if (event.pointerType !== 'mouse' || event.button !== 0 || !event.target.closest) return;
+
+                var box = event.target.closest('[data-jws-drag-scroll]');
+                if (!box || box.scrollWidth <= box.clientWidth + 1) return;
+
+                // A press on the row's own scrollbar keeps the native thumb drag.
+                if (event.target === box && event.offsetY >= box.clientHeight) return;
+
+                // A glide from the last drag must not switch snapping back on mid-drag.
+                if (box.jwsSettle) {
+                    box.jwsSettle.cancel();
+                }
+
+                drag = { box: box, id: event.pointerId, x: event.clientX, left: box.scrollLeft, moved: false };
+
+                window.addEventListener('pointermove', on_move);
+                window.addEventListener('pointerup', on_end);
+                window.addEventListener('pointercancel', on_end);
+            });
+
+            // Images and links are draggable by default; the browser's drag would take over the pointer.
+            document.addEventListener('dragstart', function(event) {
+                if (event.target.closest && event.target.closest('[data-jws-drag-scroll]')) {
+                    event.preventDefault();
+                }
+            });
+
+            // .has-more while cards wait past the far edge: CSS fades the half card there.
+            function edges(box) {
+                var max = box.scrollWidth - box.clientWidth;
+                box.classList.toggle('has-more', max > 1 && Math.abs(box.scrollLeft) < max - 1);
+            }
+
+            function edges_all() {
+                Array.prototype.forEach.call(document.querySelectorAll('[data-jws-drag-scroll]'), edges);
+            }
+
+            // Scroll does not bubble; listening in the capture phase covers rows loaded later too.
+            document.addEventListener('scroll', function(event) {
+                if (event.target.matches && event.target.matches('[data-jws-drag-scroll]')) {
+                    edges(event.target);
+                }
+            }, true);
+            window.addEventListener('resize', edges_all);
+            document.addEventListener('jws-pv3:load', edges_all); // Profile V3 swapped the tab in place
+            edges_all();
+        }
+
+        drag_scroll();
+
     });
 
 })( jQuery );

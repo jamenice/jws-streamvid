@@ -624,10 +624,24 @@ class Jws_Streamvid {
 			'maybe_flush_author_base'
 		);
         
-        $this->loader->add_action( 
-			'wp', 
-			$this->plugin_action->profile,  
+        $this->loader->add_action(
+			'wp',
+			$this->plugin_action->profile,
 			'redirect_url_default'
+		);
+
+        $this->loader->add_action(
+			'wp',
+			$this->plugin_action->profile,
+			'pmpro_true_levels'
+		);
+
+        // Before WC_Form_Handler::save_address (template_redirect, 10).
+        $this->loader->add_action(
+			'template_redirect',
+			$this->plugin_action->profile,
+			'shop_address_type',
+			9
 		);
         
         
